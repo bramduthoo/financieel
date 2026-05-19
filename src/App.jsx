@@ -4,6 +4,7 @@ import { supabase } from './lib/supabase'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
 import Wallets from './pages/Wallets'
+import WalletDetail from './pages/WalletDetail'
 import Income from './pages/Income'
 import Login from './pages/Login'
 
@@ -38,9 +39,10 @@ export default function App() {
           session
             ? <Layout>
                 <Routes>
-                  <Route path="/"        element={<Dashboard />} />
-                  <Route path="/wallets" element={<Wallets />}   />
-                  <Route path="/income"  element={<Income />}    />
+                  <Route path="/"                element={<Dashboard />}    />
+                  <Route path="/wallets"         element={<Wallets />}      />
+                  <Route path="/wallets/:id"     element={<WalletDetail />} />
+                  <Route path="/income"          element={<Income />}       />
                 </Routes>
               </Layout>
             : <Navigate to="/login" replace />

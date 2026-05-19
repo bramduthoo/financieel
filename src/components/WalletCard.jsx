@@ -1,9 +1,14 @@
 import { Pencil, Trash2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 export default function WalletCard({ wallet, onEdit, onDelete }) {
-  return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5 flex flex-col gap-3 hover:shadow-md transition-shadow">
+  const navigate = useNavigate()
 
+  return (
+    <div
+      onClick={() => navigate(`/wallets/${wallet.id}`)}
+      className="bg-white rounded-xl border border-gray-200 p-5 flex flex-col gap-3 hover:shadow-md transition-shadow cursor-pointer"
+    >
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
@@ -18,13 +23,13 @@ export default function WalletCard({ wallet, onEdit, onDelete }) {
         </div>
         <div className="flex gap-1">
           <button
-            onClick={() => onEdit(wallet)}
+            onClick={e => { e.stopPropagation(); onEdit(wallet) }}
             className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
           >
             <Pencil size={14} />
           </button>
           <button
-            onClick={() => onDelete(wallet)}
+            onClick={e => { e.stopPropagation(); onDelete(wallet) }}
             className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
           >
             <Trash2 size={14} />
@@ -46,7 +51,6 @@ export default function WalletCard({ wallet, onEdit, onDelete }) {
           {wallet.budget_type.replace('-', ' ')}
         </span>
       </div>
-
     </div>
   )
 }
