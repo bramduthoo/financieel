@@ -14,23 +14,26 @@ export default function WalletDetail() {
   const navigate   = useNavigate()
   const [wallet,   setWallet]   = useState(null)
   const [rules,    setRules]    = useState([])
+  const [transactions, setTransactions] = useState([])
   const [tab,      setTab]      = useState('overview')
   const [editOpen, setEditOpen] = useState(false)
   const [loading,  setLoading]  = useState(true)
 
-  useEffect(() => { fetchAll() }, [id])
+  useEffect(() => { fetchAll(true) }, [id])
 
-  async function fetchAll() {
-    setLoading(true)
-    const [{ data: w }, { data: r }] = await Promise.all([
-      supabase.from('wallets').select('*').eq('id', id).single(),
-      supabase.from('recurring_rules').select('*')
-        .eq('wallet_id', id).is('end_date', null).order('created_at'),
-    ])
-    setWallet(w)
-    setRules(r ?? [])
-    setLoading(false)
-  }
+async function fetchAll(showSpinner = false) {
+  if (showSpinner) setLoading(true)
+  const [{ data: w }, { data: r }, { data: t }] = await Promise.all([
+    supabase.from('wallets').select('*').eq('id', id).single(),
+    supabase.from('recurring_rules').select('*')
+      .eq('wallet_id', id).is('end_date', null).order('created_at'),
+    supabase.from('transactions').select('*').eq('wallet_id', id),
+  ])
+  setWallet(w)
+  setRules(r ?? [])
+  setTransactions(t ?? [])
+  setLoading(false)
+}
 
   async function handleSave(values) {
     await supabase.from('wallets').update(values).eq('id', id)
@@ -104,7 +107,7 @@ export default function WalletDetail() {
 
               {/* Upcoming payments */}
               <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <UpcomingPayments rules={rules} />
+                <UpcomingPayments rules={rules} transactions={transactions} />
               </div>
 
               {/* Recurring payments manager */}

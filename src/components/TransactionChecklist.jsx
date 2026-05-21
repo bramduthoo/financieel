@@ -1,78 +1,79 @@
 import { useEffect, useState } from 'react'
-import { CheckCircle2, Circle } from 'lucide-react'
+import { CheckCircle2, Circle, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import { format, startOfDay, isBefore, isEqual } from 'date-fns'
+import { format, startOfDay } from 'date-fns'
 import { generatePaymentDates } from '../lib/recurringUtils'
 
 export default function TransactionChecklist({ walletId, onBalanceChanged }) {
   const [rules,        setRules]        = useState([])
   const [transactions, setTransactions] = useState([])
   const [loading,      setLoading]      = useState(true)
+  const [confirmItem,  setConfirmItem]  = useState(null)
+  const [remark,       setRemark]       = useState('')
+  const [saving,       setSaving]       = useState(false)
 
   useEffect(() => { fetchAll() }, [walletId])
 
   async function fetchAll() {
-    setLoading(true)
     const [{ data: r }, { data: t }] = await Promise.all([
       supabase.from('recurring_rules').select('*')
         .eq('wallet_id', walletId).is('end_date', null),
-      supabase.from('transactions').select('*')
-        .eq('wallet_id', walletId),
+      supabase.from('transactions').select('*').eq('wallet_id', walletId),
     ])
     setRules(r ?? [])
     setTransactions(t ?? [])
     setLoading(false)
   }
 
-  // Build pending items: every due date up to today with no confirmed transaction
   function buildPendingItems() {
-    const today    = startOfDay(new Date())
-    const pending  = []
-
+    const today   = startOfDay(new Date())
+    const pending = []
     for (const rule of rules) {
       const dueDates = generatePaymentDates(rule, today)
       for (const date of dueDates) {
-        const dateStr = format(date, 'yyyy-MM-dd')
+        const dateStr  = format(date, 'yyyy-MM-dd')
         const existing = transactions.find(
           t => t.recurring_rule_id === rule.id && t.date === dateStr
         )
         if (!existing || !existing.is_confirmed) {
-          pending.push({
-            rule,
-            date,
-            dateStr,
-            existingId: existing?.id ?? null,
-          })
+          pending.push({ rule, date, dateStr, existingId: existing?.id ?? null })
         }
       }
     }
-
     return pending.sort((a, b) => a.date - b.date)
   }
 
-  async function handleCheck(item) {
-    if (item.existingId) {
-      // Update existing unconfirmed transaction
+  async function handleConfirm() {
+    if (!confirmItem) return
+    setSaving(true)
+    const now = new Date().toISOString()
+
+    if (confirmItem.existingId) {
       await supabase.from('transactions')
-        .update({ is_confirmed: true })
-        .eq('id', item.existingId)
+        .update({ is_confirmed: true, remark: remark || null, completed_at: now })
+        .eq('id', confirmItem.existingId)
     } else {
-      // Create and confirm in one step
       await supabase.from('transactions').insert({
         wallet_id:         walletId,
-        recurring_rule_id: item.rule.id,
-        amount:            item.rule.amount,
+        recurring_rule_id: confirmItem.rule.id,
+        amount:            confirmItem.rule.amount,
         type:              'debit',
-        date:              item.dateStr,
-        note:              item.rule.description,
+        date:              confirmItem.dateStr,
+        note:              confirmItem.rule.name,
+        remark:            remark || null,
         is_confirmed:      true,
+        completed_at:      now,
       })
     }
-    // Subtract from wallet balance
+
     await supabase.rpc('decrement_wallet_balance', {
       p_wallet_id: walletId,
-      p_amount:    item.rule.amount,
+      p_amount:    confirmItem.rule.amount,
     })
+
+    setConfirmItem(null)
+    setRemark('')
+    setSaving(false)
     fetchAll()
     onBalanceChanged?.()
   }
@@ -103,12 +104,15 @@ export default function TransactionChecklist({ walletId, onBalanceChanged }) {
             <div key={i}
               className="flex items-center justify-between bg-white border border-orange-200 rounded-lg px-4 py-3">
               <div className="flex items-center gap-3">
-                <button onClick={() => handleCheck(item)}>
+                <button onClick={() => { setConfirmItem(item); setRemark('') }}>
                   <Circle size={18} className="text-gray-300 hover:text-indigo-400 transition-colors" />
                 </button>
                 <div>
-                  <p className="text-sm font-medium text-gray-800">{item.rule.description}</p>
-                  <p className="text-xs text-gray-400">{format(item.date, 'd MMM yyyy')}</p>
+                  <p className="text-sm font-medium text-gray-800">{item.rule.name}</p>
+                  {item.rule.description && (
+                    <p className="text-xs text-gray-400">{item.rule.description}</p>
+                  )}
+                  <p className="text-xs text-gray-400">Due {format(item.date, 'd MMM yyyy')}</p>
                 </div>
               </div>
               <span className="text-sm font-semibold text-orange-600">
@@ -116,6 +120,56 @@ export default function TransactionChecklist({ walletId, onBalanceChanged }) {
               </span>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Confirmation modal */}
+      {confirmItem && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+            <div className="flex justify-between items-start mb-4">
+              <h2 className="text-lg font-bold text-gray-800">Confirm payment</h2>
+              <button onClick={() => setConfirmItem(null)}>
+                <X size={18} className="text-gray-400" />
+              </button>
+            </div>
+
+            <div className="bg-gray-50 rounded-lg p-4 mb-4">
+              <p className="text-sm font-semibold text-gray-800">{confirmItem.rule.name}</p>
+              {confirmItem.rule.description && (
+                <p className="text-xs text-gray-500 mt-0.5">{confirmItem.rule.description}</p>
+              )}
+              <p className="text-xs text-gray-500 mt-1">
+                Due {format(confirmItem.date, 'd MMM yyyy')}
+              </p>
+              <p className="text-xl font-bold text-gray-800 mt-2">
+                €{Number(confirmItem.rule.amount).toFixed(2)}
+              </p>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Remark <span className="text-gray-400">(optional)</span>
+              </label>
+              <input
+                value={remark}
+                onChange={e => setRemark(e.target.value)}
+                placeholder="e.g. Paid via bank transfer"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmItem(null)}
+                className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50">
+                Cancel
+              </button>
+              <button onClick={handleConfirm} disabled={saving}
+                className="flex-1 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 disabled:opacity-50">
+                {saving ? 'Confirming...' : 'Confirm paid'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
