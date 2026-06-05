@@ -8,6 +8,9 @@ import TransactionChecklist from '../components/TransactionChecklist'
 import UpcomingPayments from '../components/UpcomingPayments'
 import PaymentHistory from '../components/PaymentHistory'
 import WalletModal from '../components/WalletModal'
+import VariableOverview from '../components/VariableOverview'
+import VariableHistory from '../components/VariableHistory'
+import WalletTrendsChart from '../components/WalletTrendsChart'
 
 export default function WalletDetail() {
   const { id }     = useParams()
@@ -129,9 +132,36 @@ async function fetchAll(showSpinner = false) {
       )}
 
       {wallet.type === 'variable' && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <p className="text-gray-400 text-sm">Variable wallet features coming in Phase 5.</p>
-        </div>
+        <>
+          <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit mb-6">
+            {['overview', 'history', 'trends'].map(t => (
+              <button key={t} onClick={() => setTab(t)}
+                className={`px-4 py-1.5 rounded-lg text-sm font-medium capitalize transition-colors ${
+                  tab === t ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500 hover:text-gray-700'
+                }`}>
+                {t}
+              </button>
+            ))}
+          </div>
+
+          {tab === 'overview' && (
+            <VariableOverview
+              walletId={id}
+              wallet={wallet}
+              onBalanceChanged={fetchAll}
+            />
+          )}
+
+          {tab === 'history' && (
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <VariableHistory walletId={id} />
+            </div>
+          )}
+
+          {tab === 'trends' && (
+            <WalletTrendsChart walletId={id} wallet={wallet} />
+          )}
+        </>
       )}
 
       {wallet.type === 'investment' && (

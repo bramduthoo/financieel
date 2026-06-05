@@ -1,29 +1,29 @@
 import { useState } from 'react'
-import { format, startOfDay, addDays } from 'date-fns'
+import { format, startOfDay, addDays, endOfMonth, endOfWeek } from 'date-fns'
 import { Calendar, Table, CheckCircle2, XCircle } from 'lucide-react'
 import { generatePaymentDates, generateUpcomingDates } from '../lib/recurringUtils'
 
 export default function UpcomingPayments({ rules, transactions = [] }) {
   const [view,      setView]      = useState('table')
-  const [tableRows, setTableRows] = useState(5)
+  const [timeframe, setTimeframe] = useState('month')
 
-  const today        = startOfDay(new Date())
-  const tableHorizon = addDays(today, 30)
+  const today = startOfDay(new Date())
 
-  // Table: only next 30 days of upcoming payments
+  const horizon = timeframe === 'week'
+    ? endOfWeek(today, { weekStartsOn: 1 })
+    : endOfMonth(today)
+
+  // Table: upcoming payments within the selected timeframe
   const tableEvents = []
   for (const rule of rules) {
     const upcoming = generateUpcomingDates(rule, addDays(today, 1), 60)
     for (const date of upcoming) {
-      if (date > tableHorizon) break
+      if (date > horizon) break
       const dateStr = format(date, 'yyyy-MM-dd')
       tableEvents.push({ rule, date, dateStr })
     }
   }
   tableEvents.sort((a, b) => a.date - b.date)
-
-  const pageSize = tableRows === 'all' ? tableEvents.length : Number(tableRows)
-  const visible  = tableEvents.slice(0, pageSize)
 
   return (
     <div>
@@ -57,21 +57,29 @@ export default function UpcomingPayments({ rules, transactions = [] }) {
       {/* Table view */}
       {view === 'table' && (
         <div>
-          <div className="flex items-center justify-end mb-2 gap-2">
-            <span className="text-xs text-gray-400">Show</span>
-            <select
-              value={tableRows}
-              onChange={e => setTableRows(e.target.value)}
-              className="text-xs border border-gray-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              {[5, 10, 25, 50, 'all'].map(n => (
-                <option key={n} value={n}>{n}</option>
+          {/* Timeframe toggle */}
+          <div className="flex items-center justify-end mb-2">
+            <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+              {[['week', 'This week'], ['month', 'This month']].map(([id, label]) => (
+                <button
+                  key={id}
+                  onClick={() => setTimeframe(id)}
+                  className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                    timeframe === id
+                      ? 'bg-white shadow-sm text-indigo-600'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  {label}
+                </button>
               ))}
-            </select>
+            </div>
           </div>
 
-          {visible.length === 0 ? (
-            <p className="text-xs text-gray-400">No upcoming payments in the next 30 days.</p>
+          {tableEvents.length === 0 ? (
+            <p className="text-xs text-gray-400">
+              No upcoming payments {timeframe === 'week' ? 'this week' : 'this month'}.
+            </p>
           ) : (
             <div className="rounded-xl border border-gray-200 overflow-hidden">
               <table className="w-full text-sm">
@@ -83,7 +91,7 @@ export default function UpcomingPayments({ rules, transactions = [] }) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {visible.map((item, i) => (
+                  {tableEvents.map((item, i) => (
                     <tr key={i}>
                       <td className="px-4 py-2.5 font-medium text-gray-800">
                         {item.rule.name}
@@ -98,11 +106,6 @@ export default function UpcomingPayments({ rules, transactions = [] }) {
                   ))}
                 </tbody>
               </table>
-              {tableEvents.length > pageSize && tableRows !== 'all' && (
-                <div className="px-4 py-2 bg-gray-50 border-t border-gray-200 text-xs text-gray-400">
-                  Showing {pageSize} of {tableEvents.length} upcoming payments
-                </div>
-              )}
             </div>
           )}
         </div>

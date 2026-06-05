@@ -1,14 +1,19 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { format, parseISO } from 'date-fns'
-import { ChevronUp, ChevronDown } from 'lucide-react'
+import { ChevronUp, ChevronDown, X } from 'lucide-react'
 
 export default function PaymentHistory({ walletId }) {
-  const [history,  setHistory]  = useState([])
-  const [loading,  setLoading]  = useState(true)
-  const [filter,   setFilter]   = useState('all')
-  const [sort,     setSort]     = useState({ key: 'due', dir: 'desc' })
-  const [pageSize, setPageSize] = useState(10)
+  const [history,   setHistory]   = useState([])
+  const [loading,   setLoading]   = useState(true)
+  const [filter,    setFilter]    = useState('all')
+  const [sort,      setSort]      = useState({ key: 'due', dir: 'desc' })
+  const [pageSize,  setPageSize]  = useState(10)
+
+  const [detail,   setDetail]   = useState(null)  // transaction being viewed
+  const [editForm, setEditForm] = useState(null)  // null | form fields
+  const [confirm,  setConfirm]  = useState(null)  // null | { onConfirm }
+  const [saving,   setSaving]   = useState(false)
 
   useEffect(() => { fetchHistory() }, [walletId])
 
@@ -60,6 +65,45 @@ export default function PaymentHistory({ walletId }) {
       : <ChevronDown size={12} className="text-indigo-500" />
   }
 
+  function openEdit(t) {
+    setDetail(null)
+    setEditForm({
+      id: t.id,
+      oldAmount: t.amount,
+      amount: String(t.amount),
+      completed_at_date: t.completed_at
+        ? format(new Date(t.completed_at), 'yyyy-MM-dd')
+        : '',
+      remark: t.remark ?? '',
+    })
+  }
+
+  function submitEdit() {
+    const f = editForm
+    if (!f.amount || isNaN(Number(f.amount)) || Number(f.amount) <= 0) return
+    setConfirm({
+      onConfirm: async () => {
+        setSaving(true)
+        const amountChanged = Number(f.amount) !== Number(f.oldAmount)
+        if (amountChanged) {
+          await supabase.rpc('increment_wallet_balance', { p_wallet_id: walletId, p_amount: Number(f.oldAmount) })
+          await supabase.rpc('decrement_wallet_balance', { p_wallet_id: walletId, p_amount: Number(f.amount) })
+        }
+        await supabase.from('transactions').update({
+          amount: Number(f.amount),
+          completed_at: f.completed_at_date
+            ? new Date(f.completed_at_date).toISOString()
+            : null,
+          remark: f.remark.trim() || null,
+        }).eq('id', f.id)
+        setSaving(false)
+        setConfirm(null)
+        setEditForm(null)
+        fetchHistory()
+      },
+    })
+  }
+
   return (
     <div>
       {/* Header: filter + page size */}
@@ -106,7 +150,7 @@ export default function PaymentHistory({ walletId }) {
                     onClick={() => toggleSort('name')}
                     className="flex items-center gap-1 hover:text-gray-700"
                   >
-                    Payment <SortIcon col="name" />
+                    Name <SortIcon col="name" />
                   </button>
                 </th>
                 <th className="px-4 py-2 text-left">
@@ -125,7 +169,6 @@ export default function PaymentHistory({ walletId }) {
                     Completed <SortIcon col="completed" />
                   </button>
                 </th>
-                <th className="px-4 py-2 text-left">Remark</th>
                 <th className="px-4 py-2 text-right">
                   <button
                     onClick={() => toggleSort('amount')}
@@ -138,7 +181,11 @@ export default function PaymentHistory({ walletId }) {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {visible.map(t => (
-                <tr key={t.id} className="hover:bg-gray-50">
+                <tr
+                  key={t.id}
+                  onClick={() => setDetail(t)}
+                  className="hover:bg-gray-50 cursor-pointer"
+                >
                   <td className="px-4 py-2.5">
                     <p className="font-medium text-gray-800">
                       {t.recurring_rules?.name ?? '—'}
@@ -158,9 +205,6 @@ export default function PaymentHistory({ walletId }) {
                       : <span className="text-gray-300">—</span>
                     }
                   </td>
-                  <td className="px-4 py-2.5 text-xs italic text-gray-400">
-                    {t.remark ?? '—'}
-                  </td>
                   <td className="px-4 py-2.5 text-right font-semibold text-green-600">
                     €{Number(t.amount).toFixed(2)}
                   </td>
@@ -169,7 +213,7 @@ export default function PaymentHistory({ walletId }) {
             </tbody>
             <tfoot className="bg-gray-50 border-t border-gray-200">
               <tr>
-                <td colSpan={4} className="px-4 py-2 text-xs text-gray-500">
+                <td colSpan={3} className="px-4 py-2 text-xs text-gray-500">
                   {pageSize === 'all' || Number(pageSize) >= sorted.length
                     ? `${sorted.length} payment${sorted.length !== 1 ? 's' : ''}`
                     : `Showing ${pageSize} of ${sorted.length} payments`
@@ -181,6 +225,159 @@ export default function PaymentHistory({ walletId }) {
               </tr>
             </tfoot>
           </table>
+        </div>
+      )}
+
+      {/* ── Detail modal ────────────────────────────────────────────────────── */}
+      {detail && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-gray-800">Payment detail</h2>
+              <button
+                onClick={() => setDetail(null)}
+                className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="space-y-2.5 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Name</span>
+                <span className="font-medium text-gray-800">{detail.recurring_rules?.name ?? '—'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Due date</span>
+                <span className="text-gray-700">{format(parseISO(detail.date), 'd MMM yyyy')}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Completed</span>
+                <span className="text-gray-700">
+                  {detail.completed_at
+                    ? format(new Date(detail.completed_at), 'd MMM yyyy')
+                    : <span className="text-gray-300">—</span>
+                  }
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Amount</span>
+                <span className="font-semibold text-green-600">€{Number(detail.amount).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Remark</span>
+                <span className="text-gray-700 text-right max-w-[60%]">{detail.remark ?? '—'}</span>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setDetail(null)}
+                className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => openEdit(detail)}
+                className="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700"
+              >
+                Edit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Edit modal ──────────────────────────────────────────────────────── */}
+      {editForm && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-gray-800">Edit payment</h2>
+              <button
+                onClick={() => setEditForm(null)}
+                className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Amount (€)</label>
+                <input
+                  type="number"
+                  value={editForm.amount}
+                  onChange={e => setEditForm(f => ({ ...f, amount: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                {editForm.amount && Number(editForm.amount) !== Number(editForm.oldAmount) && (
+                  <p className="text-xs text-amber-600 mt-1">
+                    Changing the amount will update the wallet balance.
+                  </p>
+                )}
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Completed date</label>
+                <input
+                  type="date"
+                  value={editForm.completed_at_date}
+                  onChange={e => setEditForm(f => ({ ...f, completed_at_date: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Remark (optional)</label>
+                <input
+                  value={editForm.remark}
+                  onChange={e => setEditForm(f => ({ ...f, remark: e.target.value }))}
+                  placeholder="Optional remark"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-5">
+              <button
+                onClick={() => setEditForm(null)}
+                className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitEdit}
+                className="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700"
+              >
+                Save changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Confirm dialog ──────────────────────────────────────────────────── */}
+      {confirm && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+            <h2 className="text-lg font-bold text-gray-800 mb-2">Save changes?</h2>
+            <p className="text-sm text-gray-500 mb-6">
+              {Number(editForm?.amount) !== Number(editForm?.oldAmount)
+                ? `The amount will change from €${Number(editForm?.oldAmount).toFixed(2)} to €${Number(editForm?.amount).toFixed(2)} and the wallet balance will be updated.`
+                : 'The payment details will be updated.'
+              }
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirm(null)}
+                className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirm.onConfirm}
+                disabled={saving}
+                className="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {saving ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
