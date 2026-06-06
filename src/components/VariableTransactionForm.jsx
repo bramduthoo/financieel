@@ -4,36 +4,35 @@ import { supabase } from '../lib/supabase'
 
 function todayStr() { return format(new Date(), 'yyyy-MM-dd') }
 
-export default function VariableTransactionForm({ walletId, onSaved, editTarget, onCancelEdit }) {
+export default function VariableTransactionForm({ walletId, onSaved, onCancel, editTarget }) {
+  const [name,    setName]    = useState('')
   const [amount,  setAmount]  = useState('')
-  const [txType,  setTxType]  = useState('debit')
   const [date,    setDate]    = useState(todayStr())
-  const [note,    setNote]    = useState('')
+  const [remark,  setRemark]  = useState('')
   const [saving,  setSaving]  = useState(false)
   const [error,   setError]   = useState(null)
   const [confirm, setConfirm] = useState(false)
 
   useEffect(() => {
     if (editTarget) {
+      setName(editTarget.note ?? '')
       setAmount(String(editTarget.amount))
-      setTxType(editTarget.type)
       setDate(editTarget.date)
-      setNote(editTarget.note ?? '')
+      setRemark(editTarget.remark ?? '')
       setError(null)
     } else {
+      setName('')
       setAmount('')
-      setTxType('debit')
       setDate(todayStr())
-      setNote('')
+      setRemark('')
       setError(null)
     }
   }, [editTarget])
 
   function handleSubmit() {
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
-      setError('Enter a valid amount.'); return
-    }
-    if (!date) { setError('Pick a date.'); return }
+    if (!name.trim())                                              { setError('Enter a name.'); return }
+    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0)  { setError('Enter a valid amount.'); return }
+    if (!date)                                                     { setError('Pick a date.'); return }
     setError(null)
     setConfirm(true)
   }
@@ -41,41 +40,26 @@ export default function VariableTransactionForm({ walletId, onSaved, editTarget,
   async function handleConfirm() {
     setSaving(true)
     const amt = Number(amount)
-    const now = new Date().toISOString()
 
     if (editTarget) {
-      // Reverse old balance effect
-      if (editTarget.type === 'debit') {
-        await supabase.rpc('increment_wallet_balance', { p_wallet_id: walletId, p_amount: Number(editTarget.amount) })
-      } else {
-        await supabase.rpc('decrement_wallet_balance', { p_wallet_id: walletId, p_amount: Number(editTarget.amount) })
-      }
-      // Apply new balance effect
-      if (txType === 'debit') {
-        await supabase.rpc('decrement_wallet_balance', { p_wallet_id: walletId, p_amount: amt })
-      } else {
-        await supabase.rpc('increment_wallet_balance', { p_wallet_id: walletId, p_amount: amt })
-      }
+      // Reverse old (always debit) then apply new
+      await supabase.rpc('increment_wallet_balance', { p_wallet_id: walletId, p_amount: Number(editTarget.amount) })
+      await supabase.rpc('decrement_wallet_balance', { p_wallet_id: walletId, p_amount: amt })
       await supabase.from('transactions').update({
-        amount: amt, type: txType, date, note: note.trim() || null,
+        amount: amt, type: 'debit', date,
+        note: name.trim(), remark: remark.trim() || null,
       }).eq('id', editTarget.id)
     } else {
       await supabase.from('transactions').insert({
-        wallet_id: walletId, amount: amt, type: txType, date,
-        note: note.trim() || null, is_confirmed: true, completed_at: now,
+        wallet_id: walletId, amount: amt, type: 'debit', date,
+        note: name.trim(), remark: remark.trim() || null,
+        is_confirmed: true, completed_at: new Date().toISOString(),
       })
-      if (txType === 'debit') {
-        await supabase.rpc('decrement_wallet_balance', { p_wallet_id: walletId, p_amount: amt })
-      } else {
-        await supabase.rpc('increment_wallet_balance', { p_wallet_id: walletId, p_amount: amt })
-      }
+      await supabase.rpc('decrement_wallet_balance', { p_wallet_id: walletId, p_amount: amt })
     }
 
     setSaving(false)
     setConfirm(false)
-    if (!editTarget) {
-      setAmount(''); setTxType('debit'); setDate(todayStr()); setNote('')
-    }
     onSaved()
   }
 
@@ -85,10 +69,19 @@ export default function VariableTransactionForm({ walletId, onSaved, editTarget,
     <>
       <div className="bg-white rounded-xl border border-gray-200 p-5">
         <h2 className="text-sm font-semibold text-gray-700 mb-4">
-          {isEdit ? 'Edit transaction' : 'Add transaction'}
+          {isEdit ? 'Edit transaction' : 'New transaction'}
         </h2>
         {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
         <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Name</label>
+            <input
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="e.g. Groceries"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Amount (€)</label>
             <input
@@ -97,32 +90,6 @@ export default function VariableTransactionForm({ walletId, onSaved, editTarget,
               placeholder="0.00"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Type</label>
-            <div className="flex rounded-lg border border-gray-300 overflow-hidden h-[38px]">
-              <button
-                onClick={() => setTxType('debit')}
-                className={`flex-1 text-sm font-medium transition-colors ${
-                  txType === 'debit'
-                    ? 'bg-red-50 text-red-600'
-                    : 'bg-white text-gray-500 hover:bg-gray-50'
-                }`}
-              >
-                Debit
-              </button>
-              <div className="w-px bg-gray-300" />
-              <button
-                onClick={() => setTxType('credit')}
-                className={`flex-1 text-sm font-medium transition-colors ${
-                  txType === 'credit'
-                    ? 'bg-green-50 text-green-600'
-                    : 'bg-white text-gray-500 hover:bg-gray-50'
-                }`}
-              >
-                Credit
-              </button>
-            </div>
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
@@ -135,22 +102,20 @@ export default function VariableTransactionForm({ walletId, onSaved, editTarget,
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Note (optional)</label>
             <input
-              value={note}
-              onChange={e => setNote(e.target.value)}
-              placeholder="e.g. Groceries"
+              value={remark}
+              onChange={e => setRemark(e.target.value)}
+              placeholder="Optional"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
         </div>
         <div className="flex gap-2 mt-4">
-          {isEdit && (
-            <button
-              onClick={onCancelEdit}
-              className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-          )}
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50"
+          >
+            Cancel
+          </button>
           <button
             onClick={handleSubmit}
             className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors"
@@ -168,25 +133,21 @@ export default function VariableTransactionForm({ walletId, onSaved, editTarget,
             </h2>
             <div className="bg-gray-50 rounded-lg p-4 mb-5 space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Type</span>
-                <span className={`font-medium capitalize ${txType === 'debit' ? 'text-red-600' : 'text-green-600'}`}>
-                  {txType}
-                </span>
+                <span className="text-gray-500">Name</span>
+                <span className="font-medium text-gray-700">{name.trim()}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Amount</span>
-                <span className={`font-bold text-base ${txType === 'debit' ? 'text-red-600' : 'text-green-600'}`}>
-                  {txType === 'debit' ? '-' : '+'}€{Number(amount).toFixed(2)}
-                </span>
+                <span className="font-bold text-base text-red-600">-€{Number(amount).toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Date</span>
                 <span className="font-medium text-gray-700">{format(parseISO(date), 'd MMM yyyy')}</span>
               </div>
-              {note.trim() && (
+              {remark.trim() && (
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Note</span>
-                  <span className="font-medium text-gray-700">{note.trim()}</span>
+                  <span className="font-medium text-gray-700">{remark.trim()}</span>
                 </div>
               )}
             </div>

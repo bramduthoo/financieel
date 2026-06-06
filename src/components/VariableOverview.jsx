@@ -1,119 +1,253 @@
 import { useState, useEffect } from 'react'
-import { format, startOfMonth, endOfMonth, addMonths, subMonths, isSameMonth } from 'date-fns'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { format, parseISO, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns'
+import { Plus, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import VariableTransactionForm from './VariableTransactionForm'
-import VariableTransactionList from './VariableTransactionList'
 
-export default function VariableOverview({ walletId, wallet, onBalanceChanged }) {
-  const [viewMonth,   setViewMonth]   = useState(startOfMonth(new Date()))
-  const [editTarget,  setEditTarget]  = useState(null)
-  const [monthDebits, setMonthDebits] = useState(0)
-  const [refreshKey,  setRefreshKey]  = useState(0)
+export default function VariableOverview({ walletId, onBalanceChanged }) {
+  const [showForm,     setShowForm]     = useState(false)
+  const [editTarget,   setEditTarget]   = useState(null)
+  const [transactions, setTransactions] = useState([])
+  const [loading,      setLoading]      = useState(true)
+  const [timeframe,    setTimeframe]    = useState('month')
+  const [detail,       setDetail]       = useState(null)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deleting,     setDeleting]     = useState(false)
+  const [refreshKey,   setRefreshKey]   = useState(0)
 
-  useEffect(() => { fetchMonthSummary() }, [walletId])
+  useEffect(() => { fetchTransactions() }, [walletId, timeframe, refreshKey])
 
-  async function fetchMonthSummary() {
-    const from = format(startOfMonth(new Date()), 'yyyy-MM-dd')
-    const to   = format(endOfMonth(new Date()),   'yyyy-MM-dd')
+  async function fetchTransactions() {
+    setLoading(true)
+    const today = new Date()
+    const from  = format(
+      timeframe === 'week' ? startOfWeek(today, { weekStartsOn: 1 }) : startOfMonth(today),
+      'yyyy-MM-dd'
+    )
+    const to    = format(
+      timeframe === 'week' ? endOfWeek(today, { weekStartsOn: 1 }) : endOfMonth(today),
+      'yyyy-MM-dd'
+    )
     const { data } = await supabase
       .from('transactions')
-      .select('amount')
+      .select('*')
       .eq('wallet_id', walletId)
-      .eq('type', 'debit')
       .gte('date', from)
       .lte('date', to)
-    setMonthDebits((data ?? []).reduce((s, t) => s + Number(t.amount), 0))
+      .order('date',       { ascending: false })
+      .order('created_at', { ascending: false })
+    setTransactions(data ?? [])
+    setLoading(false)
   }
 
   function handleFormSaved() {
+    setShowForm(false)
     setEditTarget(null)
-    fetchMonthSummary()
     setRefreshKey(k => k + 1)
     onBalanceChanged()
   }
 
-  function handleListChanged() {
-    fetchMonthSummary()
-    onBalanceChanged()
+  function handleCancel() {
+    setShowForm(false)
+    setEditTarget(null)
   }
 
   function handleEdit(t) {
-    setViewMonth(startOfMonth(new Date()))
+    setDetail(null)
     setEditTarget(t)
+    setShowForm(true)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const isCurrentMonth = isSameMonth(viewMonth, new Date())
-  const budget = Number(wallet.budget)
-  const pct    = budget > 0 ? (monthDebits / budget) * 100 : 0
-  const barColour  = pct >= 100 ? 'bg-red-500'   : pct >= 75 ? 'bg-amber-400' : 'bg-green-500'
-  const textColour = pct >= 100 ? 'text-red-600'  : pct >= 75 ? 'text-amber-600' : 'text-green-600'
+  async function handleDelete() {
+    if (!deleteTarget) return
+    setDeleting(true)
+    await supabase.rpc('increment_wallet_balance', {
+      p_wallet_id: walletId, p_amount: Number(deleteTarget.amount),
+    })
+    await supabase.from('transactions').delete().eq('id', deleteTarget.id)
+    setDeleteTarget(null)
+    setDeleting(false)
+    setDetail(null)
+    setRefreshKey(k => k + 1)
+    onBalanceChanged()
+  }
+
+  const showingForm = showForm || !!editTarget
+  const total = transactions.reduce((s, t) => s + Number(t.amount), 0)
 
   return (
-    <div className="space-y-5">
-      {/* Budget progress — always shows current month */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-sm font-semibold text-gray-700">
-            {format(new Date(), 'MMMM')} spending
-          </h2>
-          <span className={`text-sm font-semibold ${textColour}`}>
-            {pct.toFixed(0)}%
-          </span>
-        </div>
-        <div className="w-full bg-gray-100 rounded-full h-2 mb-2">
-          <div
-            className={`h-2 rounded-full transition-all ${barColour}`}
-            style={{ width: `${Math.min(pct, 100)}%` }}
-          />
-        </div>
-        <p className="text-xs text-gray-400">
-          €{monthDebits.toFixed(2)} spent of €{budget.toFixed(2)} monthly budget
-        </p>
-      </div>
-
-      {/* Month navigation */}
-      <div className="flex items-center justify-between px-1">
+    <div className="space-y-4">
+      {/* Add transaction button or inline form */}
+      {!showingForm ? (
         <button
-          onClick={() => setViewMonth(m => subMonths(m, 1))}
-          className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+          onClick={() => setShowForm(true)}
+          className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
         >
-          <ChevronLeft size={16} />
+          <Plus size={15} /> Add transaction
         </button>
-        <span className="text-sm font-semibold text-gray-700">
-          {format(viewMonth, 'MMMM yyyy')}
-        </span>
-        <button
-          onClick={() => setViewMonth(m => addMonths(m, 1))}
-          disabled={isCurrentMonth}
-          className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          <ChevronRight size={16} />
-        </button>
-      </div>
-
-      {/* Add / edit form — current month only */}
-      {isCurrentMonth && (
+      ) : (
         <VariableTransactionForm
           walletId={walletId}
           onSaved={handleFormSaved}
+          onCancel={handleCancel}
           editTarget={editTarget}
-          onCancelEdit={() => setEditTarget(null)}
         />
       )}
 
-      {/* Monthly transaction list */}
+      {/* Transaction overview */}
       <div>
-        <h2 className="text-sm font-semibold text-gray-700 mb-3">Transactions</h2>
-        <VariableTransactionList
-          walletId={walletId}
-          viewMonth={viewMonth}
-          refreshKey={refreshKey}
-          onChanged={handleListChanged}
-          onEdit={handleEdit}
-        />
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-gray-700">Transactions</h2>
+          <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+            {[['week', 'This week'], ['month', 'This month']].map(([id, label]) => (
+              <button
+                key={id}
+                onClick={() => setTimeframe(id)}
+                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                  timeframe === id
+                    ? 'bg-white shadow-sm text-indigo-600'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {loading ? (
+          <p className="text-sm text-gray-400">Loading…</p>
+        ) : transactions.length === 0 ? (
+          <div className="text-center py-10 text-gray-400 border border-dashed border-gray-200 rounded-xl">
+            <p className="text-sm">No transactions {timeframe === 'week' ? 'this week' : 'this month'}</p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide border-b border-gray-200">
+                <tr>
+                  <th className="px-4 py-2.5 text-left">Name</th>
+                  <th className="px-4 py-2.5 text-left">Date</th>
+                  <th className="px-4 py-2.5 text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {transactions.map(t => (
+                  <tr
+                    key={t.id}
+                    onClick={() => setDetail(t)}
+                    className="hover:bg-gray-50 cursor-pointer"
+                  >
+                    <td className="px-4 py-2.5 font-medium text-gray-800">{t.note ?? '—'}</td>
+                    <td className="px-4 py-2.5 text-gray-500 whitespace-nowrap">
+                      {format(parseISO(t.date), 'd MMM yyyy')}
+                    </td>
+                    <td className="px-4 py-2.5 text-right font-semibold text-red-600">
+                      -€{Number(t.amount).toFixed(2)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot className="bg-gray-50 border-t border-gray-200 text-xs">
+                <tr>
+                  <td colSpan={2} className="px-4 py-2 text-gray-500">
+                    {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
+                  </td>
+                  <td className="px-4 py-2 text-right font-semibold text-red-600">
+                    -€{total.toFixed(2)}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        )}
       </div>
+
+      {/* ── Detail modal ──────────────────────────────────────────────────────── */}
+      {detail && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-gray-800">Transaction detail</h2>
+              <button onClick={() => setDetail(null)} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="space-y-2.5 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Name</span>
+                <span className="font-medium text-gray-800">{detail.note ?? '—'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Amount</span>
+                <span className="font-semibold text-red-600">-€{Number(detail.amount).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Date</span>
+                <span className="text-gray-700">{format(parseISO(detail.date), 'd MMM yyyy')}</span>
+              </div>
+              {detail.remark && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Note</span>
+                  <span className="text-gray-700 text-right max-w-[60%]">{detail.remark}</span>
+                </div>
+              )}
+            </div>
+            <div className="flex gap-2 mt-6">
+              <button
+                onClick={() => { setDeleteTarget(detail); setDetail(null) }}
+                className="px-3 py-2 rounded-lg border border-red-200 text-sm text-red-500 hover:bg-red-50 transition-colors"
+              >
+                Delete
+              </button>
+              <button
+                onClick={() => setDetail(null)}
+                className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => handleEdit(detail)}
+                className="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700"
+              >
+                Edit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete confirmation ───────────────────────────────────────────────── */}
+      {deleteTarget && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+            <h2 className="text-lg font-bold text-gray-800 mb-2">Delete transaction?</h2>
+            <p className="text-gray-500 text-sm mb-6">
+              Remove{' '}
+              <span className="font-medium text-gray-700">
+                {deleteTarget.note ?? '—'} · -€{Number(deleteTarget.amount).toFixed(2)}
+              </span>{' '}
+              from {format(parseISO(deleteTarget.date), 'd MMM yyyy')}? The wallet balance will be corrected.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex-1 py-2 rounded-lg bg-red-500 text-white text-sm font-medium hover:bg-red-600 disabled:opacity-50"
+              >
+                {deleting ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
