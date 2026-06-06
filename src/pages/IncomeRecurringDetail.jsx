@@ -4,6 +4,8 @@ import { ArrowLeft, Edit2, X } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { supabase } from '../lib/supabase'
 import IncomeConfirmModal from '../components/IncomeConfirmModal'
+import DistributionPopup from '../components/DistributionPopup'
+import { distributeIncome } from '../lib/distributeIncome'
 
 const FREQ_OPTIONS = [
   { value: 'weekly',    label: 'Weekly' },
@@ -99,16 +101,28 @@ export default function IncomeRecurringDetail() {
   const [editError, setEditError] = useState(null)
   const [confirm,   setConfirm]   = useState(null)
 
+  const [distributionRules,   setDistributionRules]   = useState([])
+  const [allWallets,          setAllWallets]           = useState([])
+  const [unallocatedWalletId, setUnallocatedWalletId] = useState(null)
+  const [distPopupOpen,       setDistPopupOpen]       = useState(false)
+  const [distSuccess,         setDistSuccess]         = useState(false)
+
   useEffect(() => { fetchData() }, [id])
 
   async function fetchData() {
     setLoading(true)
-    const [{ data: r }, { data: all }] = await Promise.all([
+    const [{ data: r }, { data: all }, { data: dr }, { data: w }, { data: ua }] = await Promise.all([
       supabase.from('income_recurring').select('*').eq('id', id).single(),
       supabase.from('income_recurring').select('*').order('start_date', { ascending: true }),
+      supabase.from('income_distribution_rules').select('*').eq('income_recurring_id', id).order('priority'),
+      supabase.from('wallets').select('*').eq('is_active', true).order('sort_order'),
+      supabase.from('wallets').select('id').eq('is_system', true).single(),
     ])
     setRule(r)
     setAllRules(all ?? [])
+    setDistributionRules(dr ?? [])
+    setAllWallets(w ?? [])
+    setUnallocatedWalletId(ua?.id ?? null)
     setLoading(false)
   }
 
@@ -139,6 +153,18 @@ export default function IncomeRecurringDetail() {
           source_type: 'recurring',
           income_recurring_id: rule.id,
         })
+        if (distributionRules.length > 0) {
+          await distributeIncome({
+            distributions: distributionRules.map(dr => ({ wallet_id: dr.wallet_id, amount: Number(dr.amount) })),
+            wallets: allWallets,
+            unallocatedWalletId,
+            sourceName: rule.name,
+            date: logModal.date,
+            isAutomated: true,
+          })
+          setDistSuccess(true)
+          setTimeout(() => setDistSuccess(false), 3000)
+        }
         setLogModal(null)
         setConfirm(null)
       },
@@ -289,13 +315,61 @@ export default function IncomeRecurringDetail() {
         </div>
       )}
 
+      {/* Distribution setup */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-gray-700">Distribution setup</h2>
+          {distributionRules.length > 0 && (
+            <button
+              onClick={() => setDistPopupOpen(true)}
+              className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+            >
+              Edit
+            </button>
+          )}
+        </div>
+        {distributionRules.length === 0 ? (
+          <div className="text-center py-4 text-gray-400">
+            <p className="text-sm mb-3">No distribution set up</p>
+            <button
+              onClick={() => setDistPopupOpen(true)}
+              className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+            >
+              Set up distribution
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {distributionRules.map(dr => {
+              const wallet = allWallets.find(w => w.id === dr.wallet_id)
+              return (
+                <div key={dr.id} className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    {wallet && (
+                      <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: wallet.colour }} />
+                    )}
+                    <span className="text-gray-700">{wallet?.name ?? '—'}</span>
+                  </div>
+                  <span className="font-semibold text-gray-800">€{Number(dr.amount).toFixed(2)}</span>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
       {/* Log income button */}
-      <button
-        onClick={() => setLogModal({ amount: String(rule.amount), date: todayStr() })}
-        className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
-      >
-        Log income
-      </button>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => setLogModal({ amount: String(rule.amount), date: todayStr() })}
+          className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
+        >
+          Log income
+        </button>
+        {distSuccess && (
+          <span className="text-sm text-green-600 font-medium">Income distributed.</span>
+        )}
+      </div>
 
       {/* Log modal */}
       {logModal && (
@@ -404,6 +478,31 @@ export default function IncomeRecurringDetail() {
           onCancel={() => setConfirm(null)}
           variant={confirm.variant}
           confirmLabel={confirm.confirmLabel}
+        />
+      )}
+
+      {/* Distribution setup / edit popup */}
+      {distPopupOpen && (
+        <DistributionPopup
+          totalAmount={Number(rule.amount)}
+          strictMode={true}
+          existingRules={distributionRules.map(dr => ({ wallet_id: dr.wallet_id, amount: Number(dr.amount) }))}
+          onClose={() => setDistPopupOpen(false)}
+          onConfirm={async (distributions) => {
+            await supabase.from('income_distribution_rules').delete().eq('income_recurring_id', id)
+            if (distributions.length > 0) {
+              await supabase.from('income_distribution_rules').insert(
+                distributions.map((d, i) => ({
+                  income_recurring_id: id,
+                  wallet_id: d.wallet_id,
+                  amount: d.amount,
+                  priority: i,
+                }))
+              )
+            }
+            setDistPopupOpen(false)
+            fetchData()
+          }}
         />
       )}
     </div>

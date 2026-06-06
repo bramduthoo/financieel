@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { generateUpcomingDates } from '../lib/recurringUtils'
 import IncomeConfirmModal from '../components/IncomeConfirmModal'
+import DistributionPopup from '../components/DistributionPopup'
+import { distributeIncome } from '../lib/distributeIncome'
 
 const FREQ_OPTIONS = [
   { value: 'weekly',    label: 'Weekly' },
@@ -71,18 +73,29 @@ export default function Income() {
   const [histFilter, setHistFilter] = useState({ sourceType: 'all', search: '' })
   const [histLimit,  setHistLimit]  = useState(10)
 
+  const [allWallets,         setAllWallets]         = useState([])
+  const [strictMode,         setStrictMode]         = useState(true)
+  const [unallocatedWalletId, setUnallocatedWalletId] = useState(null)
+  const [distributionState,  setDistributionState]  = useState(null)
+
   useEffect(() => { fetchAll() }, [])
 
   async function fetchAll() {
     setLoading(true)
-    const [{ data: e }, { data: r }, { data: t }] = await Promise.all([
+    const [{ data: e }, { data: r }, { data: t }, { data: w }, { data: s }, { data: ua }] = await Promise.all([
       supabase.from('income_entries').select('*').order('date', { ascending: false }),
       supabase.from('income_recurring').select('*').order('start_date', { ascending: true }),
       supabase.from('income_templates').select('*').order('created_at', { ascending: true }),
+      supabase.from('wallets').select('*').eq('is_active', true).order('sort_order'),
+      supabase.from('settings').select('strict_distribution').single(),
+      supabase.from('wallets').select('id').eq('is_system', true).single(),
     ])
     setEntries(e ?? [])
     setAllRecurringRules(r ?? [])
     setTemplates(t ?? [])
+    setAllWallets(w ?? [])
+    setStrictMode(s?.strict_distribution ?? true)
+    setUnallocatedWalletId(ua?.id ?? null)
     setLoading(false)
   }
 
@@ -158,16 +171,20 @@ export default function Income() {
           await supabase.from('income_entries').update({
             amount: Number(amount), source: source.trim(), date, note: note.trim() || null,
           }).eq('id', entry.id)
+          setConfirm(null)
+          closeModal()
+          setDetailEntry(null)
+          fetchAll()
         } else {
           await supabase.from('income_entries').insert({
             amount: Number(amount), source: source.trim(), date,
             note: note.trim() || null, source_type: 'manual',
           })
+          setConfirm(null)
+          closeModal()
+          setDistributionState({ mode: 'income', totalAmount: Number(amount), sourceName: source.trim(), date })
+          fetchAll()
         }
-        setConfirm(null)
-        closeModal()
-        setDetailEntry(null)
-        fetchAll()
       },
     })
   }
@@ -205,15 +222,23 @@ export default function Income() {
         }
         if (f.isEdit && amountChanged) {
           await supabase.from('income_recurring').update({ end_date: todayStr() }).eq('id', f.id)
-          await supabase.from('income_recurring').insert({ ...payload, start_date: todayStr(), parent_rule_id: f.id })
+          const { data: newRule } = await supabase.from('income_recurring').insert({ ...payload, start_date: todayStr(), parent_rule_id: f.id }).select().single()
+          setConfirm(null)
+          closeModal()
+          fetchAll()
+          if (newRule) setDistributionState({ mode: 'recurringSetup', ruleId: newRule.id, ruleName: payload.name, ruleAmount: Number(f.amount) })
         } else if (f.isEdit) {
           await supabase.from('income_recurring').update({ name: payload.name, frequency: payload.frequency, day_of_month: payload.day_of_month }).eq('id', f.id)
+          setConfirm(null)
+          closeModal()
+          fetchAll()
         } else {
-          await supabase.from('income_recurring').insert({ ...payload, start_date: f.start_date })
+          const { data: newRule } = await supabase.from('income_recurring').insert({ ...payload, start_date: f.start_date }).select().single()
+          setConfirm(null)
+          closeModal()
+          fetchAll()
+          if (newRule) setDistributionState({ mode: 'recurringSetup', ruleId: newRule.id, ruleName: payload.name, ruleAmount: Number(f.amount) })
         }
-        setConfirm(null)
-        closeModal()
-        fetchAll()
       },
     })
   }
@@ -294,6 +319,7 @@ export default function Income() {
         })
         setLogTemplate(null)
         setConfirm(null)
+        setDistributionState({ mode: 'income', totalAmount: Number(amount), sourceName: template.name, date })
         fetchAll()
       },
     })
@@ -859,6 +885,56 @@ export default function Income() {
           onCancel={() => setConfirm(null)}
           variant={confirm.variant}
           confirmLabel={confirm.confirmLabel}
+        />
+      )}
+
+      {/* ══ Distribution popup — quick / template income ════════════════════════ */}
+      {distributionState?.mode === 'income' && (
+        <DistributionPopup
+          totalAmount={distributionState.totalAmount}
+          strictMode={strictMode}
+          onClose={() => setDistributionState(null)}
+          onConfirm={async (distributions) => {
+            const finalDists = [...distributions]
+            if (!strictMode) {
+              const assigned = distributions.reduce((s, d) => s + Number(d.amount), 0)
+              const rem = Number((distributionState.totalAmount - assigned).toFixed(2))
+              if (rem > 0.005 && unallocatedWalletId) {
+                finalDists.push({ wallet_id: unallocatedWalletId, amount: rem })
+              }
+            }
+            await distributeIncome({
+              distributions: finalDists,
+              wallets: allWallets,
+              unallocatedWalletId,
+              sourceName: distributionState.sourceName,
+              date: distributionState.date,
+              isAutomated: false,
+            })
+            setDistributionState(null)
+          }}
+        />
+      )}
+
+      {/* ══ Distribution popup — new recurring income setup (mandatory) ═════════ */}
+      {distributionState?.mode === 'recurringSetup' && (
+        <DistributionPopup
+          totalAmount={distributionState.ruleAmount}
+          strictMode={true}
+          onClose={null}
+          onConfirm={async (distributions) => {
+            if (distributions.length > 0) {
+              await supabase.from('income_distribution_rules').insert(
+                distributions.map((d, i) => ({
+                  income_recurring_id: distributionState.ruleId,
+                  wallet_id: d.wallet_id,
+                  amount: d.amount,
+                  priority: i,
+                }))
+              )
+            }
+            setDistributionState(null)
+          }}
         />
       )}
     </div>

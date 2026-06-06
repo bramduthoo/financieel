@@ -1,4 +1,4 @@
-import { Pencil, Trash2 } from 'lucide-react'
+import { Lock, Pencil, Trash2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 export default function WalletCard({ wallet, onEdit, onDelete }) {
@@ -21,27 +21,45 @@ export default function WalletCard({ wallet, onEdit, onDelete }) {
             <span className="text-xs text-gray-400 capitalize">{wallet.type}</span>
           </div>
         </div>
-        <div className="flex gap-1">
-          <button
-            onClick={e => { e.stopPropagation(); onEdit(wallet) }}
-            className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-          >
-            <Pencil size={14} />
-          </button>
-          <button
-            onClick={e => { e.stopPropagation(); onDelete(wallet) }}
-            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-          >
-            <Trash2 size={14} />
-          </button>
-        </div>
+
+        {wallet.is_system ? (
+          <div className="flex items-center gap-1 text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
+            <Lock size={10} />
+            System
+          </div>
+        ) : (
+          <div className="flex gap-1">
+            <button
+              onClick={e => { e.stopPropagation(); onEdit(wallet) }}
+              className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+            >
+              <Pencil size={14} />
+            </button>
+            <button
+              onClick={e => { e.stopPropagation(); onDelete(wallet) }}
+              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Budget */}
-      {wallet.type !== 'investment' && (
+      {/* Budget — hidden for system/unallocated wallets */}
+      {wallet.type !== 'investment' && wallet.type !== 'unallocated' && (
         <div className="text-sm text-gray-600">
           <span className="text-gray-400 text-xs">Monthly budget</span>
           <p className="font-semibold text-gray-800">€{Number(wallet.budget).toFixed(2)}</p>
+        </div>
+      )}
+
+      {/* Balance — shown for unallocated/system wallets */}
+      {wallet.type === 'unallocated' && (
+        <div className="text-sm">
+          <span className="text-gray-400 text-xs">Balance</span>
+          <p className={`font-semibold ${Number(wallet.balance) >= 0 ? 'text-green-700' : 'text-red-600'}`}>
+            €{Number(wallet.balance).toFixed(2)}
+          </p>
         </div>
       )}
 

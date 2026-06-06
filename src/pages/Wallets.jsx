@@ -35,6 +35,7 @@ export default function Wallets() {
   }
 
   async function handleDelete(wallet) {
+    if (wallet.is_system) return
     await supabase.from('wallets').delete().eq('id', wallet.id)
     setDeleteTarget(null)
     fetchWallets()
@@ -43,11 +44,14 @@ export default function Wallets() {
   function openCreate() { setEditWallet(null); setModalOpen(true) }
   function openEdit(w)  { setEditWallet(w);    setModalOpen(true) }
 
-  const grouped = {
-    fixed:      wallets.filter(w => w.type === 'fixed'),
-    variable:   wallets.filter(w => w.type === 'variable'),
-    investment: wallets.filter(w => w.type === 'investment'),
-  }
+  const groups = [
+    { key: 'fixed',      label: 'Fixed wallets',      list: wallets.filter(w => w.type === 'fixed'      && !w.is_system) },
+    { key: 'variable',   label: 'Variable wallets',   list: wallets.filter(w => w.type === 'variable'   && !w.is_system) },
+    { key: 'investment', label: 'Investment wallets',  list: wallets.filter(w => w.type === 'investment' && !w.is_system) },
+    { key: 'system',     label: 'System',              list: wallets.filter(w => w.is_system) },
+  ]
+
+  const userWallets = wallets.filter(w => !w.is_system)
 
   return (
     <div>
@@ -68,18 +72,18 @@ export default function Wallets() {
 
       {loading ? (
         <p className="text-gray-400">Loading wallets...</p>
-      ) : wallets.length === 0 ? (
+      ) : userWallets.length === 0 ? (
         <div className="text-center py-20 text-gray-400">
           <p className="text-lg font-medium mb-1">No wallets yet</p>
           <p className="text-sm">Create your first wallet to get started</p>
         </div>
       ) : (
         <div className="space-y-8">
-          {Object.entries(grouped).map(([type, list]) =>
+          {groups.map(({ key, label, list }) =>
             list.length === 0 ? null : (
-              <div key={type}>
-                <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3 capitalize">
-                  {type} wallets
+              <div key={key}>
+                <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                  {label}
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {list.map(w => (

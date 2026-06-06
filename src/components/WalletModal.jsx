@@ -25,6 +25,11 @@ export default function WalletModal({ wallet, onClose, onSave }) {
   const [saving,     setSaving]     = useState(false)
   const [error,      setError]      = useState(null)
 
+  const [capReductionEnabled, setCapReductionEnabled] = useState(wallet?.cap_reduction_enabled ?? false)
+  const [capReductionRate,    setCapReductionRate]    = useState(
+    wallet?.cap_reduction_rate ? String(Math.round(Number(wallet.cap_reduction_rate) * 100)) : '50'
+  )
+
   // When type changes, auto-select the first valid budget_type for that type
   useEffect(() => {
     const options = BUDGET_TYPES[type]
@@ -37,7 +42,12 @@ export default function WalletModal({ wallet, onClose, onSave }) {
     if (!name.trim()) { setError('Please enter a wallet name.'); return }
     setSaving(true)
     setError(null)
-    await onSave({ name: name.trim(), type, budget_type: budgetType, budget: Number(budget) || 0, colour, sort_order: Number(sortOrder) || 0 })
+    const payload = { name: name.trim(), type, budget_type: budgetType, budget: Number(budget) || 0, colour, sort_order: Number(sortOrder) || 0 }
+    if (type === 'variable' && budgetType === 'capped') {
+      payload.cap_reduction_enabled = capReductionEnabled
+      payload.cap_reduction_rate    = capReductionEnabled ? Number(capReductionRate) / 100 : 1.0
+    }
+    await onSave(payload)
     setSaving(false)
   }
 
@@ -153,6 +163,50 @@ export default function WalletModal({ wallet, onClose, onSave }) {
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
+
+        {/* Cap reduction settings — capped variable wallets only */}
+        {type === 'variable' && budgetType === 'capped' && (
+          <div className="mb-6 border border-gray-200 rounded-xl p-4 space-y-3">
+            <p className="text-sm font-medium text-gray-700">Cap reduction settings</p>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Enable reduction when cap is reached</span>
+              <button
+                type="button"
+                onClick={() => setCapReductionEnabled(v => !v)}
+                className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none ${
+                  capReductionEnabled ? 'bg-indigo-600' : 'bg-gray-200'
+                }`}
+              >
+                <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                  capReductionEnabled ? 'translate-x-5' : 'translate-x-0'
+                }`} />
+              </button>
+            </div>
+            {capReductionEnabled && (
+              <>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Receive % of normal distribution after cap
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      max={100}
+                      value={capReductionRate}
+                      onChange={e => setCapReductionRate(e.target.value)}
+                      className="w-20 px-3 py-2 border border-gray-300 rounded-lg text-sm text-right focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                    <span className="text-sm text-gray-500">%</span>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-400 leading-relaxed">
+                  When your balance reaches the cap, automated income will be reduced to {capReductionRate || '?'}% of its normal amount. The rest goes to Unallocated.
+                </p>
+              </>
+            )}
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex gap-3">

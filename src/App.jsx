@@ -7,6 +7,7 @@ import Wallets from './pages/Wallets'
 import WalletDetail from './pages/WalletDetail'
 import Income from './pages/Income'
 import IncomeRecurringDetail from './pages/IncomeRecurringDetail'
+import Settings from './pages/Settings'
 import Login from './pages/Login'
 
 export default function App() {
@@ -45,6 +46,7 @@ export default function App() {
                   <Route path="/wallets/:id"     element={<WalletDetail />} />
                   <Route path="/income"          element={<Income />}       />
                   <Route path="/income/recurring/:id" element={<IncomeRecurringDetail />} />
+                  <Route path="/settings"        element={<Settings />}     />
                 </Routes>
               </Layout>
             : <Navigate to="/login" replace />

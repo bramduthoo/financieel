@@ -77,8 +77,10 @@ export default function WalletDetail() {
             <div>
               <h1 className="text-2xl font-bold text-gray-800">{wallet.name}</h1>
               <p className="text-gray-400 text-sm capitalize">
-                {wallet.type} · {wallet.budget_type.replace('-', ' ')}
-                {wallet.type !== 'investment' && ` · €${Number(wallet.budget).toFixed(2)}/mo`}
+                {wallet.type === 'unallocated'
+                  ? 'System wallet'
+                  : `${wallet.type} · ${wallet.budget_type.replace('-', ' ')}${wallet.type !== 'investment' ? ` · €${Number(wallet.budget).toFixed(2)}/mo` : ''}`
+                }
               </p>
             </div>
           </div>
@@ -113,12 +115,14 @@ export default function WalletDetail() {
             Balance: €{Number(wallet.balance).toFixed(2)}
           </div>
 
-          <button
-            onClick={() => setEditOpen(true)}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <Settings size={15} /> Settings
-          </button>
+          {!wallet.is_system && (
+            <button
+              onClick={() => setEditOpen(true)}
+              className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <Settings size={15} /> Settings
+            </button>
+          )}
         </div>
       </div>
 
@@ -195,6 +199,45 @@ export default function WalletDetail() {
       {wallet.type === 'investment' && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <p className="text-gray-400 text-sm">Investment wallet features coming in Phase 7.</p>
+        </div>
+      )}
+
+      {/* ── Unallocated wallet ────────────────────────────────────────────────── */}
+      {wallet.type === 'unallocated' && (
+        <div className="space-y-4">
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <p className="text-sm text-gray-500 leading-relaxed">
+              This wallet automatically collects unassigned income and overflow from capped wallets.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h2 className="text-sm font-semibold text-gray-700 mb-4">Incoming transactions</h2>
+            {transactions.filter(t => t.type === 'credit').length === 0 ? (
+              <p className="text-gray-400 text-sm">No transactions yet.</p>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {transactions
+                  .filter(t => t.type === 'credit')
+                  .sort((a, b) => new Date(b.date) - new Date(a.date))
+                  .map(t => (
+                    <div key={t.id} className="flex items-center justify-between py-3">
+                      <div>
+                        <p className="text-sm font-medium text-gray-800">
+                          {t.name || t.note || 'Credit'}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {format(new Date(t.date), 'dd MMM yyyy')}
+                        </p>
+                      </div>
+                      <span className="text-sm font-semibold text-green-600">
+                        +€{Number(t.amount).toFixed(2)}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 

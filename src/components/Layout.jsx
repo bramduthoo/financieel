@@ -2,9 +2,10 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 const navItems = [
-  { path: '/',        label: 'Dashboard' },
-  { path: '/wallets', label: 'Wallets'   },
-  { path: '/income',  label: 'Income'    },
+  { path: '/',          label: 'Dashboard' },
+  { path: '/wallets',   label: 'Wallets'   },
+  { path: '/income',    label: 'Income'    },
+  { path: '/settings',  label: 'Settings'  },
 ]
 
 export default function Layout({ children }) {
