@@ -84,10 +84,10 @@ export default function TransactionChecklist({ walletId, onBalanceChanged }) {
 
   return (
     <div>
-      <h2 className="text-sm font-semibold text-gray-700 mb-4">
+      <h2 className="text-sm font-medium text-gray-900 mb-4">
         Pending payments
         {pending.length > 0 && (
-          <span className="ml-2 bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">
+          <span className="ml-2 bg-[#FCEBEB] text-[#A32D2D] text-[11px] font-medium px-2 py-0.5 rounded-full">
             {pending.length}
           </span>
         )}
@@ -95,27 +95,27 @@ export default function TransactionChecklist({ walletId, onBalanceChanged }) {
 
       {pending.length === 0 ? (
         <div className="text-center py-8 text-gray-400">
-          <CheckCircle2 size={32} className="mx-auto mb-2 text-green-400" />
+          <CheckCircle2 size={32} className="mx-auto mb-2 text-[#3B6D11]" />
           <p className="text-sm">All payments up to date</p>
         </div>
       ) : (
         <div className="space-y-2">
           {pending.map((item, i) => (
             <div key={i}
-              className="flex items-center justify-between bg-white border border-orange-200 rounded-lg px-4 py-3">
+              className="flex items-center justify-between bg-white border border-[#F5C4B3] rounded-xl px-4 py-3">
               <div className="flex items-center gap-3">
                 <button onClick={() => { setConfirmItem(item); setRemark('') }}>
-                  <Circle size={18} className="text-gray-300 hover:text-indigo-400 transition-colors" />
+                  <Circle size={18} className="text-gray-300 hover:text-gray-500 transition-colors" />
                 </button>
                 <div>
-                  <p className="text-sm font-medium text-gray-800">{item.rule.name}</p>
+                  <p className="text-sm font-medium text-gray-900">{item.rule.name}</p>
                   {item.rule.description && (
                     <p className="text-xs text-gray-400">{item.rule.description}</p>
                   )}
                   <p className="text-xs text-gray-400">Due {format(item.date, 'd MMM yyyy')}</p>
                 </div>
               </div>
-              <span className="text-sm font-semibold text-orange-600">
+              <span className="text-sm font-medium text-[#993C1D]">
                 €{Number(item.rule.amount).toFixed(2)}
               </span>
             </div>
@@ -125,24 +125,24 @@ export default function TransactionChecklist({ walletId, onBalanceChanged }) {
 
       {/* Confirmation modal */}
       {confirmItem && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
             <div className="flex justify-between items-start mb-4">
-              <h2 className="text-lg font-bold text-gray-800">Confirm payment</h2>
+              <h2 className="text-lg font-medium text-gray-900">Confirm payment</h2>
               <button onClick={() => setConfirmItem(null)}>
                 <X size={18} className="text-gray-400" />
               </button>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-4 mb-4">
-              <p className="text-sm font-semibold text-gray-800">{confirmItem.rule.name}</p>
+            <div className="bg-stone-50 rounded-lg p-4 mb-4">
+              <p className="text-sm font-medium text-gray-900">{confirmItem.rule.name}</p>
               {confirmItem.rule.description && (
                 <p className="text-xs text-gray-500 mt-0.5">{confirmItem.rule.description}</p>
               )}
               <p className="text-xs text-gray-500 mt-1">
                 Due {format(confirmItem.date, 'd MMM yyyy')}
               </p>
-              <p className="text-xl font-bold text-gray-800 mt-2">
+              <p className="text-xl font-medium text-gray-900 mt-2">
                 €{Number(confirmItem.rule.amount).toFixed(2)}
               </p>
             </div>
@@ -155,17 +155,17 @@ export default function TransactionChecklist({ walletId, onBalanceChanged }) {
                 value={remark}
                 onChange={e => setRemark(e.target.value)}
                 placeholder="e.g. Paid via bank transfer"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
               />
             </div>
 
             <div className="flex gap-3">
               <button onClick={() => setConfirmItem(null)}
-                className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50">
+                className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50">
                 Cancel
               </button>
               <button onClick={handleConfirm} disabled={saving}
-                className="flex-1 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 disabled:opacity-50">
+                className="flex-1 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 disabled:opacity-50">
                 {saving ? 'Confirming...' : 'Confirm paid'}
               </button>
             </div>

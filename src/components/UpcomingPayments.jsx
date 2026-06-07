@@ -29,13 +29,13 @@ export default function UpcomingPayments({ rules, transactions = [] }) {
     <div>
       {/* Header with view toggle */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm font-semibold text-gray-700">Payments overview</h2>
-        <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+        <h2 className="text-sm font-medium text-gray-900">Payments overview</h2>
+        <div className="flex gap-1 bg-stone-100 rounded-lg p-1">
           <button
             onClick={() => setView('table')}
             className={`p-1.5 rounded-md transition-colors ${
               view === 'table'
-                ? 'bg-white shadow-sm text-indigo-600'
+                ? 'bg-white shadow-sm text-gray-900'
                 : 'text-gray-400 hover:text-gray-600'
             }`}
           >
@@ -45,7 +45,7 @@ export default function UpcomingPayments({ rules, transactions = [] }) {
             onClick={() => setView('calendar')}
             className={`p-1.5 rounded-md transition-colors ${
               view === 'calendar'
-                ? 'bg-white shadow-sm text-indigo-600'
+                ? 'bg-white shadow-sm text-gray-900'
                 : 'text-gray-400 hover:text-gray-600'
             }`}
           >
@@ -59,14 +59,14 @@ export default function UpcomingPayments({ rules, transactions = [] }) {
         <div>
           {/* Timeframe toggle */}
           <div className="flex items-center justify-end mb-2">
-            <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+            <div className="flex gap-1 bg-stone-100 rounded-lg p-1">
               {[['week', 'This week'], ['month', 'This month']].map(([id, label]) => (
                 <button
                   key={id}
                   onClick={() => setTimeframe(id)}
                   className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
                     timeframe === id
-                      ? 'bg-white shadow-sm text-indigo-600'
+                      ? 'bg-white shadow-sm text-gray-900'
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
@@ -81,25 +81,25 @@ export default function UpcomingPayments({ rules, transactions = [] }) {
               No upcoming payments {timeframe === 'week' ? 'this week' : 'this month'}.
             </p>
           ) : (
-            <div className="rounded-xl border border-gray-200 overflow-hidden">
+            <div className="rounded-xl border border-stone-200 overflow-hidden">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
+                <thead className="bg-stone-50 text-xs text-gray-500 uppercase tracking-wide">
                   <tr>
                     <th className="px-4 py-2 text-left">Payment</th>
                     <th className="px-4 py-2 text-left">Date</th>
                     <th className="px-4 py-2 text-right">Amount</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-stone-100">
                   {tableEvents.map((item, i) => (
                     <tr key={i}>
-                      <td className="px-4 py-2.5 font-medium text-gray-800">
+                      <td className="px-4 py-2.5 font-medium text-gray-900">
                         {item.rule.name}
                       </td>
                       <td className="px-4 py-2.5 text-gray-500">
                         {format(item.date, 'd MMM yyyy')}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-semibold text-gray-700">
+                      <td className="px-4 py-2.5 text-right font-medium text-gray-700">
                         €{Number(item.rule.amount).toFixed(2)}
                       </td>
                     </tr>
@@ -176,7 +176,7 @@ function CalendarView({ rules, transactions, today }) {
         >
           ← Prev
         </button>
-        <span className="text-sm font-semibold text-gray-700">
+        <span className="text-sm font-medium text-gray-900">
           {format(viewDate, 'MMMM yyyy')}
         </span>
         <button
@@ -211,12 +211,12 @@ function CalendarView({ rules, transactions, today }) {
               key={i}
               className={`min-h-16 p-1 rounded-lg border text-xs ${
                 isToday
-                  ? 'border-indigo-300 bg-indigo-50'
-                  : 'border-gray-100 bg-white'
+                  ? 'border-stone-300 bg-stone-50'
+                  : 'border-stone-100 bg-white'
               }`}
             >
               <p className={`text-center font-medium mb-1 ${
-                isToday ? 'text-indigo-600' : 'text-gray-600'
+                isToday ? 'text-gray-900' : 'text-gray-600'
               }`}>
                 {day}
               </p>
@@ -225,10 +225,10 @@ function CalendarView({ rules, transactions, today }) {
                   key={j}
                   className={`flex items-center gap-0.5 text-xs rounded px-1 py-0.5 mb-0.5 ${
                     item.isFuture
-                      ? 'bg-blue-100 text-blue-700'
+                      ? 'bg-stone-100 text-gray-600'
                       : item.confirmed
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-red-100 text-red-700'
+                        ? 'bg-[#EAF3DE] text-[#3B6D11]'
+                        : 'bg-[#FCEBEB] text-[#A32D2D]'
                   }`}
                   title={`${item.rule.name} — €${Number(item.rule.amount).toFixed(2)}`}
                 >

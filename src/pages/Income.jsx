@@ -16,10 +16,12 @@ const FREQ_OPTIONS = [
 ]
 
 const TYPE_BADGE = {
-  manual:    'bg-blue-50 text-blue-600',
-  recurring: 'bg-indigo-50 text-indigo-600',
-  template:  'bg-violet-50 text-violet-600',
+  manual:    'bg-stone-100 text-gray-600',
+  recurring: 'bg-[#FAEEDA] text-[#854F0B]',
+  template:  'bg-[#E1F5EE] text-[#0F6E56]',
 }
+
+const inputClass = 'w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent'
 
 function fmt(n) { return `€${Number(n).toFixed(2)}` }
 function todayStr() { return format(new Date(), 'yyyy-MM-dd') }
@@ -360,8 +362,8 @@ export default function Income() {
   function SortIcon({ field }) {
     if (histSort.field !== field) return <ChevronUp size={12} className="text-gray-300" />
     return histSort.dir === 'asc'
-      ? <ChevronUp size={12} className="text-indigo-500" />
-      : <ChevronDown size={12} className="text-indigo-500" />
+      ? <ChevronUp size={12} className="text-gray-900" />
+      : <ChevronDown size={12} className="text-gray-900" />
   }
 
   // ─── Render ────────────────────────────────────────────────────────────────
@@ -369,14 +371,14 @@ export default function Income() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Income</h1>
-          <p className="text-gray-500 text-sm mt-1">Track income from all sources</p>
+          <h1 className="text-xl font-medium text-gray-900">Income</h1>
+          <p className="text-sm text-gray-600 mt-0.5">Track income from all sources</p>
         </div>
         <button
           onClick={() => openModal('quick')}
-          className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
+          className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
         >
           <Plus size={15} />
           Add Income
@@ -392,7 +394,7 @@ export default function Income() {
             <select
               value={histFilter.sourceType}
               onChange={e => setHistFilter(f => ({ ...f, sourceType: e.target.value }))}
-              className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="px-3 py-1.5 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
             >
               <option value="all">All types</option>
               <option value="manual">Manual</option>
@@ -403,13 +405,13 @@ export default function Income() {
               value={histFilter.search}
               onChange={e => setHistFilter(f => ({ ...f, search: e.target.value }))}
               placeholder="Search source…"
-              className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[160px]"
+              className="px-3 py-1.5 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent min-w-[160px]"
             />
             <div className="ml-auto">
               <select
                 value={histLimit === 'all' ? 'all' : histLimit}
                 onChange={e => setHistLimit(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-                className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="px-3 py-1.5 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
               >
                 <option value={10}>Show 10</option>
                 <option value={25}>Show 25</option>
@@ -419,30 +421,30 @@ export default function Income() {
             </div>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50">
+                <tr className="border-b border-stone-100 bg-stone-50">
                   <th className="px-4 py-3 text-left">
-                    <button onClick={() => toggleSort('date')} className="flex items-center gap-1 text-xs font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700">
+                    <button onClick={() => toggleSort('date')} className="flex items-center gap-1 text-[11px] font-medium text-gray-400 uppercase tracking-wider hover:text-gray-600">
                       Date <SortIcon field="date" />
                     </button>
                   </th>
                   <th className="px-4 py-3 text-left">
-                    <button onClick={() => toggleSort('source')} className="flex items-center gap-1 text-xs font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700">
+                    <button onClick={() => toggleSort('source')} className="flex items-center gap-1 text-[11px] font-medium text-gray-400 uppercase tracking-wider hover:text-gray-600">
                       Source <SortIcon field="source" />
                     </button>
                   </th>
                   <th className="px-4 py-3 text-right">
-                    <button onClick={() => toggleSort('amount')} className="flex items-center gap-1 text-xs font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700 ml-auto">
+                    <button onClick={() => toggleSort('amount')} className="flex items-center gap-1 text-[11px] font-medium text-gray-400 uppercase tracking-wider hover:text-gray-600 ml-auto">
                       Amount <SortIcon field="amount" />
                     </button>
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Type</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Note</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-400 uppercase tracking-wider">Type</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-400 uppercase tracking-wider">Note</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-stone-100">
                 {displayedEntries.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-4 py-12 text-center text-gray-400">No entries found</td>
@@ -451,13 +453,13 @@ export default function Income() {
                   <tr
                     key={e.id}
                     onClick={() => setDetailEntry(e)}
-                    className="hover:bg-gray-50 transition-colors cursor-pointer"
+                    className="hover:bg-stone-50 transition-colors cursor-pointer"
                   >
                     <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{format(parseISO(e.date), 'd MMM yyyy')}</td>
-                    <td className="px-4 py-3 font-medium text-gray-800">{e.source}</td>
-                    <td className="px-4 py-3 text-right font-semibold text-green-600 whitespace-nowrap">+{fmt(e.amount)}</td>
+                    <td className="px-4 py-3 font-medium text-gray-900">{e.source}</td>
+                    <td className="px-4 py-3 text-right font-medium text-[#3B6D11] whitespace-nowrap">+{fmt(e.amount)}</td>
                     <td className="px-4 py-3">
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium capitalize ${TYPE_BADGE[e.source_type] ?? 'bg-gray-100 text-gray-500'}`}>
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-medium capitalize ${TYPE_BADGE[e.source_type] ?? 'bg-stone-100 text-gray-600'}`}>
                         {e.source_type ?? 'manual'}
                       </span>
                     </td>
@@ -467,7 +469,7 @@ export default function Income() {
               </tbody>
             </table>
             {filteredEntries.length > displayedEntries.length && (
-              <p className="px-4 py-2 text-xs text-gray-400 border-t border-gray-100">
+              <p className="px-4 py-2 text-xs text-gray-400 border-t border-stone-100">
                 Showing {displayedEntries.length} of {filteredEntries.length} entries
               </p>
             )}
@@ -476,23 +478,23 @@ export default function Income() {
       )}
 
       {/* Two-column grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left: Recurring income */}
-        <div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Left: Recurring incomes */}
+        <div className="bg-white border border-stone-200 rounded-2xl p-5">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-gray-700">Recurring income</h2>
+            <h2 className="text-sm font-medium text-gray-900">Recurring incomes</h2>
             <button
               onClick={() => openModal('recurring')}
-              className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+              className="text-xs text-gray-600 hover:text-gray-900 font-medium"
             >
-              <Plus size={13} /> Add
+              + Add
             </button>
           </div>
 
           {loading ? (
             <p className="text-gray-400 text-sm">Loading…</p>
           ) : recurringRules.length === 0 ? (
-            <div className="text-center py-12 text-gray-400 border border-dashed border-gray-200 rounded-xl">
+            <div className="text-center py-12 text-gray-400 border border-dashed border-stone-200 rounded-xl">
               <TrendingUp size={28} className="mx-auto mb-2 text-gray-300" />
               <p className="text-sm font-medium">No recurring income</p>
               <p className="text-xs mt-1">Add a salary or regular source</p>
@@ -503,31 +505,30 @@ export default function Income() {
                 <div
                   key={rule.id}
                   onClick={() => navigate(`/income/recurring/${rule.id}`)}
-                  className="bg-white border border-gray-200 rounded-xl p-4 cursor-pointer hover:border-indigo-200 hover:shadow-sm transition-all"
+                  className="bg-white border border-stone-200 rounded-xl p-4 cursor-pointer hover:shadow-sm transition-shadow"
                 >
                   <div className="flex items-start justify-between">
                     <div className="min-w-0">
-                      <p className="font-semibold text-gray-800 text-sm truncate">{rule.name}</p>
-                      <p className="text-xs text-gray-400 mt-0.5 capitalize">{rule.frequency} · next: {getNextDue(rule)}</p>
+                      <p className="text-sm font-medium text-gray-900 truncate">{rule.name}</p>
+                      <p className="text-[12px] text-gray-600 mt-0.5">
+                        {fmt(rule.amount)} · <span className="capitalize">{rule.frequency}</span> · next: {getNextDue(rule)}
+                      </p>
                     </div>
                     <div className="flex items-center gap-1 ml-2 shrink-0">
                       <button
                         onClick={e => { e.stopPropagation(); openModal('recurring', { editRule: rule }) }}
-                        className="p-1.5 text-gray-300 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors"
+                        className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg transition-colors"
                       >
                         <Edit2 size={13} />
                       </button>
                       <button
                         onClick={e => { e.stopPropagation(); archiveRecurring(rule) }}
-                        className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg transition-colors"
                       >
                         <Trash2 size={13} />
                       </button>
+                      <ChevronRight size={15} className="text-gray-400 ml-1" />
                     </div>
-                  </div>
-                  <div className="flex items-center justify-between mt-2">
-                    <p className="text-xl font-bold text-gray-900">{fmt(rule.amount)}</p>
-                    <ChevronRight size={16} className="text-gray-300" />
                   </div>
                 </div>
               ))}
@@ -536,21 +537,21 @@ export default function Income() {
         </div>
 
         {/* Right: Templates */}
-        <div>
+        <div className="bg-white border border-stone-200 rounded-2xl p-5">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-gray-700">Templates</h2>
+            <h2 className="text-sm font-medium text-gray-900">Templates</h2>
             <button
               onClick={() => openModal('template')}
-              className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+              className="text-xs text-gray-600 hover:text-gray-900 font-medium"
             >
-              <Plus size={13} /> Add
+              + Add
             </button>
           </div>
 
           {loading ? (
             <p className="text-gray-400 text-sm">Loading…</p>
           ) : templates.length === 0 ? (
-            <div className="text-center py-12 text-gray-400 border border-dashed border-gray-200 rounded-xl">
+            <div className="text-center py-12 text-gray-400 border border-dashed border-stone-200 rounded-xl">
               <FileText size={28} className="mx-auto mb-2 text-gray-300" />
               <p className="text-sm font-medium">No templates</p>
               <p className="text-xs mt-1">Save amounts you log regularly</p>
@@ -561,29 +562,25 @@ export default function Income() {
                 <div
                   key={t.id}
                   onClick={() => setLogTemplate({ template: t, amount: String(t.amount), date: todayStr() })}
-                  className="bg-white border border-gray-200 rounded-xl p-4 cursor-pointer hover:border-indigo-200 hover:shadow-sm transition-all"
+                  className="bg-white border border-stone-200 rounded-xl p-4 cursor-pointer hover:shadow-sm transition-shadow relative"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="min-w-0">
-                      <p className="font-semibold text-gray-800 text-sm truncate">{t.name}</p>
-                      {t.note && <p className="text-xs text-gray-400 mt-0.5 truncate">{t.note}</p>}
-                    </div>
-                    <div className="flex items-center gap-1 ml-2 shrink-0">
-                      <button
-                        onClick={e => { e.stopPropagation(); openModal('template', { editTemplate: t }) }}
-                        className="p-1.5 text-gray-300 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors"
-                      >
-                        <Edit2 size={13} />
-                      </button>
-                      <button
-                        onClick={e => { e.stopPropagation(); deleteTemplate(t) }}
-                        className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
+                  <div className="absolute top-3 right-3 flex items-center gap-1">
+                    <button
+                      onClick={e => { e.stopPropagation(); openModal('template', { editTemplate: t }) }}
+                      className="p-1 text-gray-400 hover:text-gray-700 rounded-lg transition-colors"
+                    >
+                      <Edit2 size={13} />
+                    </button>
+                    <button
+                      onClick={e => { e.stopPropagation(); deleteTemplate(t) }}
+                      className="p-1 text-gray-400 hover:text-gray-700 rounded-lg transition-colors"
+                    >
+                      <Trash2 size={13} />
+                    </button>
                   </div>
-                  <p className="text-xl font-bold text-gray-900 mt-2">{fmt(t.amount)}</p>
+                  <p className="text-sm font-medium text-gray-900 truncate pr-12">{t.name}</p>
+                  <p className="text-[12px] text-gray-600 mt-0.5">{fmt(t.amount)}</p>
+                  {t.note && <p className="text-xs text-gray-400 mt-0.5 truncate">{t.note}</p>}
                 </div>
               ))}
             </div>
@@ -593,10 +590,10 @@ export default function Income() {
 
       {/* ══ Add Income modal ════════════════════════════════════════════════════ */}
       {modal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100">
-              <h2 className="text-lg font-bold text-gray-800">
+            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-stone-100">
+              <h2 className="text-lg font-medium text-gray-900">
                 {modal.editEntry ? 'Edit income entry' : 'Add Income'}
               </h2>
               <button onClick={closeModal} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg">
@@ -605,13 +602,13 @@ export default function Income() {
             </div>
 
             {!modal.editEntry && (
-              <div className="flex gap-1 bg-gray-100 p-1 mx-6 mt-4 rounded-xl">
+              <div className="flex gap-1 bg-stone-100 p-1 mx-6 mt-4 rounded-xl">
                 {[['quick', 'Quick Entry'], ['recurring', 'Recurring'], ['template', 'Template']].map(([id, label]) => (
                   <button
                     key={id}
                     onClick={() => openModal(id, {})}
                     className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                      modal.tab === id ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500 hover:text-gray-700'
+                      modal.tab === id ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'
                     }`}
                   >
                     {label}
@@ -624,7 +621,7 @@ export default function Income() {
               {/* Quick Entry */}
               {modal.tab === 'quick' && (
                 <div>
-                  {quickError && <p className="text-red-500 text-sm mb-3">{quickError}</p>}
+                  {quickError && <p className="text-[#A32D2D] text-sm mb-3">{quickError}</p>}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">Amount (€)</label>
@@ -632,7 +629,7 @@ export default function Income() {
                         type="number" value={quickForm.amount}
                         onChange={e => setQuickForm(f => ({ ...f, amount: e.target.value }))}
                         placeholder="0.00"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className={inputClass}
                       />
                     </div>
                     <div>
@@ -641,7 +638,7 @@ export default function Income() {
                         value={quickForm.source}
                         onChange={e => setQuickForm(f => ({ ...f, source: e.target.value }))}
                         placeholder="e.g. Bonus"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className={inputClass}
                       />
                     </div>
                     <div>
@@ -649,7 +646,7 @@ export default function Income() {
                       <input
                         type="date" value={quickForm.date}
                         onChange={e => setQuickForm(f => ({ ...f, date: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className={inputClass}
                       />
                     </div>
                     <div>
@@ -658,13 +655,13 @@ export default function Income() {
                         value={quickForm.note}
                         onChange={e => setQuickForm(f => ({ ...f, note: e.target.value }))}
                         placeholder="Optional note"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className={inputClass}
                       />
                     </div>
                   </div>
                   <div className="flex gap-3 mt-5">
-                    <button onClick={closeModal} className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
-                    <button onClick={submitQuick} className="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">
+                    <button onClick={closeModal} className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50">Cancel</button>
+                    <button onClick={submitQuick} className="flex-1 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800">
                       {modal.editEntry ? 'Update' : 'Add income'}
                     </button>
                   </div>
@@ -674,7 +671,7 @@ export default function Income() {
               {/* Recurring */}
               {modal.tab === 'recurring' && (
                 <div>
-                  {recurringError && <p className="text-red-500 text-sm mb-3">{recurringError}</p>}
+                  {recurringError && <p className="text-[#A32D2D] text-sm mb-3">{recurringError}</p>}
                   <div className="space-y-3">
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">Name</label>
@@ -682,7 +679,7 @@ export default function Income() {
                         value={recurringForm.name}
                         onChange={e => setRecurringForm(f => ({ ...f, name: e.target.value }))}
                         placeholder="e.g. Salary"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className={inputClass}
                       />
                     </div>
                     <div>
@@ -691,10 +688,10 @@ export default function Income() {
                         type="number" value={recurringForm.amount}
                         onChange={e => setRecurringForm(f => ({ ...f, amount: e.target.value }))}
                         placeholder="0.00"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className={inputClass}
                       />
                       {recurringForm.isEdit && recurringForm.amount && Number(recurringForm.amount) !== Number(recurringForm.originalAmount) && (
-                        <p className="text-xs text-amber-600 mt-1">Changing the amount will archive the current version.</p>
+                        <p className="text-xs text-[#854F0B] mt-1">Changing the amount will archive the current version.</p>
                       )}
                     </div>
                     <div>
@@ -702,7 +699,7 @@ export default function Income() {
                       <select
                         value={recurringForm.frequency}
                         onChange={e => setRecurringForm(f => ({ ...f, frequency: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className={inputClass}
                       >
                         {FREQ_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                       </select>
@@ -714,7 +711,7 @@ export default function Income() {
                           type="number" value={recurringForm.day_of_month}
                           onChange={e => setRecurringForm(f => ({ ...f, day_of_month: e.target.value }))}
                           min={1} max={recurringForm.frequency === 'weekly' ? 7 : 31}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className={inputClass}
                         />
                       </div>
                     )}
@@ -724,14 +721,14 @@ export default function Income() {
                         <input
                           type="date" value={recurringForm.start_date}
                           onChange={e => setRecurringForm(f => ({ ...f, start_date: e.target.value }))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className={inputClass}
                         />
                       </div>
                     )}
                   </div>
                   <div className="flex gap-3 mt-5">
-                    <button onClick={closeModal} className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
-                    <button onClick={submitRecurring} className="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">
+                    <button onClick={closeModal} className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50">Cancel</button>
+                    <button onClick={submitRecurring} className="flex-1 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800">
                       {recurringForm.isEdit ? 'Save changes' : 'Save'}
                     </button>
                   </div>
@@ -741,7 +738,7 @@ export default function Income() {
               {/* Template */}
               {modal.tab === 'template' && (
                 <div>
-                  {templateError && <p className="text-red-500 text-sm mb-3">{templateError}</p>}
+                  {templateError && <p className="text-[#A32D2D] text-sm mb-3">{templateError}</p>}
                   <div className="space-y-3">
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">Name</label>
@@ -749,7 +746,7 @@ export default function Income() {
                         value={templateForm.name}
                         onChange={e => setTemplateForm(f => ({ ...f, name: e.target.value }))}
                         placeholder="e.g. Freelance invoice"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className={inputClass}
                       />
                     </div>
                     <div>
@@ -758,7 +755,7 @@ export default function Income() {
                         type="number" value={templateForm.amount}
                         onChange={e => setTemplateForm(f => ({ ...f, amount: e.target.value }))}
                         placeholder="0.00"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className={inputClass}
                       />
                     </div>
                     <div>
@@ -767,13 +764,13 @@ export default function Income() {
                         value={templateForm.note}
                         onChange={e => setTemplateForm(f => ({ ...f, note: e.target.value }))}
                         placeholder="Optional"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className={inputClass}
                       />
                     </div>
                   </div>
                   <div className="flex gap-3 mt-5">
-                    <button onClick={closeModal} className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
-                    <button onClick={submitTemplate} className="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">
+                    <button onClick={closeModal} className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50">Cancel</button>
+                    <button onClick={submitTemplate} className="flex-1 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800">
                       {templateForm.isEdit ? 'Save changes' : 'Save'}
                     </button>
                   </div>
@@ -786,49 +783,49 @@ export default function Income() {
 
       {/* ══ Detail modal (row click) ════════════════════════════════════════════ */}
       {detailEntry && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-800">Income entry</h2>
+              <h2 className="text-lg font-medium text-gray-900">Income entry</h2>
               <button onClick={() => setDetailEntry(null)} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg">
                 <X size={16} />
               </button>
             </div>
             <div className="space-y-2.5 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-500">Source</span>
-                <span className="font-medium text-gray-800">{detailEntry.source}</span>
+                <span className="text-gray-600">Source</span>
+                <span className="font-medium text-gray-900">{detailEntry.source}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">Amount</span>
-                <span className="font-semibold text-green-600">+{fmt(detailEntry.amount)}</span>
+                <span className="text-gray-600">Amount</span>
+                <span className="font-medium text-[#3B6D11]">+{fmt(detailEntry.amount)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">Date</span>
+                <span className="text-gray-600">Date</span>
                 <span className="text-gray-700">{format(parseISO(detailEntry.date), 'd MMM yyyy')}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">Type</span>
-                <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium capitalize ${TYPE_BADGE[detailEntry.source_type] ?? 'bg-gray-100 text-gray-500'}`}>
+                <span className="text-gray-600">Type</span>
+                <span className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-medium capitalize ${TYPE_BADGE[detailEntry.source_type] ?? 'bg-stone-100 text-gray-600'}`}>
                   {detailEntry.source_type ?? 'manual'}
                 </span>
               </div>
               {detailEntry.note && (
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Note</span>
+                  <span className="text-gray-600">Note</span>
                   <span className="text-gray-700 text-right max-w-[60%]">{detailEntry.note}</span>
                 </div>
               )}
             </div>
             <div className="flex gap-3 mt-6">
-              <button onClick={() => setDetailEntry(null)} className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50">Close</button>
+              <button onClick={() => setDetailEntry(null)} className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50">Close</button>
               <button
                 onClick={() => {
                   const e = detailEntry
                   setDetailEntry(null)
                   openModal('quick', { editEntry: e })
                 }}
-                className="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700"
+                className="flex-1 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800"
               >
                 Edit
               </button>
@@ -839,15 +836,15 @@ export default function Income() {
 
       {/* ══ Log template modal ══════════════════════════════════════════════════ */}
       {logTemplate && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-800">Log income</h2>
+              <h2 className="text-lg font-medium text-gray-900">Log income</h2>
               <button onClick={() => setLogTemplate(null)} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg">
                 <X size={16} />
               </button>
             </div>
-            <p className="text-sm text-gray-500 mb-4">
+            <p className="text-sm text-gray-600 mb-4">
               Template: <span className="font-medium text-gray-700">{logTemplate.template.name}</span>
             </p>
             <div className="space-y-3">
@@ -856,7 +853,7 @@ export default function Income() {
                 <input
                   type="number" value={logTemplate.amount}
                   onChange={e => setLogTemplate(m => ({ ...m, amount: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className={inputClass}
                 />
               </div>
               <div>
@@ -864,13 +861,13 @@ export default function Income() {
                 <input
                   type="date" value={logTemplate.date}
                   onChange={e => setLogTemplate(m => ({ ...m, date: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className={inputClass}
                 />
               </div>
             </div>
             <div className="flex gap-3 mt-5">
-              <button onClick={() => setLogTemplate(null)} className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
-              <button onClick={submitLogTemplate} className="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">Continue</button>
+              <button onClick={() => setLogTemplate(null)} className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50">Cancel</button>
+              <button onClick={submitLogTemplate} className="flex-1 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800">Continue</button>
             </div>
           </div>
         </div>

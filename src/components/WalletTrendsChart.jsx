@@ -68,26 +68,26 @@ export default function WalletTrendsChart({ walletId }) {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
+      <div className="bg-white border border-stone-200 rounded-2xl p-5">
         <p className="text-sm text-gray-400">Loading chart…</p>
       </div>
     )
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
+    <div className="bg-white border border-stone-200 rounded-2xl p-5">
       <div className="flex items-start justify-between mb-4">
         <div>
-          <h2 className="text-sm font-semibold text-gray-700">Monthly activity</h2>
+          <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Monthly activity</p>
           <p className="text-xs text-gray-400 mt-0.5">Last 6 months</p>
         </div>
         <div className="flex items-center gap-4 text-xs text-gray-500">
           <span className="flex items-center gap-1.5">
-            <span className="inline-block w-3 h-3 rounded-sm bg-red-400" />
+            <span className="inline-block w-3 h-3 rounded-sm bg-[#E24B4A]" />
             Spent
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="inline-block w-3 h-3 rounded-sm bg-green-400" />
+            <span className="inline-block w-3 h-3 rounded-sm bg-[#97C459]" />
             Credit
           </span>
         </div>
@@ -120,7 +120,7 @@ export default function WalletTrendsChart({ walletId }) {
               <rect
                 x={bX(i, 0)} y={bY(d.debit)}
                 width={barW}  height={bH(d.debit)}
-                fill="#f87171" rx={2}
+                fill="#E24B4A" rx={2}
               >
                 <title>{d.month} · Spent: €{d.debit.toFixed(2)}</title>
               </rect>
@@ -129,7 +129,7 @@ export default function WalletTrendsChart({ walletId }) {
               <rect
                 x={bX(i, 1)} y={bY(d.credit)}
                 width={barW}  height={bH(d.credit)}
-                fill="#4ade80" rx={2}
+                fill="#97C459" rx={2}
               >
                 <title>{d.month} · Credit: €{d.credit.toFixed(2)}</title>
               </rect>

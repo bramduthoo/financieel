@@ -61,8 +61,8 @@ export default function PaymentHistory({ walletId }) {
   function SortIcon({ col }) {
     if (sort.key !== col) return <ChevronUp size={12} className="text-gray-300" />
     return sort.dir === 'asc'
-      ? <ChevronUp size={12} className="text-indigo-500" />
-      : <ChevronDown size={12} className="text-indigo-500" />
+      ? <ChevronUp size={12} className="text-gray-700" />
+      : <ChevronDown size={12} className="text-gray-700" />
   }
 
   function openEdit(t) {
@@ -108,12 +108,12 @@ export default function PaymentHistory({ walletId }) {
     <div>
       {/* Header: filter + page size */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm font-semibold text-gray-700">Payment history</h2>
+        <h2 className="text-sm font-medium text-gray-900">Payment history</h2>
         <div className="flex items-center gap-3">
           <select
             value={filter}
             onChange={e => setFilter(e.target.value)}
-            className="text-xs border border-gray-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="text-xs border border-stone-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
           >
             <option value="all">All payments</option>
             {ruleNames.map(n => <option key={n} value={n}>{n}</option>)}
@@ -123,7 +123,7 @@ export default function PaymentHistory({ walletId }) {
             <select
               value={pageSize}
               onChange={e => setPageSize(e.target.value)}
-              className="text-xs border border-gray-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="text-xs border border-stone-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
             >
               {[10, 25, 50, 'all'].map(n => (
                 <option key={n} value={n}>{n}</option>
@@ -141,9 +141,9 @@ export default function PaymentHistory({ walletId }) {
 
       {/* Table */}
       {!loading && sorted.length > 0 && (
-        <div className="rounded-xl border border-gray-200 overflow-hidden">
+        <div className="rounded-xl border border-stone-200 overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
+            <thead className="bg-stone-50 text-xs text-gray-500 uppercase tracking-wide">
               <tr>
                 <th className="px-4 py-2 text-left">
                   <button
@@ -179,15 +179,15 @@ export default function PaymentHistory({ walletId }) {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-stone-100">
               {visible.map(t => (
                 <tr
                   key={t.id}
                   onClick={() => setDetail(t)}
-                  className="hover:bg-gray-50 cursor-pointer"
+                  className="hover:bg-stone-50 cursor-pointer"
                 >
                   <td className="px-4 py-2.5">
-                    <p className="font-medium text-gray-800">
+                    <p className="font-medium text-gray-900">
                       {t.recurring_rules?.name ?? '—'}
                     </p>
                     {t.recurring_rules?.description && (
@@ -205,13 +205,13 @@ export default function PaymentHistory({ walletId }) {
                       : <span className="text-gray-300">—</span>
                     }
                   </td>
-                  <td className="px-4 py-2.5 text-right font-semibold text-green-600">
+                  <td className="px-4 py-2.5 text-right font-medium text-[#3B6D11]">
                     €{Number(t.amount).toFixed(2)}
                   </td>
                 </tr>
               ))}
             </tbody>
-            <tfoot className="bg-gray-50 border-t border-gray-200">
+            <tfoot className="bg-stone-50 border-t border-stone-200">
               <tr>
                 <td colSpan={3} className="px-4 py-2 text-xs text-gray-500">
                   {pageSize === 'all' || Number(pageSize) >= sorted.length
@@ -219,7 +219,7 @@ export default function PaymentHistory({ walletId }) {
                     : `Showing ${pageSize} of ${sorted.length} payments`
                   }
                 </td>
-                <td className="px-4 py-2 text-right text-xs font-semibold text-gray-700">
+                <td className="px-4 py-2 text-right text-xs font-medium text-gray-700">
                   €{sorted.reduce((s, t) => s + Number(t.amount), 0).toFixed(2)} total
                 </td>
               </tr>
@@ -230,10 +230,10 @@ export default function PaymentHistory({ walletId }) {
 
       {/* ── Detail modal ────────────────────────────────────────────────────── */}
       {detail && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-800">Payment detail</h2>
+              <h2 className="text-lg font-medium text-gray-900">Payment detail</h2>
               <button
                 onClick={() => setDetail(null)}
                 className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg"
@@ -244,7 +244,7 @@ export default function PaymentHistory({ walletId }) {
             <div className="space-y-2.5 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-500">Name</span>
-                <span className="font-medium text-gray-800">{detail.recurring_rules?.name ?? '—'}</span>
+                <span className="font-medium text-gray-900">{detail.recurring_rules?.name ?? '—'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Due date</span>
@@ -261,7 +261,7 @@ export default function PaymentHistory({ walletId }) {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Amount</span>
-                <span className="font-semibold text-green-600">€{Number(detail.amount).toFixed(2)}</span>
+                <span className="font-medium text-[#3B6D11]">€{Number(detail.amount).toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Remark</span>
@@ -271,13 +271,13 @@ export default function PaymentHistory({ walletId }) {
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setDetail(null)}
-                className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50"
+                className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50"
               >
                 Close
               </button>
               <button
                 onClick={() => openEdit(detail)}
-                className="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700"
+                className="flex-1 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800"
               >
                 Edit
               </button>
@@ -288,10 +288,10 @@ export default function PaymentHistory({ walletId }) {
 
       {/* ── Edit modal ──────────────────────────────────────────────────────── */}
       {editForm && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-800">Edit payment</h2>
+              <h2 className="text-lg font-medium text-gray-900">Edit payment</h2>
               <button
                 onClick={() => setEditForm(null)}
                 className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg"
@@ -306,10 +306,10 @@ export default function PaymentHistory({ walletId }) {
                   type="number"
                   value={editForm.amount}
                   onChange={e => setEditForm(f => ({ ...f, amount: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 />
                 {editForm.amount && Number(editForm.amount) !== Number(editForm.oldAmount) && (
-                  <p className="text-xs text-amber-600 mt-1">
+                  <p className="text-xs text-[#854F0B] mt-1">
                     Changing the amount will update the wallet balance.
                   </p>
                 )}
@@ -320,7 +320,7 @@ export default function PaymentHistory({ walletId }) {
                   type="date"
                   value={editForm.completed_at_date}
                   onChange={e => setEditForm(f => ({ ...f, completed_at_date: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 />
               </div>
               <div>
@@ -329,20 +329,20 @@ export default function PaymentHistory({ walletId }) {
                   value={editForm.remark}
                   onChange={e => setEditForm(f => ({ ...f, remark: e.target.value }))}
                   placeholder="Optional remark"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 />
               </div>
             </div>
             <div className="flex gap-3 mt-5">
               <button
                 onClick={() => setEditForm(null)}
-                className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50"
+                className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50"
               >
                 Cancel
               </button>
               <button
                 onClick={submitEdit}
-                className="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700"
+                className="flex-1 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800"
               >
                 Save changes
               </button>
@@ -353,9 +353,9 @@ export default function PaymentHistory({ walletId }) {
 
       {/* ── Confirm dialog ──────────────────────────────────────────────────── */}
       {confirm && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4">
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[60] p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
-            <h2 className="text-lg font-bold text-gray-800 mb-2">Save changes?</h2>
+            <h2 className="text-lg font-medium text-gray-900 mb-2">Save changes?</h2>
             <p className="text-sm text-gray-500 mb-6">
               {Number(editForm?.amount) !== Number(editForm?.oldAmount)
                 ? `The amount will change from €${Number(editForm?.oldAmount).toFixed(2)} to €${Number(editForm?.amount).toFixed(2)} and the wallet balance will be updated.`
@@ -365,14 +365,14 @@ export default function PaymentHistory({ walletId }) {
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirm(null)}
-                className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50"
+                className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50"
               >
                 Cancel
               </button>
               <button
                 onClick={confirm.onConfirm}
                 disabled={saving}
-                className="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
+                className="flex-1 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 disabled:opacity-50"
               >
                 {saving ? 'Saving…' : 'Save'}
               </button>

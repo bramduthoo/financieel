@@ -69,7 +69,56 @@ export function calculateMonthOutlook(month, incomeRecurring, recurringRules) {
     costs += dates.length * Number(rule.amount)
   }
 
-  return { month, projectedNet: income - costs }
+  return { month, income, costs, projectedNet: income - costs }
+}
+
+export function getProjectedBalanceTimeline(wallets, incomeRecurring, recurringRules, transactions, daysAhead = 30) {
+  const today  = startOfDay(new Date())
+  const cutoff = addDays(today, daysAhead)
+
+  const startBalance = wallets.reduce((s, w) => s + Number(w.balance), 0)
+
+  const events = []
+
+  for (const rule of recurringRules) {
+    if (!isActive(rule, today)) continue
+    const dueDates = generatePaymentDates(rule, cutoff).filter(d => !isBefore(d, today))
+    for (const date of dueDates) {
+      const dateStr  = format(date, 'yyyy-MM-dd')
+      const existing = findTransaction(transactions, rule.id, dateStr)
+      if (!existing || !existing.is_confirmed) {
+        events.push({ date, type: 'cost', name: rule.name, amount: Number(rule.amount) })
+      }
+    }
+  }
+
+  for (const rule of incomeRecurring) {
+    if (!isActive(rule, today)) continue
+    const dates = generateUpcomingDates(rule, today, 60).filter(d => !isAfter(d, cutoff))
+    for (const date of dates) {
+      events.push({ date, type: 'income', name: rule.name, amount: Number(rule.amount) })
+    }
+  }
+
+  events.sort((a, b) => a.date - b.date)
+
+  let running = startBalance
+  let minBalance = startBalance
+  let maxBalance = startBalance
+  for (const event of events) {
+    running += event.type === 'income' ? event.amount : -event.amount
+    event.balanceAfter = running
+    minBalance = Math.min(minBalance, running)
+    maxBalance = Math.max(maxBalance, running)
+  }
+
+  return {
+    events,
+    startBalance,
+    projectedEnd: running,
+    minBalance,
+    maxBalance,
+  }
 }
 
 export function getOverduePayments(recurringRules, transactions) {

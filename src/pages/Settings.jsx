@@ -8,13 +8,13 @@ function Toggle({ checked, onChange }) {
     <button
       type="button"
       onClick={() => onChange(!checked)}
-      className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none ${
-        checked ? 'bg-indigo-600' : 'bg-gray-200'
+      className={`relative w-9 h-5 rounded-full transition-colors focus:outline-none ${
+        checked ? 'bg-gray-900' : 'bg-stone-300'
       }`}
     >
       <div
-        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-          checked ? 'translate-x-5' : 'translate-x-0'
+        className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full shadow transition-transform ${
+          checked ? 'translate-x-4' : 'translate-x-0'
         }`}
       />
     </button>
@@ -23,12 +23,12 @@ function Toggle({ checked, onChange }) {
 
 function SettingCard({ label, description, children }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
+    <div className="bg-white border border-stone-200 rounded-2xl p-5">
       <div className="flex items-start justify-between gap-6">
         <div className="flex-1">
-          <p className="text-sm font-semibold text-gray-800">{label}</p>
+          <p className="text-sm font-medium text-gray-900">{label}</p>
           {description && (
-            <p className="text-xs text-gray-500 mt-1 leading-relaxed">{description}</p>
+            <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">{description}</p>
           )}
         </div>
         <div className="flex-shrink-0 flex items-center">
@@ -128,11 +128,11 @@ export default function Settings() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Settings</h1>
-          <p className="text-gray-500 text-sm mt-1">App preferences and configuration</p>
+          <h1 className="text-xl font-medium text-gray-900">Settings</h1>
+          <p className="text-gray-600 text-sm mt-1">App preferences and configuration</p>
         </div>
         <span
-          className={`text-sm font-medium text-green-600 transition-opacity duration-500 ${
+          className={`text-sm font-medium text-[#3B6D11] transition-opacity duration-500 ${
             saved ? 'opacity-100' : 'opacity-0'
           }`}
         >
@@ -145,7 +145,7 @@ export default function Settings() {
           label="Currency"
           description="The currency used throughout the app."
         >
-          <span className="text-sm font-semibold text-gray-700 bg-gray-100 px-3 py-1.5 rounded-lg">
+          <span className="text-sm font-medium text-gray-700 bg-stone-100 px-3 py-1.5 rounded-lg">
             EUR €
           </span>
         </SettingCard>
@@ -163,7 +163,7 @@ export default function Settings() {
               const v = Math.min(28, Math.max(1, parseInt(e.target.value, 10) || 1))
               updateSetting('month_start_day', v)
             }}
-            className="w-20 text-center text-sm font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-20 text-center text-sm font-medium border border-stone-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
           />
         </SettingCard>
 
@@ -172,14 +172,14 @@ export default function Settings() {
           description="Switch between light and dark mode. Dark mode is saved but not yet applied visually."
         >
           <div className="flex items-center gap-3">
-            <span className={`text-sm ${settings.theme === 'light' ? 'text-gray-800 font-medium' : 'text-gray-400'}`}>
+            <span className={`text-sm ${settings.theme === 'light' ? 'text-gray-900 font-medium' : 'text-gray-400'}`}>
               Light
             </span>
             <Toggle
               checked={settings.theme === 'dark'}
               onChange={isDark => updateSetting('theme', isDark ? 'dark' : 'light')}
             />
-            <span className={`text-sm ${settings.theme === 'dark' ? 'text-gray-800 font-medium' : 'text-gray-400'}`}>
+            <span className={`text-sm ${settings.theme === 'dark' ? 'text-gray-900 font-medium' : 'text-gray-400'}`}>
               Dark
             </span>
           </div>
@@ -194,31 +194,31 @@ export default function Settings() {
           }
         >
           <div className="flex items-center gap-3">
-            <span className={`text-sm ${!settings.strict_distribution ? 'text-gray-800 font-medium' : 'text-gray-400'}`}>
+            <span className={`text-sm ${!settings.strict_distribution ? 'text-gray-900 font-medium' : 'text-gray-400'}`}>
               OFF
             </span>
             <Toggle
               checked={settings.strict_distribution ?? true}
               onChange={val => updateSetting('strict_distribution', val)}
             />
-            <span className={`text-sm ${settings.strict_distribution ? 'text-gray-800 font-medium' : 'text-gray-400'}`}>
+            <span className={`text-sm ${settings.strict_distribution ? 'text-gray-900 font-medium' : 'text-gray-400'}`}>
               ON
             </span>
           </div>
         </SettingCard>
 
         {/* Danger zone */}
-        <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+        <div className="bg-[#FCEBEB] border border-[#F7C1C1] rounded-2xl p-5">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
-              <p className="text-sm font-semibold text-red-700">Delete all data</p>
-              <p className="text-xs text-red-600 mt-1 leading-relaxed">
+              <p className="text-sm font-medium text-[#A32D2D]">Delete all data</p>
+              <p className="text-xs text-[#A32D2D]/80 mt-1 leading-relaxed">
                 Permanently deletes all transactions, income history and wallet balances. Your wallet structure and payment rules are kept. This cannot be undone.
               </p>
             </div>
             <button
               onClick={() => setDeleteModal('warning')}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 border border-red-300 rounded-lg hover:bg-red-100 transition-colors flex-shrink-0"
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#A32D2D] bg-white border border-[#A32D2D] rounded-lg hover:bg-[#FCEBEB] transition-colors flex-shrink-0"
             >
               <AlertTriangle size={14} />
               Delete all data
@@ -229,9 +229,9 @@ export default function Settings() {
 
       {/* ── Warning modal ──────────────────────────────────────────────────────── */}
       {deleteModal === 'warning' && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
-            <h2 className="text-lg font-bold text-gray-800 mb-3">Are you sure?</h2>
+            <h2 className="text-lg font-medium text-gray-900 mb-3">Are you sure?</h2>
             <p className="text-sm text-gray-600 mb-3">The following will be permanently deleted:</p>
             <ul className="text-sm text-gray-700 space-y-1.5 mb-3 ml-1">
               <li>• All transactions</li>
@@ -239,18 +239,18 @@ export default function Settings() {
               <li>• All wallet balances (reset to €0)</li>
               <li>• All budget allocation history</li>
             </ul>
-            <p className="text-sm font-semibold text-red-600 mb-5">This cannot be undone.</p>
+            <p className="text-sm font-medium text-[#A32D2D] mb-5">This cannot be undone.</p>
             <div className="flex gap-3">
               <button
                 onClick={closeDeleteModals}
-                className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50"
+                className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50"
               >
                 Cancel
               </button>
               <button
                 onClick={sendOtp}
                 disabled={deleteLoading}
-                className="flex-1 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 disabled:opacity-50"
+                className="flex-1 py-2 rounded-lg bg-[#A32D2D] text-white text-sm font-medium hover:bg-[#8a2626] disabled:opacity-50"
               >
                 {deleteLoading ? 'Sending…' : 'Send confirmation code'}
               </button>
@@ -261,15 +261,15 @@ export default function Settings() {
 
       {/* ── Code modal ─────────────────────────────────────────────────────────── */}
       {deleteModal === 'code' && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
-            <h2 className="text-lg font-bold text-gray-800 mb-2">Check your email</h2>
-            <p className="text-sm text-gray-500 mb-4">
+            <h2 className="text-lg font-medium text-gray-900 mb-2">Check your email</h2>
+            <p className="text-sm text-gray-600 mb-4">
               We sent a 6-digit confirmation code to{' '}
               <span className="font-medium text-gray-700">{userEmail}</span>.
               Enter it below to confirm deletion.
             </p>
-            {deleteError && <p className="text-red-500 text-sm mb-3">{deleteError}</p>}
+            {deleteError && <p className="text-[#A32D2D] text-sm mb-3">{deleteError}</p>}
             <input
               type="text"
               inputMode="numeric"
@@ -277,19 +277,19 @@ export default function Settings() {
               value={otpCode}
               onChange={e => setOtpCode(e.target.value.replace(/\D/g, ''))}
               placeholder="000000"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-red-500 mb-4"
+              className="w-full px-3 py-2 border border-stone-300 rounded-lg text-lg text-center tracking-[0.5em] font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent mb-4"
             />
             <div className="flex gap-3">
               <button
                 onClick={closeDeleteModals}
-                className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50"
+                className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDeletion}
                 disabled={deleteLoading || otpCode.length < 6}
-                className="flex-1 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 disabled:opacity-50"
+                className="flex-1 py-2 rounded-lg bg-[#A32D2D] text-white text-sm font-medium hover:bg-[#8a2626] disabled:opacity-50"
               >
                 {deleteLoading ? 'Deleting…' : 'Confirm deletion'}
               </button>
@@ -300,7 +300,7 @@ export default function Settings() {
 
       {/* ── Success toast ──────────────────────────────────────────────────────── */}
       {deleteSuccess && (
-        <div className="fixed bottom-6 right-6 bg-green-600 text-white px-4 py-3 rounded-xl shadow-lg text-sm font-medium z-50">
+        <div className="fixed bottom-6 right-6 bg-gray-900 text-white px-4 py-3 rounded-xl shadow-lg text-sm font-medium z-50">
           All data deleted successfully
         </div>
       )}

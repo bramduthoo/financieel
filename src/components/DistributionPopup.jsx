@@ -49,8 +49,8 @@ export default function DistributionPopup({ totalAmount, onConfirm, onClose, str
   const diff        = Math.abs(assignedTotal - totalAmount)
   const canConfirm  = strictMode ? diff < 0.005 : true
   const totalColour =
-    diff < 0.005            ? 'text-green-600' :
-    assignedTotal > totalAmount ? 'text-red-600'   : 'text-amber-600'
+    diff < 0.005                ? 'text-[#3B6D11]' :
+    assignedTotal > totalAmount ? 'text-[#A32D2D]'  : 'text-[#854F0B]'
 
   const grouped = {
     fixed:      wallets.filter(w => w.type === 'fixed'),
@@ -59,12 +59,12 @@ export default function DistributionPopup({ totalAmount, onConfirm, onClose, str
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100 flex-shrink-0">
-          <h2 className="text-lg font-bold text-gray-800">
+        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-stone-100 flex-shrink-0">
+          <h2 className="text-lg font-medium text-gray-900">
             Distribute €{totalAmount.toFixed(2)}
           </h2>
           {onClose && (
@@ -85,12 +85,12 @@ export default function DistributionPopup({ totalAmount, onConfirm, onClose, str
               {Object.entries(grouped).map(([type, list]) =>
                 list.length === 0 ? null : (
                   <div key={type}>
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 capitalize">
+                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-1 capitalize">
                       {type}
                     </p>
-                    <div className="space-y-2">
+                    <div>
                       {list.map(wallet => (
-                        <div key={wallet.id} className="flex items-center gap-3">
+                        <div key={wallet.id} className="flex items-center justify-between gap-3 py-2.5 border-b border-stone-100 last:border-0">
                           <button
                             type="button"
                             onClick={() => handleWalletClick(wallet)}
@@ -105,15 +105,18 @@ export default function DistributionPopup({ totalAmount, onConfirm, onClose, str
                               <p className="text-xs text-gray-400">Balance: €{Number(wallet.balance).toFixed(2)}</p>
                             </div>
                           </button>
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={amounts[wallet.id] ?? ''}
-                            onChange={e => setAmounts(prev => ({ ...prev, [wallet.id]: e.target.value }))}
-                            placeholder="0.00"
-                            className="w-24 px-2 py-1.5 text-sm text-right border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          />
+                          <div className="flex items-center gap-1 shrink-0">
+                            <span className="text-sm text-gray-400">€</span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={amounts[wallet.id] ?? ''}
+                              onChange={e => setAmounts(prev => ({ ...prev, [wallet.id]: e.target.value }))}
+                              placeholder="0.00"
+                              className="w-24 px-2 py-1.5 text-sm text-right border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                            />
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -125,21 +128,23 @@ export default function DistributionPopup({ totalAmount, onConfirm, onClose, str
         </div>
 
         {/* Footer */}
-        <div className="px-6 pb-5 pt-3 border-t border-gray-100 flex-shrink-0 space-y-3">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-500">Assigned</span>
-            <span className={`font-semibold ${totalColour}`}>
-              €{assignedTotal.toFixed(2)} of €{totalAmount.toFixed(2)}
-            </span>
+        <div className="px-6 pb-5 pt-3 border-t border-stone-100 flex-shrink-0">
+          <div className="p-4 bg-stone-50 rounded-xl mb-3">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600">Assigned</span>
+              <span className={`font-medium ${totalColour}`}>
+                €{assignedTotal.toFixed(2)} of €{totalAmount.toFixed(2)}
+              </span>
+            </div>
+            {!strictMode && remainder > 0.005 && (
+              <p className="text-xs text-gray-400 mt-1">€{remainder.toFixed(2)} will go to Unallocated</p>
+            )}
           </div>
-          {!strictMode && remainder > 0.005 && (
-            <p className="text-xs text-gray-400">€{remainder.toFixed(2)} will go to Unallocated</p>
-          )}
           <div className="flex gap-3">
             {onClose && (
               <button
                 onClick={onClose}
-                className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50"
+                className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50"
               >
                 Cancel
               </button>
@@ -149,8 +154,8 @@ export default function DistributionPopup({ totalAmount, onConfirm, onClose, str
               disabled={!canConfirm}
               className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
                 canConfirm
-                  ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  ? 'bg-gray-900 text-white hover:bg-gray-800'
+                  : 'bg-stone-200 text-gray-400 cursor-not-allowed'
               }`}
             >
               Distribute

@@ -61,8 +61,8 @@ export default function VariableHistory({ walletId }) {
   function SortIcon({ col }) {
     if (sort.key !== col) return <ChevronUp size={12} className="text-gray-300" />
     return sort.dir === 'asc'
-      ? <ChevronUp size={12} className="text-indigo-500" />
-      : <ChevronDown size={12} className="text-indigo-500" />
+      ? <ChevronUp size={12} className="text-gray-700" />
+      : <ChevronDown size={12} className="text-gray-700" />
   }
 
   function openEdit(t) {
@@ -109,12 +109,12 @@ export default function VariableHistory({ walletId }) {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search by name…"
-          className="text-xs border border-gray-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[160px]"
+          className="text-xs border border-stone-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent min-w-[160px]"
         />
         <select
           value={typeFilter}
           onChange={e => setTypeFilter(e.target.value)}
-          className="text-xs border border-gray-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="text-xs border border-stone-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
         >
           <option value="all">All types</option>
           <option value="debit">Debit</option>
@@ -125,7 +125,7 @@ export default function VariableHistory({ walletId }) {
           <select
             value={pageSize === 'all' ? 'all' : pageSize}
             onChange={e => setPageSize(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-            className="text-xs border border-gray-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="text-xs border border-stone-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
           >
             {[10, 25, 50, 'all'].map(n => <option key={n} value={n}>{n}</option>)}
           </select>
@@ -135,9 +135,9 @@ export default function VariableHistory({ walletId }) {
       {loading ? (
         <p className="text-sm text-gray-400">Loading history…</p>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide border-b border-gray-200">
+            <thead className="bg-stone-50 text-xs text-gray-500 uppercase tracking-wide border-b border-stone-200">
               <tr>
                 <th className="px-4 py-2.5 text-left">
                   <button onClick={() => toggleSort('date')} className="flex items-center gap-1 hover:text-gray-700">
@@ -156,7 +156,7 @@ export default function VariableHistory({ walletId }) {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-stone-100">
               {visible.length === 0 ? (
                 <tr>
                   <td colSpan={3} className="px-4 py-10 text-center text-gray-400 text-xs">
@@ -167,19 +167,19 @@ export default function VariableHistory({ walletId }) {
                 <tr
                   key={t.id}
                   onClick={() => setDetail(t)}
-                  className="hover:bg-gray-50 cursor-pointer"
+                  className="hover:bg-stone-50 cursor-pointer"
                 >
                   <td className="px-4 py-2.5 text-gray-500 whitespace-nowrap">
                     {format(parseISO(t.date), 'd MMM yyyy')}
                   </td>
-                  <td className="px-4 py-2.5 font-medium text-gray-800">{t.note ?? '—'}</td>
-                  <td className="px-4 py-2.5 text-right font-semibold text-red-600">
-                    -€{Number(t.amount).toFixed(2)}
+                  <td className="px-4 py-2.5 font-medium text-gray-900">{t.note ?? '—'}</td>
+                  <td className="px-4 py-2.5 text-right font-medium text-[#A32D2D]">
+                    −€{Number(t.amount).toFixed(2)}
                   </td>
                 </tr>
               ))}
             </tbody>
-            <tfoot className="bg-gray-50 border-t border-gray-200 text-xs">
+            <tfoot className="bg-stone-50 border-t border-stone-200 text-xs">
               <tr>
                 <td colSpan={2} className="px-4 py-2 text-gray-500">
                   {pageSize === 'all' || Number(pageSize) >= filtered.length
@@ -187,8 +187,8 @@ export default function VariableHistory({ walletId }) {
                     : `Showing ${visible.length} of ${filtered.length}`
                   }
                 </td>
-                <td className="px-4 py-2 text-right font-semibold text-red-600">
-                  -€{totalSpent.toFixed(2)}
+                <td className="px-4 py-2 text-right font-medium text-[#A32D2D]">
+                  −€{totalSpent.toFixed(2)}
                 </td>
               </tr>
             </tfoot>
@@ -198,10 +198,10 @@ export default function VariableHistory({ walletId }) {
 
       {/* ── Detail modal ──────────────────────────────────────────────────────── */}
       {detail && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-800">Transaction detail</h2>
+              <h2 className="text-lg font-medium text-gray-900">Transaction detail</h2>
               <button onClick={() => setDetail(null)} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg">
                 <X size={16} />
               </button>
@@ -209,11 +209,11 @@ export default function VariableHistory({ walletId }) {
             <div className="space-y-2.5 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-500">Name</span>
-                <span className="font-medium text-gray-800">{detail.note ?? '—'}</span>
+                <span className="font-medium text-gray-900">{detail.note ?? '—'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Amount</span>
-                <span className="font-semibold text-red-600">-€{Number(detail.amount).toFixed(2)}</span>
+                <span className="font-medium text-[#A32D2D]">−€{Number(detail.amount).toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Date</span>
@@ -227,8 +227,8 @@ export default function VariableHistory({ walletId }) {
               )}
             </div>
             <div className="flex gap-3 mt-6">
-              <button onClick={() => setDetail(null)} className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50">Close</button>
-              <button onClick={() => openEdit(detail)} className="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">Edit</button>
+              <button onClick={() => setDetail(null)} className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50">Close</button>
+              <button onClick={() => openEdit(detail)} className="flex-1 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800">Edit</button>
             </div>
           </div>
         </div>
@@ -236,10 +236,10 @@ export default function VariableHistory({ walletId }) {
 
       {/* ── Edit modal ────────────────────────────────────────────────────────── */}
       {editForm && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-800">Edit transaction</h2>
+              <h2 className="text-lg font-medium text-gray-900">Edit transaction</h2>
               <button onClick={() => setEditForm(null)} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg">
                 <X size={16} />
               </button>
@@ -250,7 +250,7 @@ export default function VariableHistory({ walletId }) {
                 <input
                   value={editForm.name}
                   onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 />
               </div>
               <div>
@@ -258,10 +258,10 @@ export default function VariableHistory({ walletId }) {
                 <input
                   type="number" value={editForm.amount}
                   onChange={e => setEditForm(f => ({ ...f, amount: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 />
                 {editForm.amount && Number(editForm.amount) !== Number(editForm.oldAmount) && (
-                  <p className="text-xs text-amber-600 mt-1">Changing the amount will update the wallet balance.</p>
+                  <p className="text-xs text-[#854F0B] mt-1">Changing the amount will update the wallet balance.</p>
                 )}
               </div>
               <div>
@@ -269,7 +269,7 @@ export default function VariableHistory({ walletId }) {
                 <input
                   type="date" value={editForm.date}
                   onChange={e => setEditForm(f => ({ ...f, date: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 />
               </div>
               <div>
@@ -277,13 +277,13 @@ export default function VariableHistory({ walletId }) {
                 <input
                   value={editForm.remark}
                   onChange={e => setEditForm(f => ({ ...f, remark: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 />
               </div>
             </div>
             <div className="flex gap-3 mt-5">
-              <button onClick={() => setEditForm(null)} className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
-              <button onClick={submitEdit} className="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">Save changes</button>
+              <button onClick={() => setEditForm(null)} className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50">Cancel</button>
+              <button onClick={submitEdit} className="flex-1 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800">Save changes</button>
             </div>
           </div>
         </div>
@@ -291,9 +291,9 @@ export default function VariableHistory({ walletId }) {
 
       {/* ── Confirm dialog ────────────────────────────────────────────────────── */}
       {confirm && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4">
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[60] p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
-            <h2 className="text-lg font-bold text-gray-800 mb-2">Save changes?</h2>
+            <h2 className="text-lg font-medium text-gray-900 mb-2">Save changes?</h2>
             <p className="text-sm text-gray-500 mb-6">
               {Number(editForm?.amount) !== Number(editForm?.oldAmount)
                 ? `Amount changes from €${Number(editForm?.oldAmount).toFixed(2)} to €${Number(editForm?.amount).toFixed(2)}. The wallet balance will be updated.`
@@ -301,11 +301,11 @@ export default function VariableHistory({ walletId }) {
               }
             </p>
             <div className="flex gap-3">
-              <button onClick={() => setConfirm(null)} className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
+              <button onClick={() => setConfirm(null)} className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50">Cancel</button>
               <button
                 onClick={confirm.onConfirm}
                 disabled={saving}
-                className="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
+                className="flex-1 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 disabled:opacity-50"
               >
                 {saving ? 'Saving…' : 'Save'}
               </button>
