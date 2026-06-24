@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Edit2, X } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
-import { supabase } from '../lib/supabase'
+import { supabase, getCurrentUserId } from '../lib/supabase'
 import IncomeConfirmModal from '../components/IncomeConfirmModal'
 import DistributionPopup from '../components/DistributionPopup'
 import { distributeIncome } from '../lib/distributeIncome'
@@ -146,12 +146,14 @@ export default function IncomeRecurringDetail() {
       ),
       confirmLabel: 'Log income', variant: 'primary',
       onConfirm: async () => {
+        const userId = await getCurrentUserId()
         await supabase.from('income_entries').insert({
           amount: Number(logModal.amount),
           source: rule.name,
           date: logModal.date,
           source_type: 'recurring',
           income_recurring_id: rule.id,
+          user_id: userId,
         })
         if (distributionRules.length > 0) {
           await distributeIncome({
@@ -161,6 +163,7 @@ export default function IncomeRecurringDetail() {
             sourceName: rule.name,
             date: logModal.date,
             isAutomated: true,
+            userId,
           })
           setDistSuccess(true)
           setTimeout(() => setDistSuccess(false), 3000)
@@ -201,6 +204,7 @@ export default function IncomeRecurringDetail() {
     setConfirm({
       title, body, variant: 'primary', confirmLabel: 'Save changes',
       onConfirm: async () => {
+        const userId = await getCurrentUserId()
         const payload = {
           name: f.name.trim(), amount: Number(f.amount),
           frequency: f.frequency,
@@ -208,7 +212,7 @@ export default function IncomeRecurringDetail() {
         }
         if (amountChanged) {
           await supabase.from('income_recurring').update({ end_date: todayStr() }).eq('id', rule.id)
-          await supabase.from('income_recurring').insert({ ...payload, start_date: todayStr(), parent_rule_id: rule.id })
+          await supabase.from('income_recurring').insert({ ...payload, start_date: todayStr(), parent_rule_id: rule.id, user_id: userId })
           setConfirm(null)
           setEditModal(null)
           navigate('/income')
@@ -491,12 +495,14 @@ export default function IncomeRecurringDetail() {
           onConfirm={async (distributions) => {
             await supabase.from('income_distribution_rules').delete().eq('income_recurring_id', id)
             if (distributions.length > 0) {
+              const userId = await getCurrentUserId()
               await supabase.from('income_distribution_rules').insert(
                 distributions.map((d, i) => ({
                   income_recurring_id: id,
                   wallet_id: d.wallet_id,
                   amount: d.amount,
                   priority: i,
+                  user_id: userId,
                 }))
               )
             }

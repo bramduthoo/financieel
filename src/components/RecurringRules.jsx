@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Plus, Pencil, Trash2, X } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { supabase, getCurrentUserId } from '../lib/supabase'
 import { format, addMonths } from 'date-fns'
 import { formatFrequency } from '../lib/recurringUtils'
 
@@ -76,6 +76,8 @@ export default function RecurringRules({ walletId, onRulesChanged }) {
     }
     setSaving(true); setError(null)
 
+    const userId = await getCurrentUserId()
+
     const payload = {
       wallet_id:          walletId,
       name:               form.name.trim(),
@@ -90,6 +92,7 @@ export default function RecurringRules({ walletId, onRulesChanged }) {
       yearly_month:       null,
       custom_dates:       null,
       custom_cycle_years: null,
+      user_id:            userId,
     }
 
     // Set frequency-specific fields

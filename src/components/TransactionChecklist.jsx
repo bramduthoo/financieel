@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { CheckCircle2, Circle, X } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { supabase, getCurrentUserId } from '../lib/supabase'
 import { format, startOfDay } from 'date-fns'
 import { generatePaymentDates } from '../lib/recurringUtils'
 
@@ -53,6 +53,7 @@ export default function TransactionChecklist({ walletId, onBalanceChanged }) {
         .update({ is_confirmed: true, remark: remark || null, completed_at: now })
         .eq('id', confirmItem.existingId)
     } else {
+      const userId = await getCurrentUserId()
       await supabase.from('transactions').insert({
         wallet_id:         walletId,
         recurring_rule_id: confirmItem.rule.id,
@@ -63,6 +64,7 @@ export default function TransactionChecklist({ walletId, onBalanceChanged }) {
         remark:            remark || null,
         is_confirmed:      true,
         completed_at:      now,
+        user_id:           userId,
       })
     }
 
