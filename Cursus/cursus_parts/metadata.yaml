@@ -1,0 +1,22 @@
+---
+title: "Financieel"
+subtitle: "A walkthrough of the codebase"
+author: "Bram Duthoo"
+date: "\\today"
+documentclass: report
+geometry: margin=2.5cm
+fontsize: 11pt
+linestretch: 1.15
+toc: true
+toc-depth: 3
+colorlinks: true
+linkcolor: black
+urlcolor: blue
+header-includes:
+  - \usepackage{microtype}
+  - \usepackage{fancyhdr}
+  - \pagestyle{fancy}
+  - \fancyhf{}
+  - \fancyhead[L]{\nouppercase{\leftmark}}
+  - \fancyfoot[C]{\thepage}
+---
