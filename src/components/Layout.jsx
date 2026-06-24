@@ -17,11 +17,11 @@ export default function Layout({ children }) {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
 
       {/* Sidebar */}
-      <aside className="w-56 bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-6 border-b border-gray-200">
+      <aside className="w-56 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <h1 className="text-lg font-bold text-indigo-600">Financieel</h1>
         </div>
         <nav className="flex-1 p-4 space-y-1">
@@ -34,7 +34,7 @@ export default function Layout({ children }) {
                 `block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive
                     ? 'bg-indigo-50 text-indigo-600'
-                    : 'text-gray-600 hover:bg-gray-100'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
                 }`
               }
             >
@@ -42,10 +42,10 @@ export default function Layout({ children }) {
             </NavLink>
           ))}
         </nav>
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
           <button
             onClick={handleSignOut}
-            className="w-full px-3 py-2 text-sm text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors text-left"
+            className="w-full px-3 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors text-left"
           >
             Sign out
           </button>

@@ -58,12 +58,12 @@ export default function VariableTransactionList({ walletId, viewMonth, refreshKe
 
   return (
     <>
-      <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-800">
         {transactions.map(t => (
           <div key={t.id} className="flex items-center justify-between px-4 py-3">
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-800 truncate">{t.note || '—'}</p>
-              <p className="text-xs text-gray-400">{format(parseISO(t.date), 'd MMM yyyy')}</p>
+              <p className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">{t.note || '—'}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">{format(parseISO(t.date), 'd MMM yyyy')}</p>
             </div>
             <div className="flex items-center gap-3 ml-4 shrink-0">
               <span className={`text-sm font-semibold ${t.type === 'debit' ? 'text-red-600' : 'text-green-600'}`}>
@@ -71,13 +71,13 @@ export default function VariableTransactionList({ walletId, viewMonth, refreshKe
               </span>
               <button
                 onClick={() => onEdit(t)}
-                className="p-1.5 text-gray-300 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors"
+                className="p-1.5 text-gray-300 dark:text-gray-600 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors"
               >
                 <Edit2 size={13} />
               </button>
               <button
                 onClick={() => setDeleteTarget(t)}
-                className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                className="p-1.5 text-gray-300 dark:text-gray-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
               >
                 <Trash2 size={13} />
               </button>
@@ -88,11 +88,11 @@ export default function VariableTransactionList({ walletId, viewMonth, refreshKe
 
       {deleteTarget && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
-            <h2 className="text-lg font-bold text-gray-800 mb-2">Delete transaction?</h2>
-            <p className="text-gray-500 text-sm mb-6">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
+            <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">Delete transaction?</h2>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
               Remove{' '}
-              <span className="font-medium text-gray-700">
+              <span className="font-medium text-gray-700 dark:text-gray-200">
                 {deleteTarget.type === 'debit' ? '-' : '+'}€{Number(deleteTarget.amount).toFixed(2)}
                 {deleteTarget.note ? ` · ${deleteTarget.note}` : ''}
               </span>{' '}
@@ -101,7 +101,7 @@ export default function VariableTransactionList({ walletId, viewMonth, refreshKe
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteTarget(null)}
-                className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50"
+                className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
               >
                 Cancel
               </button>

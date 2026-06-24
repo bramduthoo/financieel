@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AlertTriangle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { useTheme } from '../lib/ThemeContext'
 
 function Toggle({ checked, onChange }) {
   return (
@@ -9,7 +10,7 @@ function Toggle({ checked, onChange }) {
       type="button"
       onClick={() => onChange(!checked)}
       className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none ${
-        checked ? 'bg-indigo-600' : 'bg-gray-200'
+        checked ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-600'
       }`}
     >
       <div
@@ -23,12 +24,12 @@ function Toggle({ checked, onChange }) {
 
 function SettingCard({ label, description, children }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
+    <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
       <div className="flex items-start justify-between gap-6">
         <div className="flex-1">
-          <p className="text-sm font-semibold text-gray-800">{label}</p>
+          <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">{label}</p>
           {description && (
-            <p className="text-xs text-gray-500 mt-1 leading-relaxed">{description}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">{description}</p>
           )}
         </div>
         <div className="flex-shrink-0 flex items-center">
@@ -41,6 +42,7 @@ function SettingCard({ label, description, children }) {
 
 export default function Settings() {
   const navigate = useNavigate()
+  const { setTheme } = useTheme()
 
   const [settings, setSettings] = useState(null)
   const [loading,  setLoading]  = useState(true)
@@ -74,6 +76,7 @@ export default function Settings() {
     if (!settings?.id) return
     await supabase.from('settings').update({ [field]: value }).eq('id', settings.id)
     setSettings(prev => ({ ...prev, [field]: value }))
+    if (field === 'theme') setTheme(value)
     if (timerRef.current) clearTimeout(timerRef.current)
     setSaved(true)
     timerRef.current = setTimeout(() => setSaved(false), 2000)
@@ -128,8 +131,8 @@ export default function Settings() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Settings</h1>
-          <p className="text-gray-500 text-sm mt-1">App preferences and configuration</p>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Settings</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">App preferences and configuration</p>
         </div>
         <span
           className={`text-sm font-medium text-green-600 transition-opacity duration-500 ${
@@ -145,7 +148,7 @@ export default function Settings() {
           label="Currency"
           description="The currency used throughout the app."
         >
-          <span className="text-sm font-semibold text-gray-700 bg-gray-100 px-3 py-1.5 rounded-lg">
+          <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-lg">
             EUR €
           </span>
         </SettingCard>
@@ -163,23 +166,23 @@ export default function Settings() {
               const v = Math.min(28, Math.max(1, parseInt(e.target.value, 10) || 1))
               updateSetting('month_start_day', v)
             }}
-            className="w-20 text-center text-sm font-medium border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-20 text-center text-sm font-medium border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
           />
         </SettingCard>
 
         <SettingCard
           label="Theme"
-          description="Switch between light and dark mode. Dark mode is saved but not yet applied visually."
+          description="Switch between light and dark mode."
         >
           <div className="flex items-center gap-3">
-            <span className={`text-sm ${settings.theme === 'light' ? 'text-gray-800 font-medium' : 'text-gray-400'}`}>
+            <span className={`text-sm ${settings.theme === 'light' ? 'text-gray-800 dark:text-gray-100 font-medium' : 'text-gray-400 dark:text-gray-500'}`}>
               Light
             </span>
             <Toggle
               checked={settings.theme === 'dark'}
               onChange={isDark => updateSetting('theme', isDark ? 'dark' : 'light')}
             />
-            <span className={`text-sm ${settings.theme === 'dark' ? 'text-gray-800 font-medium' : 'text-gray-400'}`}>
+            <span className={`text-sm ${settings.theme === 'dark' ? 'text-gray-800 dark:text-gray-100 font-medium' : 'text-gray-400 dark:text-gray-500'}`}>
               Dark
             </span>
           </div>
@@ -194,14 +197,14 @@ export default function Settings() {
           }
         >
           <div className="flex items-center gap-3">
-            <span className={`text-sm ${!settings.strict_distribution ? 'text-gray-800 font-medium' : 'text-gray-400'}`}>
+            <span className={`text-sm ${!settings.strict_distribution ? 'text-gray-800 dark:text-gray-100 font-medium' : 'text-gray-400 dark:text-gray-500'}`}>
               OFF
             </span>
             <Toggle
               checked={settings.strict_distribution ?? true}
               onChange={val => updateSetting('strict_distribution', val)}
             />
-            <span className={`text-sm ${settings.strict_distribution ? 'text-gray-800 font-medium' : 'text-gray-400'}`}>
+            <span className={`text-sm ${settings.strict_distribution ? 'text-gray-800 dark:text-gray-100 font-medium' : 'text-gray-400 dark:text-gray-500'}`}>
               ON
             </span>
           </div>
@@ -230,10 +233,10 @@ export default function Settings() {
       {/* ── Warning modal ──────────────────────────────────────────────────────── */}
       {deleteModal === 'warning' && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
-            <h2 className="text-lg font-bold text-gray-800 mb-3">Are you sure?</h2>
-            <p className="text-sm text-gray-600 mb-3">The following will be permanently deleted:</p>
-            <ul className="text-sm text-gray-700 space-y-1.5 mb-3 ml-1">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
+            <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3">Are you sure?</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">The following will be permanently deleted:</p>
+            <ul className="text-sm text-gray-700 dark:text-gray-200 space-y-1.5 mb-3 ml-1">
               <li>• All transactions</li>
               <li>• All income entries</li>
               <li>• All wallet balances (reset to €0)</li>
@@ -243,7 +246,7 @@ export default function Settings() {
             <div className="flex gap-3">
               <button
                 onClick={closeDeleteModals}
-                className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50"
+                className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
               >
                 Cancel
               </button>
@@ -262,11 +265,11 @@ export default function Settings() {
       {/* ── Code modal ─────────────────────────────────────────────────────────── */}
       {deleteModal === 'code' && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
-            <h2 className="text-lg font-bold text-gray-800 mb-2">Check your email</h2>
-            <p className="text-sm text-gray-500 mb-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
+            <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">Check your email</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
               We sent a 6-digit confirmation code to{' '}
-              <span className="font-medium text-gray-700">{userEmail}</span>.
+              <span className="font-medium text-gray-700 dark:text-gray-200">{userEmail}</span>.
               Enter it below to confirm deletion.
             </p>
             {deleteError && <p className="text-red-500 text-sm mb-3">{deleteError}</p>}
@@ -277,12 +280,12 @@ export default function Settings() {
               value={otpCode}
               onChange={e => setOtpCode(e.target.value.replace(/\D/g, ''))}
               placeholder="000000"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-red-500 mb-4"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-red-500 mb-4 dark:bg-gray-800 dark:text-gray-100"
             />
             <div className="flex gap-3">
               <button
                 onClick={closeDeleteModals}
-                className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50"
+                className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
               >
                 Cancel
               </button>

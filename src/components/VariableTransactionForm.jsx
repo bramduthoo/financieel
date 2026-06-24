@@ -67,52 +67,52 @@ export default function VariableTransactionForm({ walletId, onSaved, onCancel, e
 
   return (
     <>
-      <div className="bg-white rounded-xl border border-gray-200 p-5">
-        <h2 className="text-sm font-semibold text-gray-700 mb-4">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">
           {isEdit ? 'Edit transaction' : 'New transaction'}
         </h2>
         {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Name</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Name</label>
             <input
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="e.g. Groceries"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Amount (€)</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Amount (€)</label>
             <input
               type="number" value={amount}
               onChange={e => setAmount(e.target.value)}
               placeholder="0.00"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Date</label>
             <input
               type="date" value={date}
               onChange={e => setDate(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Note (optional)</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Note (optional)</label>
             <input
               value={remark}
               onChange={e => setRemark(e.target.value)}
               placeholder="Optional"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
             />
           </div>
         </div>
         <div className="flex gap-2 mt-4">
           <button
             onClick={onCancel}
-            className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50"
+            className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
           >
             Cancel
           </button>
@@ -127,34 +127,34 @@ export default function VariableTransactionForm({ walletId, onSaved, onCancel, e
 
       {confirm && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
-            <h2 className="text-lg font-bold text-gray-800 mb-2">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
+            <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">
               {isEdit ? 'Save changes?' : 'Add transaction?'}
             </h2>
-            <div className="bg-gray-50 rounded-lg p-4 mb-5 space-y-2">
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-5 space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Name</span>
-                <span className="font-medium text-gray-700">{name.trim()}</span>
+                <span className="text-gray-500 dark:text-gray-400">Name</span>
+                <span className="font-medium text-gray-700 dark:text-gray-200">{name.trim()}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Amount</span>
+                <span className="text-gray-500 dark:text-gray-400">Amount</span>
                 <span className="font-bold text-base text-red-600">-€{Number(amount).toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Date</span>
-                <span className="font-medium text-gray-700">{format(parseISO(date), 'd MMM yyyy')}</span>
+                <span className="text-gray-500 dark:text-gray-400">Date</span>
+                <span className="font-medium text-gray-700 dark:text-gray-200">{format(parseISO(date), 'd MMM yyyy')}</span>
               </div>
               {remark.trim() && (
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Note</span>
-                  <span className="font-medium text-gray-700">{remark.trim()}</span>
+                  <span className="text-gray-500 dark:text-gray-400">Note</span>
+                  <span className="font-medium text-gray-700 dark:text-gray-200">{remark.trim()}</span>
                 </div>
               )}
             </div>
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirm(false)}
-                className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50"
+                className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
               >
                 Cancel
               </button>
