@@ -58,8 +58,13 @@ export default function Wallets() {
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
+<<<<<<< HEAD
           <h1 className="text-xl font-medium text-gray-900">Wallets</h1>
           <p className="text-sm text-gray-600 mt-0.5">Manage your spending and saving categories</p>
+=======
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Wallets</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Manage your spending and saving categories</p>
+>>>>>>> WOUTER
         </div>
         <button
           onClick={openCreate}
@@ -82,7 +87,11 @@ export default function Wallets() {
           {groups.map(({ key, label, list }) =>
             list.length === 0 ? null : (
               <div key={key}>
+<<<<<<< HEAD
                 <h2 className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-3">
+=======
+                <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+>>>>>>> WOUTER
                   {label}
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -112,17 +121,29 @@ export default function Wallets() {
 
       {/* Delete confirmation */}
       {deleteTarget && (
+<<<<<<< HEAD
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
             <h2 className="text-lg font-medium text-gray-900 mb-2">Delete wallet?</h2>
             <p className="text-gray-600 text-sm mb-6">
               <span className="font-medium text-gray-700">"{deleteTarget.name}"</span> and all
+=======
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
+            <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">Delete wallet?</h2>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
+              <span className="font-medium text-gray-700 dark:text-gray-200">"{deleteTarget.name}"</span> and all
+>>>>>>> WOUTER
               its transactions will be permanently deleted. This cannot be undone.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteTarget(null)}
+<<<<<<< HEAD
                 className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50"
+=======
+                className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+>>>>>>> WOUTER
               >
                 Cancel
               </button>

@@ -120,6 +120,7 @@ export default function Dashboard() {
   return (
     <div>
       {/* Header */}
+<<<<<<< HEAD
       <div className="mb-5">
         <h1 className="text-xl font-medium text-gray-900">Dashboard</h1>
         <p className="text-sm text-gray-600 mt-0.5">{monthLabel}</p>
@@ -143,10 +144,30 @@ export default function Dashboard() {
               <span className="text-[13px] font-medium text-gray-900">{onTrack ? 'On track' : 'At risk'}</span>
             </div>
           </div>
+=======
+      <div>
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Dashboard</h1>
+        <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{monthLabel}</p>
+      </div>
+
+      {/* Section 1 — Projected cash position */}
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">Next 30 days</h2>
+
+        <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-300 mb-4">
+          <span>Cash now: <span className="font-semibold text-gray-800 dark:text-gray-100">€{cash.cashNow.toFixed(2)}</span></span>
+          <span>+</span>
+          <span>Expected income: <span className="font-semibold text-green-600">€{cash.expectedIncome.toFixed(2)}</span></span>
+          <span>−</span>
+          <span>Upcoming costs: <span className="font-semibold text-red-500">€{cash.upcomingCosts.toFixed(2)}</span></span>
+          <span>=</span>
+          <span>Projected balance:</span>
+>>>>>>> WOUTER
         </div>
 
         <ProjectedBalanceChart timeline={timeline} />
 
+<<<<<<< HEAD
         <div className="h-px bg-stone-200 my-4" />
 
         <div className="grid grid-cols-3 gap-4">
@@ -192,6 +213,26 @@ export default function Dashboard() {
                 <p className={`text-[11px] font-medium ${negative ? 'text-[#791F1F]' : 'text-gray-900'}`}>
                   {fmtEUR(m.projectedNet)}
                 </p>
+=======
+        <p className="text-xs text-gray-400 dark:text-gray-500 mt-4">
+          If today is the 5th of the month and your salary arrives on the 30th, this shows
+          your projected balance at the end of the next 30-day window.
+        </p>
+      </div>
+
+      {/* Section 1.5 — Months ahead outlook */}
+      <div>
+        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">6-month outlook</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          {months.map(m => (
+            <div key={m.month.toISOString()} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{format(m.month, 'MMM yyyy')}</p>
+              <div className={`flex items-center gap-1 text-sm font-semibold ${
+                m.projectedNet >= 0 ? 'text-green-600' : 'text-red-500'
+              }`}>
+                {m.projectedNet >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                €{m.projectedNet.toFixed(2)}
+>>>>>>> WOUTER
               </div>
             )
           })}
@@ -256,6 +297,7 @@ export default function Dashboard() {
         </div>
       )}
 
+<<<<<<< HEAD
       {!hasAlerts && (
         <div className="bg-white border border-stone-200 rounded-2xl p-5 mb-4 flex flex-col items-center justify-center py-6 gap-1.5">
           <CheckCircle2 size={20} className="text-[#3B6D11]" />
@@ -329,12 +371,152 @@ export default function Dashboard() {
           <h2 className="text-sm font-medium text-gray-900">Over time</h2>
           {hasYearOfData && (
             <div className="flex gap-1 bg-stone-100 rounded-lg p-1">
+=======
+      {/* Section 2 — Needs attention */}
+      <div className="space-y-3">
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Needs attention</h2>
+
+        {!hasAlerts && (
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5 flex items-center gap-2 text-green-600">
+            <CheckCircle2 size={18} />
+            <span className="text-sm font-medium">All clear</span>
+          </div>
+        )}
+
+        {overdue.length > 0 && (
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-red-500 p-5">
+            <div className="flex items-center gap-2 text-red-500 mb-2">
+              <AlertCircle size={18} />
+              <span className="text-sm font-semibold">
+                {overdue.length} overdue payment{overdue.length === 1 ? '' : 's'} totalling €
+                {overdue.reduce((s, o) => s + o.amount, 0).toFixed(2)}
+              </span>
+            </div>
+            <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+              {overdue.slice(0, 5).map((o, i) => (
+                <li key={i}>
+                  {o.rule.name} — €{o.amount.toFixed(2)} — due {format(o.dueDate, 'd MMM yyyy')}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {overspent.length > 0 && (
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-red-500 p-5">
+            <div className="flex items-center gap-2 text-red-500 mb-2">
+              <AlertCircle size={18} />
+              <span className="text-sm font-semibold">
+                {overspent.length} wallet{overspent.length === 1 ? '' : 's'} overspent this month
+              </span>
+            </div>
+            <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+              {overspent.map(o => (
+                <li key={o.wallet.id}>
+                  {o.wallet.name}: €{o.spent.toFixed(2)} spent of €{o.budget.toFixed(2)} budget
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {underfunded.length > 0 && (
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-orange-500 p-5">
+            <div className="flex items-center gap-2 text-orange-500 mb-2">
+              <AlertTriangle size={18} />
+              <span className="text-sm font-semibold">
+                {underfunded.length} wallet{underfunded.length === 1 ? '' : 's'} need more funding
+              </span>
+            </div>
+            <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+              {underfunded.map(u => (
+                <li key={u.wallet.id}>
+                  {u.wallet.name}: needs €{u.shortfall.toFixed(2)} more for upcoming payments
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
+      {/* Section 3 — This month's performance */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">This month's performance</h2>
+          <div className="grid grid-cols-2 gap-6">
+            <MetricCard
+              label="Income" value={`€${metrics.income.toFixed(2)}`}
+              current={metrics.income} avg={averages.income}
+            />
+            <MetricCard
+              label="Spending" value={`€${metrics.spending.toFixed(2)}`}
+              current={metrics.spending} avg={averages.spending} lowerIsBetter
+            />
+            <MetricCard
+              label="Net" value={`€${metrics.net.toFixed(2)}`}
+              current={metrics.net} avg={averages.net}
+            />
+            {metrics.income > 0 && (
+              <MetricCard
+                label="Savings rate" value={`${metrics.savingsRate.toFixed(1)}%`}
+                current={metrics.savingsRate} avg={averages.savingsRate} unit="pp"
+              />
+            )}
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">Wallet progress</h2>
+          {progressWallets.length === 0 ? (
+            <p className="text-sm text-gray-400 dark:text-gray-500">No wallets to show.</p>
+          ) : (
+            <div className="space-y-4">
+              {progressWallets.map(w => {
+                const budget = Number(w.budget)
+                const pct    = budget > 0 ? (w.spent / budget) * 100 : 0
+                const barColour = pct >= 100 ? 'bg-red-500' : pct >= 75 ? 'bg-orange-500' : 'bg-green-500'
+                return (
+                  <div key={w.id}>
+                    <div className="flex items-center gap-2 text-sm mb-1">
+                      <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: w.colour }} />
+                      <span className="text-gray-700 dark:text-gray-200 font-medium">{w.name}</span>
+                    </div>
+                    <div className="h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-1">
+                      <div className={`h-full rounded-full ${barColour}`} style={{ width: `${Math.min(pct, 100)}%` }} />
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                      <span>€{w.spent.toFixed(2)} spent of €{budget.toFixed(2)} budget</span>
+                      {w.type === 'variable' && w.budget_type === 'accumulating' && (
+                        <span className="text-gray-400 dark:text-gray-500">Balance: €{Number(w.balance).toFixed(2)}</span>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Section 4 — Over time */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Over time</h2>
+          {hasYearOfData && (
+            <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+>>>>>>> WOUTER
               {[['monthly', 'Monthly'], ['yearly', 'Yearly']].map(([id, label]) => (
                 <button
                   key={id}
                   onClick={() => setViewMode(id)}
                   className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+<<<<<<< HEAD
                     viewMode === id ? 'bg-white text-gray-900' : 'text-gray-500 hover:text-gray-700'
+=======
+                    viewMode === id
+                      ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+>>>>>>> WOUTER
                   }`}
                 >
                   {label}
@@ -352,7 +534,7 @@ export default function Dashboard() {
 
       {/* No data state */}
       {wallets.length === 0 && (
-        <div className="text-center py-16 text-gray-400">
+        <div className="text-center py-16 text-gray-400 dark:text-gray-500">
           <p className="text-lg font-medium mb-1">Nothing here yet</p>
           <p className="text-sm">Add your wallets and log your income to see your overview</p>
         </div>
@@ -376,6 +558,7 @@ function MetricCard({ label, value, current, avg, lowerIsBetter = false, unit = 
   }
 
   return (
+<<<<<<< HEAD
     <div className="bg-white border border-stone-200 rounded-2xl p-5">
       <div className="flex items-center justify-between mb-1">
         <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">{label}</p>
@@ -383,6 +566,12 @@ function MetricCard({ label, value, current, avg, lowerIsBetter = false, unit = 
       </div>
       <p className={`text-2xl font-medium ${highlight ? 'text-[#3B6D11]' : 'text-gray-900'}`}>{value}</p>
       <p className="text-[11px] text-gray-400 mt-1">vs 3-month avg</p>
+=======
+    <div>
+      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{label}</p>
+      <p className="text-xl font-bold text-gray-800 dark:text-gray-100">{value}</p>
+      {comparison}
+>>>>>>> WOUTER
     </div>
   )
 }

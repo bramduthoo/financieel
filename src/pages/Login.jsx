@@ -23,6 +23,7 @@ export default function Login() {
   }
 
   return (
+<<<<<<< HEAD
     <div className="min-h-screen bg-stone-50 flex items-center justify-center">
       <div className="bg-white border border-stone-200 rounded-2xl shadow-sm p-8 w-full max-w-md">
 
@@ -33,6 +34,13 @@ export default function Login() {
           <h1 className="text-xl font-medium text-gray-900">Financieel</h1>
         </div>
         <p className="text-sm text-gray-600 mb-8">Sign in to your dashboard</p>
+=======
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+      <div className="bg-white dark:bg-gray-900 p-8 rounded-xl shadow-sm w-full max-w-md">
+
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">Financieel</h1>
+        <p className="text-gray-500 dark:text-gray-400 mb-8">Sign in to your dashboard</p>
+>>>>>>> WOUTER
 
         {error && (
           <div className="bg-[#FCEBEB] text-[#A32D2D] text-sm px-4 py-3 rounded-lg mb-4">
@@ -42,7 +50,7 @@ export default function Login() {
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Email
             </label>
             <input
@@ -51,12 +59,16 @@ export default function Login() {
               onChange={e => setEmail(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleLogin()}
               placeholder="you@example.com"
+<<<<<<< HEAD
               className={inputClass}
+=======
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+>>>>>>> WOUTER
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Password
             </label>
             <input
@@ -65,7 +77,11 @@ export default function Login() {
               onChange={e => setPassword(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleLogin()}
               placeholder="••••••••"
+<<<<<<< HEAD
               className={inputClass}
+=======
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+>>>>>>> WOUTER
             />
           </div>
 

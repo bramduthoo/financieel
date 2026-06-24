@@ -13,10 +13,13 @@
     "@supabase/supabase-js": "^2.106.0",
     "date-fns": "^4.2.1",
     "lucide-react": "^1.16.0",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6",
+    "path-key": "^4.0.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "react-is": "^19.2.7",
-    "react-router-dom": "^7.15.1"
+    "react-router-dom": "^7.15.1",
+    "sql": "^0.78.0",
+    "supabase": "^2.105.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -29,6 +32,6 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
     "tailwindcss": "^4.3.0",
-    "vite": "^8.0.12"
+    "vite": "^8.0.16"
   }
 }
