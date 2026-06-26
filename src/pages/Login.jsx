@@ -94,9 +94,9 @@ export default function Login() {
         {view === 'signupSuccess' && (
           <div className="text-center py-4">
             <CheckCircle size={40} className="mx-auto mb-4 text-green-500" />
-            <h2 className="text-lg font-semibold text-gray-800 mb-2">Check your email</h2>
+            <h2 className="text-lg font-semibold text-gray-800 mb-2">Almost there</h2>
             <p className="text-gray-500 text-sm mb-6">
-              We've sent you a verification link. Click it to activate your account.
+              If this email isn't already registered, you'll receive a verification link shortly. If you already have an account, please log in instead.
             </p>
             <button
               onClick={() => switchTab('login')}
