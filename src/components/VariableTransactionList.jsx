@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { format, parseISO, startOfMonth, endOfMonth } from 'date-fns'
 import { Edit2, Trash2 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
@@ -58,21 +58,12 @@ export default function VariableTransactionList({ walletId, viewMonth, refreshKe
 
   return (
     <>
-<<<<<<< HEAD
-      <div className="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100">
-        {transactions.map(t => (
-          <div key={t.id} className="flex items-center justify-between px-4 py-3">
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">{t.note || '—'}</p>
-              <p className="text-xs text-gray-400">{format(parseISO(t.date), 'd MMM yyyy')}</p>
-=======
       <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-800">
         {transactions.map(t => (
           <div key={t.id} className="flex items-center justify-between px-4 py-3">
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">{t.note || '—'}</p>
               <p className="text-xs text-gray-400 dark:text-gray-500">{format(parseISO(t.date), 'd MMM yyyy')}</p>
->>>>>>> WOUTER
             </div>
             <div className="flex items-center gap-3 ml-4 shrink-0">
               <span className={`text-sm font-medium ${t.type === 'debit' ? 'text-[#A32D2D]' : 'text-[#3B6D11]'}`}>
@@ -80,21 +71,13 @@ export default function VariableTransactionList({ walletId, viewMonth, refreshKe
               </span>
               <button
                 onClick={() => onEdit(t)}
-<<<<<<< HEAD
-                className="p-1.5 text-gray-300 hover:text-gray-700 hover:bg-stone-100 rounded-lg transition-colors"
-=======
                 className="p-1.5 text-gray-300 dark:text-gray-600 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors"
->>>>>>> WOUTER
               >
                 <Edit2 size={13} />
               </button>
               <button
                 onClick={() => setDeleteTarget(t)}
-<<<<<<< HEAD
-                className="p-1.5 text-gray-300 hover:text-[#A32D2D] hover:bg-[#FCEBEB] rounded-lg transition-colors"
-=======
                 className="p-1.5 text-gray-300 dark:text-gray-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
->>>>>>> WOUTER
               >
                 <Trash2 size={13} />
               </button>
@@ -104,15 +87,6 @@ export default function VariableTransactionList({ walletId, viewMonth, refreshKe
       </div>
 
       {deleteTarget && (
-<<<<<<< HEAD
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-2">Delete transaction?</h2>
-            <p className="text-gray-500 text-sm mb-6">
-              Remove{' '}
-              <span className="font-medium text-gray-700">
-                {deleteTarget.type === 'debit' ? '−' : '+'}€{Number(deleteTarget.amount).toFixed(2)}
-=======
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
             <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">Delete transaction?</h2>
@@ -120,7 +94,6 @@ export default function VariableTransactionList({ walletId, viewMonth, refreshKe
               Remove{' '}
               <span className="font-medium text-gray-700 dark:text-gray-200">
                 {deleteTarget.type === 'debit' ? '-' : '+'}€{Number(deleteTarget.amount).toFixed(2)}
->>>>>>> WOUTER
                 {deleteTarget.note ? ` · ${deleteTarget.note}` : ''}
               </span>{' '}
               from {format(parseISO(deleteTarget.date), 'd MMM yyyy')}? The wallet balance will be corrected.
@@ -128,11 +101,7 @@ export default function VariableTransactionList({ walletId, viewMonth, refreshKe
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteTarget(null)}
-<<<<<<< HEAD
-                className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50"
-=======
                 className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
->>>>>>> WOUTER
               >
                 Cancel
               </button>

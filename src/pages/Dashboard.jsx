@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import {
   format, addMonths, subMonths, subYears, startOfMonth, endOfMonth, startOfYear,
   isBefore, isAfter, differenceInDays, addDays,
@@ -120,31 +120,6 @@ export default function Dashboard() {
   return (
     <div>
       {/* Header */}
-<<<<<<< HEAD
-      <div className="mb-5">
-        <h1 className="text-xl font-medium text-gray-900">Dashboard</h1>
-        <p className="text-sm text-gray-600 mt-0.5">{monthLabel}</p>
-      </div>
-
-      {/* Projected balance hero */}
-      <div className="bg-white border border-stone-200 rounded-2xl p-5 mb-4">
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-1">
-              Projected balance · 30 days · {format(cutoffDate, 'dd/MM/yyyy')}
-            </p>
-            <p className={`text-3xl font-medium tracking-tight ${onTrack ? 'text-[#3B6D11]' : 'text-[#A32D2D]'}`}>
-              {fmtEUR(timeline.projectedEnd)}
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-1">Confidence</p>
-            <div className="flex items-center justify-end gap-1.5">
-              <span className={`inline-block w-2 h-2 rounded-full ${onTrack ? 'bg-[#3B6D11]' : 'bg-[#A32D2D]'}`} />
-              <span className="text-[13px] font-medium text-gray-900">{onTrack ? 'On track' : 'At risk'}</span>
-            </div>
-          </div>
-=======
       <div>
         <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Dashboard</h1>
         <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{monthLabel}</p>
@@ -162,58 +137,10 @@ export default function Dashboard() {
           <span>Upcoming costs: <span className="font-semibold text-red-500">€{cash.upcomingCosts.toFixed(2)}</span></span>
           <span>=</span>
           <span>Projected balance:</span>
->>>>>>> WOUTER
         </div>
 
         <ProjectedBalanceChart timeline={timeline} />
 
-<<<<<<< HEAD
-        <div className="h-px bg-stone-200 my-4" />
-
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-1">Cash now</p>
-            <p className="text-lg font-medium text-gray-900">{fmtEUR(cash.cashNow)}</p>
-          </div>
-          <div>
-            <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-1">Expected income</p>
-            <p className="text-lg font-medium text-gray-900">{fmtEUR(cash.expectedIncome)}</p>
-          </div>
-          <div>
-            <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-1">Upcoming costs</p>
-            <p className="text-lg font-medium text-gray-900">{fmtEUR(cash.upcomingCosts)}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* 6-month outlook */}
-      <div className="bg-white border border-stone-200 rounded-2xl p-5 mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-medium text-gray-900">6-month outlook</h2>
-          <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Net per month</p>
-        </div>
-
-        <div className="grid grid-cols-6 gap-1.5 mb-3">
-          {months.map(m => {
-            const negative = m.projectedNet < 0
-            const incomeH = (m.income / outlookMax) * 28
-            const costsH  = (m.costs / outlookMax) * 28
-            return (
-              <div
-                key={m.month.toISOString()}
-                className={`border rounded-lg px-2 py-2.5 text-center ${
-                  negative ? 'bg-[#FCEBEB] border-[#F7C1C1]' : 'border-stone-200'
-                }`}
-              >
-                <p className="text-[11px] text-gray-600 mb-1">{format(m.month, 'MMM')}</p>
-                <svg viewBox="0 0 24 30" className="w-6 h-[30px] mx-auto mb-1">
-                  <rect x={3}  y={28 - incomeH} width={6} height={incomeH} fill="#C0DD97" rx={1} />
-                  <rect x={15} y={28 - costsH}  width={6} height={costsH}  fill="#F09595" rx={1} />
-                </svg>
-                <p className={`text-[11px] font-medium ${negative ? 'text-[#791F1F]' : 'text-gray-900'}`}>
-                  {fmtEUR(m.projectedNet)}
-                </p>
-=======
         <p className="text-xs text-gray-400 dark:text-gray-500 mt-4">
           If today is the 5th of the month and your salary arrives on the 30th, this shows
           your projected balance at the end of the next 30-day window.
@@ -232,10 +159,9 @@ export default function Dashboard() {
               }`}>
                 {m.projectedNet >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
                 €{m.projectedNet.toFixed(2)}
->>>>>>> WOUTER
               </div>
-            )
-          })}
+            </div>
+          ))}
         </div>
 
         <div className="flex items-center gap-4">
@@ -297,81 +223,6 @@ export default function Dashboard() {
         </div>
       )}
 
-<<<<<<< HEAD
-      {!hasAlerts && (
-        <div className="bg-white border border-stone-200 rounded-2xl p-5 mb-4 flex flex-col items-center justify-center py-6 gap-1.5">
-          <CheckCircle2 size={20} className="text-[#3B6D11]" />
-          <p className="text-[13px] font-medium text-gray-900">All clear</p>
-        </div>
-      )}
-
-      {/* This month's performance */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        <MetricCard
-          label="Income" value={fmtEUR(metrics.income)}
-          current={metrics.income} avg={averages.income}
-        />
-        <MetricCard
-          label="Spending" value={fmtEUR(metrics.spending)}
-          current={metrics.spending} avg={averages.spending} lowerIsBetter
-        />
-        <MetricCard
-          label="Net saved" value={fmtEUR(metrics.net)}
-          current={metrics.net} avg={averages.net} highlight
-        />
-        {metrics.income > 0 && (
-          <MetricCard
-            label="Savings rate" value={`${metrics.savingsRate.toFixed(1)}%`}
-            current={metrics.savingsRate} avg={averages.savingsRate} unit="pp"
-          />
-        )}
-      </div>
-
-      {/* Wallet progress */}
-      <div className="bg-white border border-stone-200 rounded-2xl p-5">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-medium text-gray-900">Wallet progress</h2>
-          <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">{monthLabel}</p>
-        </div>
-
-        {progressWallets.length === 0 ? (
-          <p className="text-sm text-gray-400">No wallets to show.</p>
-        ) : (
-          progressWallets.map((w, i) => {
-            const budget = Number(w.budget)
-            const pct    = budget > 0 ? (w.spent / budget) * 100 : 0
-            const barColour = pct >= 100 ? 'bg-[#E24B4A]' : pct >= 75 ? 'bg-[#EF9F27]' : 'bg-[#97C459]'
-            const isAccumulating = w.type === 'variable' && w.budget_type === 'accumulating'
-            return (
-              <div key={w.id} className={i === progressWallets.length - 1 ? '' : 'mb-3'}>
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-[13px] font-medium text-gray-900">
-                    {w.name}
-                    {isAccumulating && (
-                      <span className="text-gray-400 font-normal"> · balance {fmtEUR(w.balance)}</span>
-                    )}
-                  </p>
-                  <p className="text-[11.5px] text-gray-600">
-                    <span className={pct >= 100 ? 'text-[#A32D2D] font-medium' : ''}>{fmtEUR(w.spent)}</span>
-                    {' '}· {fmtEUR(budget)} budget
-                  </p>
-                </div>
-                <div className="h-1 bg-stone-200 rounded-full overflow-hidden">
-                  <div className={`h-full rounded-full ${barColour}`} style={{ width: `${Math.min(pct, 100)}%` }} />
-                </div>
-              </div>
-            )
-          })
-        )}
-      </div>
-
-      {/* Over time */}
-      <div className="mt-4">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-medium text-gray-900">Over time</h2>
-          {hasYearOfData && (
-            <div className="flex gap-1 bg-stone-100 rounded-lg p-1">
-=======
       {/* Section 2 — Needs attention */}
       <div className="space-y-3">
         <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Needs attention</h2>
@@ -504,19 +355,14 @@ export default function Dashboard() {
           <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Over time</h2>
           {hasYearOfData && (
             <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
->>>>>>> WOUTER
               {[['monthly', 'Monthly'], ['yearly', 'Yearly']].map(([id, label]) => (
                 <button
                   key={id}
                   onClick={() => setViewMode(id)}
                   className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-<<<<<<< HEAD
-                    viewMode === id ? 'bg-white text-gray-900' : 'text-gray-500 hover:text-gray-700'
-=======
                     viewMode === id
                       ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600'
                       : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
->>>>>>> WOUTER
                   }`}
                 >
                   {label}
@@ -558,20 +404,10 @@ function MetricCard({ label, value, current, avg, lowerIsBetter = false, unit = 
   }
 
   return (
-<<<<<<< HEAD
-    <div className="bg-white border border-stone-200 rounded-2xl p-5">
-      <div className="flex items-center justify-between mb-1">
-        <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">{label}</p>
-        {trend}
-      </div>
-      <p className={`text-2xl font-medium ${highlight ? 'text-[#3B6D11]' : 'text-gray-900'}`}>{value}</p>
-      <p className="text-[11px] text-gray-400 mt-1">vs 3-month avg</p>
-=======
     <div>
       <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{label}</p>
       <p className="text-xl font-bold text-gray-800 dark:text-gray-100">{value}</p>
       {comparison}
->>>>>>> WOUTER
     </div>
   )
 }

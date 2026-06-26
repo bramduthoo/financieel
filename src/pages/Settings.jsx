@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+﻿import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AlertTriangle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
@@ -9,13 +9,8 @@ function Toggle({ checked, onChange }) {
     <button
       type="button"
       onClick={() => onChange(!checked)}
-<<<<<<< HEAD
-      className={`relative w-9 h-5 rounded-full transition-colors focus:outline-none ${
-        checked ? 'bg-gray-900' : 'bg-stone-300'
-=======
       className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none ${
         checked ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-600'
->>>>>>> WOUTER
       }`}
     >
       <div
@@ -29,21 +24,12 @@ function Toggle({ checked, onChange }) {
 
 function SettingCard({ label, description, children }) {
   return (
-<<<<<<< HEAD
-    <div className="bg-white border border-stone-200 rounded-2xl p-5">
-      <div className="flex items-start justify-between gap-6">
-        <div className="flex-1">
-          <p className="text-sm font-medium text-gray-900">{label}</p>
-          {description && (
-            <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">{description}</p>
-=======
     <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
       <div className="flex items-start justify-between gap-6">
         <div className="flex-1">
           <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">{label}</p>
           {description && (
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">{description}</p>
->>>>>>> WOUTER
           )}
         </div>
         <div className="flex-shrink-0 flex items-center">
@@ -145,13 +131,8 @@ export default function Settings() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-<<<<<<< HEAD
-          <h1 className="text-xl font-medium text-gray-900">Settings</h1>
-          <p className="text-gray-600 text-sm mt-1">App preferences and configuration</p>
-=======
           <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Settings</h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">App preferences and configuration</p>
->>>>>>> WOUTER
         </div>
         <span
           className={`text-sm font-medium text-[#3B6D11] transition-opacity duration-500 ${
@@ -167,11 +148,7 @@ export default function Settings() {
           label="Currency"
           description="The currency used throughout the app."
         >
-<<<<<<< HEAD
-          <span className="text-sm font-medium text-gray-700 bg-stone-100 px-3 py-1.5 rounded-lg">
-=======
           <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-lg">
->>>>>>> WOUTER
             EUR €
           </span>
         </SettingCard>
@@ -189,11 +166,7 @@ export default function Settings() {
               const v = Math.min(28, Math.max(1, parseInt(e.target.value, 10) || 1))
               updateSetting('month_start_day', v)
             }}
-<<<<<<< HEAD
-            className="w-20 text-center text-sm font-medium border border-stone-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-=======
             className="w-20 text-center text-sm font-medium border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
->>>>>>> WOUTER
           />
         </SettingCard>
 
@@ -202,22 +175,14 @@ export default function Settings() {
           description="Switch between light and dark mode."
         >
           <div className="flex items-center gap-3">
-<<<<<<< HEAD
-            <span className={`text-sm ${settings.theme === 'light' ? 'text-gray-900 font-medium' : 'text-gray-400'}`}>
-=======
             <span className={`text-sm ${settings.theme === 'light' ? 'text-gray-800 dark:text-gray-100 font-medium' : 'text-gray-400 dark:text-gray-500'}`}>
->>>>>>> WOUTER
               Light
             </span>
             <Toggle
               checked={settings.theme === 'dark'}
               onChange={isDark => updateSetting('theme', isDark ? 'dark' : 'light')}
             />
-<<<<<<< HEAD
-            <span className={`text-sm ${settings.theme === 'dark' ? 'text-gray-900 font-medium' : 'text-gray-400'}`}>
-=======
             <span className={`text-sm ${settings.theme === 'dark' ? 'text-gray-800 dark:text-gray-100 font-medium' : 'text-gray-400 dark:text-gray-500'}`}>
->>>>>>> WOUTER
               Dark
             </span>
           </div>
@@ -232,22 +197,14 @@ export default function Settings() {
           }
         >
           <div className="flex items-center gap-3">
-<<<<<<< HEAD
-            <span className={`text-sm ${!settings.strict_distribution ? 'text-gray-900 font-medium' : 'text-gray-400'}`}>
-=======
             <span className={`text-sm ${!settings.strict_distribution ? 'text-gray-800 dark:text-gray-100 font-medium' : 'text-gray-400 dark:text-gray-500'}`}>
->>>>>>> WOUTER
               OFF
             </span>
             <Toggle
               checked={settings.strict_distribution ?? true}
               onChange={val => updateSetting('strict_distribution', val)}
             />
-<<<<<<< HEAD
-            <span className={`text-sm ${settings.strict_distribution ? 'text-gray-900 font-medium' : 'text-gray-400'}`}>
-=======
             <span className={`text-sm ${settings.strict_distribution ? 'text-gray-800 dark:text-gray-100 font-medium' : 'text-gray-400 dark:text-gray-500'}`}>
->>>>>>> WOUTER
               ON
             </span>
           </div>
@@ -275,19 +232,11 @@ export default function Settings() {
 
       {/* ── Warning modal ──────────────────────────────────────────────────────── */}
       {deleteModal === 'warning' && (
-<<<<<<< HEAD
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-3">Are you sure?</h2>
-            <p className="text-sm text-gray-600 mb-3">The following will be permanently deleted:</p>
-            <ul className="text-sm text-gray-700 space-y-1.5 mb-3 ml-1">
-=======
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
             <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3">Are you sure?</h2>
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">The following will be permanently deleted:</p>
             <ul className="text-sm text-gray-700 dark:text-gray-200 space-y-1.5 mb-3 ml-1">
->>>>>>> WOUTER
               <li>• All transactions</li>
               <li>• All income entries</li>
               <li>• All wallet balances (reset to €0)</li>
@@ -297,11 +246,7 @@ export default function Settings() {
             <div className="flex gap-3">
               <button
                 onClick={closeDeleteModals}
-<<<<<<< HEAD
-                className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50"
-=======
                 className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
->>>>>>> WOUTER
               >
                 Cancel
               </button>
@@ -319,17 +264,10 @@ export default function Settings() {
 
       {/* ── Code modal ─────────────────────────────────────────────────────────── */}
       {deleteModal === 'code' && (
-<<<<<<< HEAD
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-2">Check your email</h2>
-            <p className="text-sm text-gray-600 mb-4">
-=======
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
             <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">Check your email</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
->>>>>>> WOUTER
               We sent a 6-digit confirmation code to{' '}
               <span className="font-medium text-gray-700 dark:text-gray-200">{userEmail}</span>.
               Enter it below to confirm deletion.
@@ -342,20 +280,12 @@ export default function Settings() {
               value={otpCode}
               onChange={e => setOtpCode(e.target.value.replace(/\D/g, ''))}
               placeholder="000000"
-<<<<<<< HEAD
-              className="w-full px-3 py-2 border border-stone-300 rounded-lg text-lg text-center tracking-[0.5em] font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent mb-4"
-=======
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-red-500 mb-4 dark:bg-gray-800 dark:text-gray-100"
->>>>>>> WOUTER
             />
             <div className="flex gap-3">
               <button
                 onClick={closeDeleteModals}
-<<<<<<< HEAD
-                className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50"
-=======
                 className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
->>>>>>> WOUTER
               >
                 Cancel
               </button>

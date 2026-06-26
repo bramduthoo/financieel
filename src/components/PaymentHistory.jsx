@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { format, parseISO } from 'date-fns'
 import { ChevronUp, ChevronDown, X } from 'lucide-react'
@@ -108,20 +108,12 @@ export default function PaymentHistory({ walletId }) {
     <div>
       {/* Header: filter + page size */}
       <div className="flex items-center justify-between mb-4">
-<<<<<<< HEAD
-        <h2 className="text-sm font-medium text-gray-900">Payment history</h2>
-=======
         <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Payment history</h2>
->>>>>>> WOUTER
         <div className="flex items-center gap-3">
           <select
             value={filter}
             onChange={e => setFilter(e.target.value)}
-<<<<<<< HEAD
-            className="text-xs border border-stone-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-=======
             className="text-xs border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
->>>>>>> WOUTER
           >
             <option value="all">All payments</option>
             {ruleNames.map(n => <option key={n} value={n}>{n}</option>)}
@@ -131,11 +123,7 @@ export default function PaymentHistory({ walletId }) {
             <select
               value={pageSize}
               onChange={e => setPageSize(e.target.value)}
-<<<<<<< HEAD
-              className="text-xs border border-stone-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-=======
               className="text-xs border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
->>>>>>> WOUTER
             >
               {[10, 25, 50, 'all'].map(n => (
                 <option key={n} value={n}>{n}</option>
@@ -153,15 +141,9 @@ export default function PaymentHistory({ walletId }) {
 
       {/* Table */}
       {!loading && sorted.length > 0 && (
-<<<<<<< HEAD
-        <div className="rounded-xl border border-stone-200 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-stone-50 text-xs text-gray-500 uppercase tracking-wide">
-=======
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
->>>>>>> WOUTER
               <tr>
                 <th className="px-4 py-2 text-left">
                   <button
@@ -197,26 +179,15 @@ export default function PaymentHistory({ walletId }) {
                 </th>
               </tr>
             </thead>
-<<<<<<< HEAD
-            <tbody className="divide-y divide-stone-100">
-=======
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
->>>>>>> WOUTER
               {visible.map(t => (
                 <tr
                   key={t.id}
                   onClick={() => setDetail(t)}
-<<<<<<< HEAD
-                  className="hover:bg-stone-50 cursor-pointer"
-                >
-                  <td className="px-4 py-2.5">
-                    <p className="font-medium text-gray-900">
-=======
                   className="hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer bg-white dark:bg-gray-900"
                 >
                   <td className="px-4 py-2.5">
                     <p className="font-medium text-gray-800 dark:text-gray-100">
->>>>>>> WOUTER
                       {t.recurring_rules?.name ?? '—'}
                     </p>
                     {t.recurring_rules?.description && (
@@ -240,11 +211,7 @@ export default function PaymentHistory({ walletId }) {
                 </tr>
               ))}
             </tbody>
-<<<<<<< HEAD
-            <tfoot className="bg-stone-50 border-t border-stone-200">
-=======
             <tfoot className="bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
->>>>>>> WOUTER
               <tr>
                 <td colSpan={3} className="px-4 py-2 text-xs text-gray-500 dark:text-gray-400">
                   {pageSize === 'all' || Number(pageSize) >= sorted.length
@@ -252,11 +219,7 @@ export default function PaymentHistory({ walletId }) {
                     : `Showing ${pageSize} of ${sorted.length} payments`
                   }
                 </td>
-<<<<<<< HEAD
-                <td className="px-4 py-2 text-right text-xs font-medium text-gray-700">
-=======
                 <td className="px-4 py-2 text-right text-xs font-semibold text-gray-700 dark:text-gray-200">
->>>>>>> WOUTER
                   €{sorted.reduce((s, t) => s + Number(t.amount), 0).toFixed(2)} total
                 </td>
               </tr>
@@ -267,17 +230,10 @@ export default function PaymentHistory({ walletId }) {
 
       {/* ── Detail modal ────────────────────────────────────────────────────── */}
       {detail && (
-<<<<<<< HEAD
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-medium text-gray-900">Payment detail</h2>
-=======
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">Payment detail</h2>
->>>>>>> WOUTER
               <button
                 onClick={() => setDetail(null)}
                 className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg"
@@ -287,13 +243,8 @@ export default function PaymentHistory({ walletId }) {
             </div>
             <div className="space-y-2.5 text-sm">
               <div className="flex justify-between">
-<<<<<<< HEAD
-                <span className="text-gray-500">Name</span>
-                <span className="font-medium text-gray-900">{detail.recurring_rules?.name ?? '—'}</span>
-=======
                 <span className="text-gray-500 dark:text-gray-400">Name</span>
                 <span className="font-medium text-gray-800 dark:text-gray-100">{detail.recurring_rules?.name ?? '—'}</span>
->>>>>>> WOUTER
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500 dark:text-gray-400">Due date</span>
@@ -309,13 +260,8 @@ export default function PaymentHistory({ walletId }) {
                 </span>
               </div>
               <div className="flex justify-between">
-<<<<<<< HEAD
-                <span className="text-gray-500">Amount</span>
-                <span className="font-medium text-[#3B6D11]">€{Number(detail.amount).toFixed(2)}</span>
-=======
                 <span className="text-gray-500 dark:text-gray-400">Amount</span>
                 <span className="font-semibold text-green-600">€{Number(detail.amount).toFixed(2)}</span>
->>>>>>> WOUTER
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500 dark:text-gray-400">Remark</span>
@@ -325,11 +271,7 @@ export default function PaymentHistory({ walletId }) {
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setDetail(null)}
-<<<<<<< HEAD
-                className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50"
-=======
                 className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
->>>>>>> WOUTER
               >
                 Close
               </button>
@@ -346,17 +288,10 @@ export default function PaymentHistory({ walletId }) {
 
       {/* ── Edit modal ──────────────────────────────────────────────────────── */}
       {editForm && (
-<<<<<<< HEAD
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-medium text-gray-900">Edit payment</h2>
-=======
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">Edit payment</h2>
->>>>>>> WOUTER
               <button
                 onClick={() => setEditForm(null)}
                 className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg"
@@ -371,11 +306,7 @@ export default function PaymentHistory({ walletId }) {
                   type="number"
                   value={editForm.amount}
                   onChange={e => setEditForm(f => ({ ...f, amount: e.target.value }))}
-<<<<<<< HEAD
-                  className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-=======
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
->>>>>>> WOUTER
                 />
                 {editForm.amount && Number(editForm.amount) !== Number(editForm.oldAmount) && (
                   <p className="text-xs text-[#854F0B] mt-1">
@@ -389,11 +320,7 @@ export default function PaymentHistory({ walletId }) {
                   type="date"
                   value={editForm.completed_at_date}
                   onChange={e => setEditForm(f => ({ ...f, completed_at_date: e.target.value }))}
-<<<<<<< HEAD
-                  className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-=======
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
->>>>>>> WOUTER
                 />
               </div>
               <div>
@@ -402,22 +329,14 @@ export default function PaymentHistory({ walletId }) {
                   value={editForm.remark}
                   onChange={e => setEditForm(f => ({ ...f, remark: e.target.value }))}
                   placeholder="Optional remark"
-<<<<<<< HEAD
-                  className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-=======
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
->>>>>>> WOUTER
                 />
               </div>
             </div>
             <div className="flex gap-3 mt-5">
               <button
                 onClick={() => setEditForm(null)}
-<<<<<<< HEAD
-                className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50"
-=======
                 className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
->>>>>>> WOUTER
               >
                 Cancel
               </button>
@@ -434,17 +353,10 @@ export default function PaymentHistory({ walletId }) {
 
       {/* ── Confirm dialog ──────────────────────────────────────────────────── */}
       {confirm && (
-<<<<<<< HEAD
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[60] p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-2">Save changes?</h2>
-            <p className="text-sm text-gray-500 mb-6">
-=======
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4">
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
             <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">Save changes?</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
->>>>>>> WOUTER
               {Number(editForm?.amount) !== Number(editForm?.oldAmount)
                 ? `The amount will change from €${Number(editForm?.oldAmount).toFixed(2)} to €${Number(editForm?.amount).toFixed(2)} and the wallet balance will be updated.`
                 : 'The payment details will be updated.'
@@ -453,11 +365,7 @@ export default function PaymentHistory({ walletId }) {
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirm(null)}
-<<<<<<< HEAD
-                className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50"
-=======
                 className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
->>>>>>> WOUTER
               >
                 Cancel
               </button>

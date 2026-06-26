@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+﻿import { useEffect, useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Edit2, X } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
@@ -237,66 +237,39 @@ export default function IncomeRecurringDetail() {
       <div className="flex items-center gap-4 mb-6">
         <button
           onClick={() => navigate('/income')}
-<<<<<<< HEAD
-          className="p-2 text-gray-400 hover:text-gray-700 hover:bg-stone-100 rounded-lg transition-colors"
-=======
           className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
->>>>>>> WOUTER
         >
           <ArrowLeft size={18} />
         </button>
         <div className="flex-1 min-w-0">
-<<<<<<< HEAD
-          <h1 className="text-xl font-medium text-gray-900 truncate">{rule.name}</h1>
-          <p className="text-sm text-gray-600 capitalize mt-0.5">
-=======
           <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 truncate">{rule.name}</h1>
           <p className="text-gray-400 dark:text-gray-500 text-sm capitalize mt-0.5">
->>>>>>> WOUTER
             {rule.frequency}{showDay && rule.day_of_month ? ` · day ${rule.day_of_month}` : ''}
           </p>
         </div>
         <button
           onClick={openEdit}
-<<<<<<< HEAD
-          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-stone-100 rounded-lg transition-colors"
-=======
           className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
->>>>>>> WOUTER
         >
           <Edit2 size={15} /> Edit
         </button>
       </div>
 
       {/* Current amount */}
-<<<<<<< HEAD
-      <div className="bg-white border border-stone-200 rounded-2xl p-5 mb-6">
-        <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-1">Current amount</p>
-        <p className="text-3xl font-medium tracking-tight text-gray-900">{fmt(rule.amount)}</p>
-        <p className="text-sm text-gray-400 mt-1 capitalize">
-=======
       <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5 mb-6">
         <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">Current amount</p>
         <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">{fmt(rule.amount)}</p>
         <p className="text-sm text-gray-400 dark:text-gray-500 mt-1 capitalize">
->>>>>>> WOUTER
           {rule.frequency} · since {format(parseISO(rule.start_date), 'd MMM yyyy')}
         </p>
       </div>
 
       {/* Salary growth chart */}
       {chain.length > 0 && (
-<<<<<<< HEAD
-        <div className="bg-white border border-stone-200 rounded-2xl p-5 mb-6">
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Salary growth over time</p>
-            <div className="flex items-center gap-4 text-xs text-gray-400">
-=======
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5 mb-6">
           <div className="flex items-center justify-between mb-1">
             <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Salary growth</h2>
             <div className="flex items-center gap-4 text-xs text-gray-400 dark:text-gray-500">
->>>>>>> WOUTER
               <span className="flex items-center gap-1.5">
                 <span className="inline-block w-3 h-3 rounded-sm bg-[#C0DD97]" /> Archived
               </span>
@@ -311,32 +284,6 @@ export default function IncomeRecurringDetail() {
 
       {/* Version history table */}
       {chain.length > 1 && (
-<<<<<<< HEAD
-        <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden mb-6">
-          <table className="w-full text-sm">
-            <thead className="bg-stone-50 border-b border-stone-200">
-              <tr>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Period</th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Frequency</th>
-                <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">Amount</th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-stone-100">
-              {chain.map(r => (
-                <tr key={r.id} className={r.id === rule.id ? 'bg-stone-50' : ''}>
-                  <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap text-xs">
-                    {format(parseISO(r.start_date), 'd MMM yyyy')}
-                    {r.end_date ? ` – ${format(parseISO(r.end_date), 'd MMM yyyy')}` : ' – present'}
-                  </td>
-                  <td className="px-4 py-2.5 text-gray-600 capitalize text-xs">{r.frequency}</td>
-                  <td className="px-4 py-2.5 text-right font-medium text-gray-900">{fmt(r.amount)}</td>
-                  <td className="px-4 py-2.5">
-                    {r.end_date ? (
-                      <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-stone-100 text-gray-600">Archived</span>
-                    ) : (
-                      <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-[#EAF3DE] text-[#3B6D11] font-medium">Active</span>
-=======
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
@@ -361,7 +308,6 @@ export default function IncomeRecurringDetail() {
                       <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-400">Archived</span>
                     ) : (
                       <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 font-medium">Active</span>
->>>>>>> WOUTER
                     )}
                   </td>
                 </tr>
@@ -372,15 +318,9 @@ export default function IncomeRecurringDetail() {
       )}
 
       {/* Distribution setup */}
-<<<<<<< HEAD
-      <div className="bg-white border border-stone-200 rounded-2xl p-5 mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-medium text-gray-900">Distribution setup</h2>
-=======
       <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5 mb-6">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Distribution setup</h2>
->>>>>>> WOUTER
           {distributionRules.length > 0 && (
             <button
               onClick={() => setDistPopupOpen(true)}

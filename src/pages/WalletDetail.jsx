@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Settings } from 'lucide-react'
 import { supabase } from '../lib/supabase'
@@ -68,24 +68,15 @@ export default function WalletDetail() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate('/wallets')}
-<<<<<<< HEAD
-            className="p-2 text-gray-400 hover:text-gray-700 hover:bg-stone-100 rounded-lg transition-colors"
-=======
             className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
->>>>>>> WOUTER
           >
             <ArrowLeft size={18} />
           </button>
           <div className="flex items-center gap-3">
             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: wallet.colour }} />
             <div>
-<<<<<<< HEAD
-              <h1 className="text-xl font-medium text-gray-900">{wallet.name}</h1>
-              <p className="text-sm text-gray-600 capitalize">
-=======
               <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{wallet.name}</h1>
               <p className="text-gray-400 dark:text-gray-500 text-sm capitalize">
->>>>>>> WOUTER
                 {wallet.type === 'unallocated'
                   ? 'System wallet'
                   : `${wallet.type} · ${wallet.budget_type.replace('-', ' ')}${wallet.type !== 'investment' ? ` · €${Number(wallet.budget).toFixed(2)}/mo` : ''}`
@@ -100,17 +91,10 @@ export default function WalletDetail() {
           {wallet.type === 'variable' && (
             <div className="flex flex-col gap-1 min-w-[140px]">
               <div className="flex items-center justify-between">
-<<<<<<< HEAD
-                <span className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">{format(now, 'MMMM')} spending</span>
-                <span className={`text-xs font-medium ml-2 ${textColour}`}>{pct.toFixed(0)}%</span>
-              </div>
-              <div className="w-full bg-stone-100 rounded-full h-1.5">
-=======
                 <span className="text-xs text-gray-400 dark:text-gray-500">{format(now, 'MMMM')} spending</span>
                 <span className={`text-xs font-semibold ml-2 ${textColour}`}>{pct.toFixed(0)}%</span>
               </div>
               <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5">
->>>>>>> WOUTER
                 <div
                   className={`h-1.5 rounded-full transition-all ${barColour}`}
                   style={{ width: `${Math.min(pct, 100)}%` }}
@@ -134,11 +118,7 @@ export default function WalletDetail() {
           {!wallet.is_system && (
             <button
               onClick={() => setEditOpen(true)}
-<<<<<<< HEAD
-              className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-stone-100 rounded-lg transition-colors"
-=======
               className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
->>>>>>> WOUTER
             >
               <Settings size={15} /> Settings
             </button>
@@ -149,19 +129,11 @@ export default function WalletDetail() {
       {/* ── Fixed wallet ──────────────────────────────────────────────────────── */}
       {wallet.type === 'fixed' && (
         <>
-<<<<<<< HEAD
-          <div className="flex gap-1 bg-stone-100 rounded-xl p-1 w-fit mb-6">
-            {['overview', 'history'].map(t => (
-              <button key={t} onClick={() => setTab(t)}
-                className={`px-4 py-1.5 rounded-lg text-sm capitalize transition-colors ${
-                  tab === t ? 'bg-white shadow-sm text-gray-900 font-medium' : 'text-gray-500 hover:text-gray-700'
-=======
           <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 w-fit mb-6">
             {['overview', 'history'].map(t => (
               <button key={t} onClick={() => setTab(t)}
                 className={`px-4 py-1.5 rounded-lg text-sm font-medium capitalize transition-colors ${
                   tab === t ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
->>>>>>> WOUTER
                 }`}>
                 {t}
               </button>
@@ -170,15 +142,6 @@ export default function WalletDetail() {
 
           {tab === 'overview' && (
             <div className="space-y-6">
-<<<<<<< HEAD
-              <div className="bg-white border border-stone-200 rounded-2xl p-5">
-                <TransactionChecklist walletId={id} onBalanceChanged={fetchAll} />
-              </div>
-              <div className="bg-white border border-stone-200 rounded-2xl p-5">
-                <UpcomingPayments rules={rules} transactions={transactions} />
-              </div>
-              <div className="bg-white border border-stone-200 rounded-2xl p-5">
-=======
               <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
                 <TransactionChecklist walletId={id} onBalanceChanged={fetchAll} />
               </div>
@@ -186,18 +149,13 @@ export default function WalletDetail() {
                 <UpcomingPayments rules={rules} transactions={transactions} />
               </div>
               <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
->>>>>>> WOUTER
                 <RecurringRules walletId={id} onRulesChanged={fetchAll} />
               </div>
             </div>
           )}
 
           {tab === 'history' && (
-<<<<<<< HEAD
-            <div className="bg-white border border-stone-200 rounded-2xl p-5">
-=======
             <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
->>>>>>> WOUTER
               <PaymentHistory walletId={id} />
             </div>
           )}
@@ -207,19 +165,11 @@ export default function WalletDetail() {
       {/* ── Variable wallet ───────────────────────────────────────────────────── */}
       {wallet.type === 'variable' && (
         <>
-<<<<<<< HEAD
-          <div className="flex gap-1 bg-stone-100 rounded-xl p-1 w-fit mb-6">
-            {['overview', 'history', 'trends'].map(t => (
-              <button key={t} onClick={() => setTab(t)}
-                className={`px-4 py-1.5 rounded-lg text-sm capitalize transition-colors ${
-                  tab === t ? 'bg-white shadow-sm text-gray-900 font-medium' : 'text-gray-500 hover:text-gray-700'
-=======
           <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 w-fit mb-6">
             {['overview', 'history', 'trends'].map(t => (
               <button key={t} onClick={() => setTab(t)}
                 className={`px-4 py-1.5 rounded-lg text-sm font-medium capitalize transition-colors ${
                   tab === t ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
->>>>>>> WOUTER
                 }`}>
                 {t}
               </button>
@@ -234,11 +184,7 @@ export default function WalletDetail() {
           )}
 
           {tab === 'history' && (
-<<<<<<< HEAD
-            <div className="bg-white border border-stone-200 rounded-2xl p-5">
-=======
             <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
->>>>>>> WOUTER
               <VariableHistory walletId={id} />
             </div>
           )}
@@ -251,56 +197,33 @@ export default function WalletDetail() {
 
       {/* ── Investment wallet ─────────────────────────────────────────────────── */}
       {wallet.type === 'investment' && (
-<<<<<<< HEAD
-        <div className="bg-white border border-stone-200 rounded-2xl p-5">
-          <p className="text-gray-400 text-sm">Investment wallet features coming in Phase 7.</p>
-=======
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <p className="text-gray-400 dark:text-gray-500 text-sm">Investment wallet features coming in Phase 7.</p>
->>>>>>> WOUTER
         </div>
       )}
 
       {/* ── Unallocated wallet ────────────────────────────────────────────────── */}
       {wallet.type === 'unallocated' && (
         <div className="space-y-4">
-<<<<<<< HEAD
-          <div className="bg-white border border-stone-200 rounded-2xl p-5">
-            <p className="text-sm text-gray-600 leading-relaxed">
-=======
           <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
             <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
->>>>>>> WOUTER
               This wallet automatically collects unassigned income and overflow from capped wallets.
             </p>
           </div>
 
-<<<<<<< HEAD
-          <div className="bg-white border border-stone-200 rounded-2xl p-5">
-            <h2 className="text-sm font-medium text-gray-900 mb-4">Incoming transactions</h2>
-=======
           <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
             <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">Incoming transactions</h2>
->>>>>>> WOUTER
             {transactions.filter(t => t.type === 'credit').length === 0 ? (
               <p className="text-gray-400 dark:text-gray-500 text-sm">No transactions yet.</p>
             ) : (
-<<<<<<< HEAD
-              <div className="divide-y divide-stone-100">
-=======
               <div className="divide-y divide-gray-100 dark:divide-gray-800">
->>>>>>> WOUTER
                 {transactions
                   .filter(t => t.type === 'credit')
                   .sort((a, b) => new Date(b.date) - new Date(a.date))
                   .map(t => (
                     <div key={t.id} className="flex items-center justify-between py-3">
                       <div>
-<<<<<<< HEAD
-                        <p className="text-sm font-medium text-gray-900">
-=======
                         <p className="text-sm font-medium text-gray-800 dark:text-gray-100">
->>>>>>> WOUTER
                           {t.name || t.note || 'Credit'}
                         </p>
                         <p className="text-xs text-gray-400 dark:text-gray-500">

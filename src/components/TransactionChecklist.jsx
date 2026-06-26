@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { CheckCircle2, Circle, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { format, startOfDay } from 'date-fns'
@@ -84,11 +84,7 @@ export default function TransactionChecklist({ walletId, onBalanceChanged }) {
 
   return (
     <div>
-<<<<<<< HEAD
-      <h2 className="text-sm font-medium text-gray-900 mb-4">
-=======
       <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">
->>>>>>> WOUTER
         Pending payments
         {pending.length > 0 && (
           <span className="ml-2 bg-[#FCEBEB] text-[#A32D2D] text-[11px] font-medium px-2 py-0.5 rounded-full">
@@ -98,28 +94,14 @@ export default function TransactionChecklist({ walletId, onBalanceChanged }) {
       </h2>
 
       {pending.length === 0 ? (
-<<<<<<< HEAD
-        <div className="text-center py-8 text-gray-400">
-          <CheckCircle2 size={32} className="mx-auto mb-2 text-[#3B6D11]" />
-=======
         <div className="text-center py-8 text-gray-400 dark:text-gray-500">
           <CheckCircle2 size={32} className="mx-auto mb-2 text-green-400" />
->>>>>>> WOUTER
           <p className="text-sm">All payments up to date</p>
         </div>
       ) : (
         <div className="space-y-2">
           {pending.map((item, i) => (
             <div key={i}
-<<<<<<< HEAD
-              className="flex items-center justify-between bg-white border border-[#F5C4B3] rounded-xl px-4 py-3">
-              <div className="flex items-center gap-3">
-                <button onClick={() => { setConfirmItem(item); setRemark('') }}>
-                  <Circle size={18} className="text-gray-300 hover:text-gray-500 transition-colors" />
-                </button>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{item.rule.name}</p>
-=======
               className="flex items-center justify-between bg-white dark:bg-gray-900 border border-orange-200 dark:border-orange-900 rounded-lg px-4 py-3">
               <div className="flex items-center gap-3">
                 <button onClick={() => { setConfirmItem(item); setRemark('') }}>
@@ -127,7 +109,6 @@ export default function TransactionChecklist({ walletId, onBalanceChanged }) {
                 </button>
                 <div>
                   <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{item.rule.name}</p>
->>>>>>> WOUTER
                   {item.rule.description && (
                     <p className="text-xs text-gray-400 dark:text-gray-500">{item.rule.description}</p>
                   )}
@@ -144,40 +125,24 @@ export default function TransactionChecklist({ walletId, onBalanceChanged }) {
 
       {/* Confirmation modal */}
       {confirmItem && (
-<<<<<<< HEAD
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
-            <div className="flex justify-between items-start mb-4">
-              <h2 className="text-lg font-medium text-gray-900">Confirm payment</h2>
-=======
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
             <div className="flex justify-between items-start mb-4">
               <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">Confirm payment</h2>
->>>>>>> WOUTER
               <button onClick={() => setConfirmItem(null)}>
                 <X size={18} className="text-gray-400" />
               </button>
             </div>
 
-<<<<<<< HEAD
-            <div className="bg-stone-50 rounded-lg p-4 mb-4">
-              <p className="text-sm font-medium text-gray-900">{confirmItem.rule.name}</p>
-=======
             <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-4">
               <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">{confirmItem.rule.name}</p>
->>>>>>> WOUTER
               {confirmItem.rule.description && (
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{confirmItem.rule.description}</p>
               )}
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Due {format(confirmItem.date, 'd MMM yyyy')}
               </p>
-<<<<<<< HEAD
-              <p className="text-xl font-medium text-gray-900 mt-2">
-=======
               <p className="text-xl font-bold text-gray-800 dark:text-gray-100 mt-2">
->>>>>>> WOUTER
                 €{Number(confirmItem.rule.amount).toFixed(2)}
               </p>
             </div>
@@ -190,21 +155,13 @@ export default function TransactionChecklist({ walletId, onBalanceChanged }) {
                 value={remark}
                 onChange={e => setRemark(e.target.value)}
                 placeholder="e.g. Paid via bank transfer"
-<<<<<<< HEAD
-                className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-=======
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
->>>>>>> WOUTER
               />
             </div>
 
             <div className="flex gap-3">
               <button onClick={() => setConfirmItem(null)}
-<<<<<<< HEAD
-                className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50">
-=======
                 className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
->>>>>>> WOUTER
                 Cancel
               </button>
               <button onClick={handleConfirm} disabled={saving}

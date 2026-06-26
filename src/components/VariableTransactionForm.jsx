@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { format, parseISO } from 'date-fns'
 import { supabase } from '../lib/supabase'
 
@@ -67,13 +67,8 @@ export default function VariableTransactionForm({ walletId, onSaved, onCancel, e
 
   return (
     <>
-<<<<<<< HEAD
-      <div className="bg-white rounded-2xl border border-stone-200 p-5">
-        <h2 className="text-sm font-medium text-gray-900 mb-4">
-=======
       <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
         <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">
->>>>>>> WOUTER
           {isEdit ? 'Edit transaction' : 'New transaction'}
         </h2>
         {error && <p className="text-[#A32D2D] text-sm mb-3">{error}</p>}
@@ -84,11 +79,7 @@ export default function VariableTransactionForm({ walletId, onSaved, onCancel, e
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="e.g. Groceries"
-<<<<<<< HEAD
-              className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-=======
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
->>>>>>> WOUTER
             />
           </div>
           <div>
@@ -97,11 +88,7 @@ export default function VariableTransactionForm({ walletId, onSaved, onCancel, e
               type="number" value={amount}
               onChange={e => setAmount(e.target.value)}
               placeholder="0.00"
-<<<<<<< HEAD
-              className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-=======
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
->>>>>>> WOUTER
             />
           </div>
           <div>
@@ -109,11 +96,7 @@ export default function VariableTransactionForm({ walletId, onSaved, onCancel, e
             <input
               type="date" value={date}
               onChange={e => setDate(e.target.value)}
-<<<<<<< HEAD
-              className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-=======
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
->>>>>>> WOUTER
             />
           </div>
           <div>
@@ -122,22 +105,14 @@ export default function VariableTransactionForm({ walletId, onSaved, onCancel, e
               value={remark}
               onChange={e => setRemark(e.target.value)}
               placeholder="Optional"
-<<<<<<< HEAD
-              className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-=======
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
->>>>>>> WOUTER
             />
           </div>
         </div>
         <div className="flex gap-2 mt-4">
           <button
             onClick={onCancel}
-<<<<<<< HEAD
-            className="px-4 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50"
-=======
             className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
->>>>>>> WOUTER
           >
             Cancel
           </button>
@@ -151,33 +126,19 @@ export default function VariableTransactionForm({ walletId, onSaved, onCancel, e
       </div>
 
       {confirm && (
-<<<<<<< HEAD
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-2">
-              {isEdit ? 'Save changes?' : 'Add transaction?'}
-            </h2>
-            <div className="bg-stone-50 rounded-lg p-4 mb-5 space-y-2">
-=======
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
             <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">
               {isEdit ? 'Save changes?' : 'Add transaction?'}
             </h2>
             <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-5 space-y-2">
->>>>>>> WOUTER
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500 dark:text-gray-400">Name</span>
                 <span className="font-medium text-gray-700 dark:text-gray-200">{name.trim()}</span>
               </div>
               <div className="flex justify-between text-sm">
-<<<<<<< HEAD
-                <span className="text-gray-500">Amount</span>
-                <span className="font-medium text-base text-[#A32D2D]">−€{Number(amount).toFixed(2)}</span>
-=======
                 <span className="text-gray-500 dark:text-gray-400">Amount</span>
                 <span className="font-bold text-base text-red-600">-€{Number(amount).toFixed(2)}</span>
->>>>>>> WOUTER
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500 dark:text-gray-400">Date</span>
@@ -193,11 +154,7 @@ export default function VariableTransactionForm({ walletId, onSaved, onCancel, e
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirm(false)}
-<<<<<<< HEAD
-                className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50"
-=======
                 className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
->>>>>>> WOUTER
               >
                 Cancel
               </button>
