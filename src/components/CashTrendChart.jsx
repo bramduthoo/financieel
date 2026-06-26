@@ -33,44 +33,44 @@ export default function CashTrendChart({ data }) {
     : ''
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
-      <h3 className="text-sm font-semibold text-gray-700 mb-4">Cash trend</h3>
+    <div className="bg-white border border-stone-200 rounded-2xl p-5">
+      <h3 className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-4">Cash trend</h3>
 
       <svg viewBox={`0 0 ${W} ${H}`} width="100%">
         {ticks.map((tick, i) => (
           <g key={i}>
             <line
               x1={ML} y1={py(tick)} x2={ML + CW} y2={py(tick)}
-              stroke={Math.abs(tick) < 0.01 ? '#e5e7eb' : '#f3f4f6'} strokeWidth={1}
+              stroke={Math.abs(tick) < 0.01 ? '#e7e5e4' : '#f5f5f4'} strokeWidth={1}
             />
-            <text x={ML - 8} y={py(tick) + 4} textAnchor="end" fontSize={10} fill="#9ca3af">
+            <text x={ML - 8} y={py(tick) + 4} textAnchor="end" fontSize={10} fill="#a8a29e">
               {fmtY(tick)}
             </text>
           </g>
         ))}
 
-        {areaPath && <path d={areaPath} fill="#6366f1" fillOpacity={0.08} />}
-        {linePath && <path d={linePath} fill="none" stroke="#6366f1" strokeWidth={2} />}
+        {areaPath && <path d={areaPath} fill="#444441" fillOpacity={0.08} />}
+        {linePath && <path d={linePath} fill="none" stroke="#444441" strokeWidth={2} />}
 
         {points.map((p, i) => (
           <g key={i}>
             <circle
               cx={p.x} cy={p.y}
               r={i === points.length - 1 ? 4 : 2.5}
-              fill={i === points.length - 1 ? '#6366f1' : '#a5b4fc'}
+              fill={i === points.length - 1 ? '#444441' : '#a8a29e'}
             >
               <title>{data[i].label} · €{data[i].totalCash.toFixed(2)}</title>
             </circle>
             <text
               x={p.x} y={MT + CH + 18}
-              textAnchor="middle" fontSize={10} fill="#9ca3af"
+              textAnchor="middle" fontSize={10} fill="#a8a29e"
             >
               {data[i].label}
             </text>
           </g>
         ))}
 
-        <line x1={ML} y1={py(0)} x2={ML + CW} y2={py(0)} stroke="#e5e7eb" strokeWidth={1} />
+        <line x1={ML} y1={py(0)} x2={ML + CW} y2={py(0)} stroke="#e7e5e4" strokeWidth={1} />
       </svg>
     </div>
   )

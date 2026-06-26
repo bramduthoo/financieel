@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Settings } from 'lucide-react'
 import { supabase } from '../lib/supabase'
@@ -58,8 +58,8 @@ export default function WalletDetail() {
     : 0
   const budget       = Number(wallet.budget)
   const pct          = budget > 0 ? (monthDebits / budget) * 100 : 0
-  const barColour    = pct >= 100 ? 'bg-red-500'   : pct >= 75 ? 'bg-amber-400' : 'bg-green-500'
-  const textColour   = pct >= 100 ? 'text-red-600'  : pct >= 75 ? 'text-amber-600' : 'text-green-600'
+  const barColour    = pct >= 100 ? 'bg-[#A32D2D]' : pct >= 75 ? 'bg-[#854F0B]' : 'bg-[#3B6D11]'
+  const textColour   = pct >= 100 ? 'text-[#A32D2D]' : pct >= 75 ? 'text-[#854F0B]' : 'text-[#3B6D11]'
 
   return (
     <div>
@@ -68,15 +68,15 @@ export default function WalletDetail() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate('/wallets')}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
           >
             <ArrowLeft size={18} />
           </button>
           <div className="flex items-center gap-3">
             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: wallet.colour }} />
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">{wallet.name}</h1>
-              <p className="text-gray-400 text-sm capitalize">
+              <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{wallet.name}</h1>
+              <p className="text-gray-400 dark:text-gray-500 text-sm capitalize">
                 {wallet.type === 'unallocated'
                   ? 'System wallet'
                   : `${wallet.type} · ${wallet.budget_type.replace('-', ' ')}${wallet.type !== 'investment' ? ` · €${Number(wallet.budget).toFixed(2)}/mo` : ''}`
@@ -91,26 +91,26 @@ export default function WalletDetail() {
           {wallet.type === 'variable' && (
             <div className="flex flex-col gap-1 min-w-[140px]">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-400">{format(now, 'MMMM')} spending</span>
+                <span className="text-xs text-gray-400 dark:text-gray-500">{format(now, 'MMMM')} spending</span>
                 <span className={`text-xs font-semibold ml-2 ${textColour}`}>{pct.toFixed(0)}%</span>
               </div>
-              <div className="w-full bg-gray-100 rounded-full h-1.5">
+              <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5">
                 <div
                   className={`h-1.5 rounded-full transition-all ${barColour}`}
                   style={{ width: `${Math.min(pct, 100)}%` }}
                 />
               </div>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-gray-400 dark:text-gray-500">
                 €{monthDebits.toFixed(2)} / €{budget.toFixed(2)}
               </p>
             </div>
           )}
 
           {/* Balance pill */}
-          <div className={`px-4 py-1.5 rounded-full text-sm font-semibold ${
+          <div className={`px-4 py-1.5 rounded-full text-sm font-medium ${
             Number(wallet.balance) >= 0
-              ? 'bg-green-50 text-green-700'
-              : 'bg-red-50 text-red-600'
+              ? 'bg-[#EAF3DE] text-[#3B6D11]'
+              : 'bg-[#FCEBEB] text-[#A32D2D]'
           }`}>
             Balance: €{Number(wallet.balance).toFixed(2)}
           </div>
@@ -118,7 +118,7 @@ export default function WalletDetail() {
           {!wallet.is_system && (
             <button
               onClick={() => setEditOpen(true)}
-              className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
             >
               <Settings size={15} /> Settings
             </button>
@@ -129,11 +129,11 @@ export default function WalletDetail() {
       {/* ── Fixed wallet ──────────────────────────────────────────────────────── */}
       {wallet.type === 'fixed' && (
         <>
-          <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit mb-6">
+          <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 w-fit mb-6">
             {['overview', 'history'].map(t => (
               <button key={t} onClick={() => setTab(t)}
                 className={`px-4 py-1.5 rounded-lg text-sm font-medium capitalize transition-colors ${
-                  tab === t ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500 hover:text-gray-700'
+                  tab === t ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                 }`}>
                 {t}
               </button>
@@ -142,20 +142,20 @@ export default function WalletDetail() {
 
           {tab === 'overview' && (
             <div className="space-y-6">
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
                 <TransactionChecklist walletId={id} onBalanceChanged={fetchAll} />
               </div>
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
                 <UpcomingPayments rules={rules} transactions={transactions} />
               </div>
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
                 <RecurringRules walletId={id} onRulesChanged={fetchAll} />
               </div>
             </div>
           )}
 
           {tab === 'history' && (
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
               <PaymentHistory walletId={id} />
             </div>
           )}
@@ -165,11 +165,11 @@ export default function WalletDetail() {
       {/* ── Variable wallet ───────────────────────────────────────────────────── */}
       {wallet.type === 'variable' && (
         <>
-          <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit mb-6">
+          <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 w-fit mb-6">
             {['overview', 'history', 'trends'].map(t => (
               <button key={t} onClick={() => setTab(t)}
                 className={`px-4 py-1.5 rounded-lg text-sm font-medium capitalize transition-colors ${
-                  tab === t ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500 hover:text-gray-700'
+                  tab === t ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                 }`}>
                 {t}
               </button>
@@ -184,7 +184,7 @@ export default function WalletDetail() {
           )}
 
           {tab === 'history' && (
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
               <VariableHistory walletId={id} />
             </div>
           )}
@@ -197,40 +197,40 @@ export default function WalletDetail() {
 
       {/* ── Investment wallet ─────────────────────────────────────────────────── */}
       {wallet.type === 'investment' && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <p className="text-gray-400 text-sm">Investment wallet features coming in Phase 7.</p>
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+          <p className="text-gray-400 dark:text-gray-500 text-sm">Investment wallet features coming in Phase 7.</p>
         </div>
       )}
 
       {/* ── Unallocated wallet ────────────────────────────────────────────────── */}
       {wallet.type === 'unallocated' && (
         <div className="space-y-4">
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <p className="text-sm text-gray-500 leading-relaxed">
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+            <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
               This wallet automatically collects unassigned income and overflow from capped wallets.
             </p>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h2 className="text-sm font-semibold text-gray-700 mb-4">Incoming transactions</h2>
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+            <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">Incoming transactions</h2>
             {transactions.filter(t => t.type === 'credit').length === 0 ? (
-              <p className="text-gray-400 text-sm">No transactions yet.</p>
+              <p className="text-gray-400 dark:text-gray-500 text-sm">No transactions yet.</p>
             ) : (
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-gray-100 dark:divide-gray-800">
                 {transactions
                   .filter(t => t.type === 'credit')
                   .sort((a, b) => new Date(b.date) - new Date(a.date))
                   .map(t => (
                     <div key={t.id} className="flex items-center justify-between py-3">
                       <div>
-                        <p className="text-sm font-medium text-gray-800">
+                        <p className="text-sm font-medium text-gray-800 dark:text-gray-100">
                           {t.name || t.note || 'Credit'}
                         </p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-gray-400 dark:text-gray-500">
                           {format(new Date(t.date), 'dd MMM yyyy')}
                         </p>
                       </div>
-                      <span className="text-sm font-semibold text-green-600">
+                      <span className="text-sm font-medium text-[#3B6D11]">
                         +€{Number(t.amount).toFixed(2)}
                       </span>
                     </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const COLOURS = [
@@ -14,6 +14,8 @@ const BUDGET_TYPES = {
                { value: 'capped',          label: 'Capped',           desc: 'Has a maximum balance it won\'t exceed (e.g. clothing)' }],
   investment: [{ value: 'none',            label: 'No budget',        desc: 'Tracks value over time, no monthly budget'       }],
 }
+
+const inputClass = 'w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent'
 
 export default function WalletModal({ wallet, onClose, onSave }) {
   const [name,       setName]       = useState(wallet?.name        ?? '')
@@ -53,32 +55,32 @@ export default function WalletModal({ wallet, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md p-6 relative">
 
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
           <X size={20} />
         </button>
 
-        <h2 className="text-lg font-bold text-gray-800 mb-6">
+        <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-6">
           {wallet ? 'Edit wallet' : 'New wallet'}
         </h2>
 
-        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+        {error && <p className="text-[#A32D2D] text-sm mb-4">{error}</p>}
 
         {/* Name */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Name</label>
           <input
             value={name}
             onChange={e => setName(e.target.value)}
             placeholder="e.g. Rent, Holidays, Groceries"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
           />
         </div>
 
         {/* Type */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Type</label>
           <div className="grid grid-cols-3 gap-2">
             {['fixed', 'variable', 'investment'].map(t => (
               <button
@@ -87,7 +89,7 @@ export default function WalletModal({ wallet, onClose, onSave }) {
                 className={`py-2 rounded-lg text-sm font-medium border transition-colors capitalize ${
                   type === t
                     ? 'bg-indigo-600 text-white border-indigo-600'
-                    : 'bg-white text-gray-600 border-gray-300 hover:border-indigo-400'
+                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-indigo-400'
                 }`}
               >
                 {t}
@@ -98,7 +100,7 @@ export default function WalletModal({ wallet, onClose, onSave }) {
 
         {/* Budget type */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Budget behaviour</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Budget behaviour</label>
           <div className="space-y-2">
             {BUDGET_TYPES[type].map(opt => (
               <button
@@ -107,11 +109,11 @@ export default function WalletModal({ wallet, onClose, onSave }) {
                 className={`w-full text-left px-3 py-2 rounded-lg border text-sm transition-colors ${
                   budgetType === opt.value
                     ? 'bg-indigo-50 border-indigo-400 text-indigo-700'
-                    : 'bg-white border-gray-300 text-gray-600 hover:border-indigo-300'
+                    : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-indigo-300'
                 }`}
               >
                 <span className="font-medium">{opt.label}</span>
-                <span className="block text-xs text-gray-500 mt-0.5">{opt.desc}</span>
+                <span className="block text-xs text-gray-500 dark:text-gray-400 mt-0.5">{opt.desc}</span>
               </button>
             ))}
           </div>
@@ -120,7 +122,7 @@ export default function WalletModal({ wallet, onClose, onSave }) {
         {/* Budget amount — hide for investment */}
         {type !== 'investment' && (
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Monthly budget (€)
             </label>
             <input
@@ -128,14 +130,14 @@ export default function WalletModal({ wallet, onClose, onSave }) {
               value={budget}
               onChange={e => setBudget(e.target.value)}
               placeholder="0.00"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
             />
           </div>
         )}
 
         {/* Colour */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Colour</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Colour</label>
           <div className="flex gap-2 flex-wrap">
             {COLOURS.map(c => (
               <button
@@ -152,29 +154,29 @@ export default function WalletModal({ wallet, onClose, onSave }) {
 
         {/* Sort order */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Display order <span className="text-gray-400 font-normal">(lower = appears first)</span>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+            Display order <span className="text-gray-400 dark:text-gray-500 font-normal">(lower = appears first)</span>
           </label>
           <input
             type="number"
             value={sortOrder}
             onChange={e => setSortOrder(e.target.value)}
             placeholder="0"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
           />
         </div>
 
         {/* Cap reduction settings — capped variable wallets only */}
         {type === 'variable' && budgetType === 'capped' && (
-          <div className="mb-6 border border-gray-200 rounded-xl p-4 space-y-3">
-            <p className="text-sm font-medium text-gray-700">Cap reduction settings</p>
+          <div className="mb-6 border border-gray-200 dark:border-gray-700 rounded-xl p-4 space-y-3">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-200">Cap reduction settings</p>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Enable reduction when cap is reached</span>
+              <span className="text-sm text-gray-600 dark:text-gray-300">Enable reduction when cap is reached</span>
               <button
                 type="button"
                 onClick={() => setCapReductionEnabled(v => !v)}
                 className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none ${
-                  capReductionEnabled ? 'bg-indigo-600' : 'bg-gray-200'
+                  capReductionEnabled ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-600'
                 }`}
               >
                 <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
@@ -185,7 +187,7 @@ export default function WalletModal({ wallet, onClose, onSave }) {
             {capReductionEnabled && (
               <>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                     Receive % of normal distribution after cap
                   </label>
                   <div className="flex items-center gap-2">
@@ -195,12 +197,12 @@ export default function WalletModal({ wallet, onClose, onSave }) {
                       max={100}
                       value={capReductionRate}
                       onChange={e => setCapReductionRate(e.target.value)}
-                      className="w-20 px-3 py-2 border border-gray-300 rounded-lg text-sm text-right focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-20 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-right focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
                     />
-                    <span className="text-sm text-gray-500">%</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">%</span>
                   </div>
                 </div>
-                <p className="text-xs text-gray-400 leading-relaxed">
+                <p className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
                   When your balance reaches the cap, automated income will be reduced to {capReductionRate || '?'}% of its normal amount. The rest goes to Unallocated.
                 </p>
               </>
@@ -212,14 +214,14 @@ export default function WalletModal({ wallet, onClose, onSave }) {
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50"
+            className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
+            className="flex-1 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 disabled:opacity-50"
           >
             {saving ? 'Saving...' : wallet ? 'Save changes' : 'Create wallet'}
           </button>

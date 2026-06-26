@@ -31,16 +31,16 @@ export default function IncomeSpendingChart({ data }) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
+    <div className="bg-white border border-stone-200 rounded-2xl p-5">
       <div className="flex items-start justify-between mb-4">
-        <h3 className="text-sm font-semibold text-gray-700">Income vs spending</h3>
-        <div className="flex items-center gap-4 text-xs text-gray-500">
+        <h3 className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Income vs spending</h3>
+        <div className="flex items-center gap-4 text-[11px] text-gray-600">
           <span className="flex items-center gap-1.5">
-            <span className="inline-block w-3 h-3 rounded-sm bg-green-400" />
+            <span className="inline-block w-3 h-3 rounded-sm bg-[#97C459]" />
             Income
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="inline-block w-3 h-3 rounded-sm bg-red-400" />
+            <span className="inline-block w-3 h-3 rounded-sm bg-[#E24B4A]" />
             Spending
           </span>
         </div>
@@ -51,9 +51,9 @@ export default function IncomeSpendingChart({ data }) {
           <g key={i}>
             <line
               x1={ML} y1={bY(tick)} x2={ML + CW} y2={bY(tick)}
-              stroke={i === 0 ? '#e5e7eb' : '#f3f4f6'} strokeWidth={1}
+              stroke={i === 0 ? '#e7e5e4' : '#f5f5f4'} strokeWidth={1}
             />
-            <text x={ML - 8} y={bY(tick) + 4} textAnchor="end" fontSize={10} fill="#9ca3af">
+            <text x={ML - 8} y={bY(tick) + 4} textAnchor="end" fontSize={10} fill="#a8a29e">
               {fmtY(tick)}
             </text>
           </g>
@@ -64,7 +64,7 @@ export default function IncomeSpendingChart({ data }) {
             {d.income > 0 && (
               <rect
                 x={bX(i, 0)} y={bY(d.income)} width={barW} height={bH(d.income)}
-                fill="#4ade80" rx={2}
+                fill="#97C459" rx={2}
               >
                 <title>{d.label} · Income: €{d.income.toFixed(2)}</title>
               </rect>
@@ -72,21 +72,21 @@ export default function IncomeSpendingChart({ data }) {
             {d.spending > 0 && (
               <rect
                 x={bX(i, 1)} y={bY(d.spending)} width={barW} height={bH(d.spending)}
-                fill="#f87171" rx={2}
+                fill="#E24B4A" rx={2}
               >
                 <title>{d.label} · Spending: €{d.spending.toFixed(2)}</title>
               </rect>
             )}
             <text
               x={ML + i * slotW + slotW / 2} y={MT + CH + 18}
-              textAnchor="middle" fontSize={10} fill="#9ca3af"
+              textAnchor="middle" fontSize={10} fill="#a8a29e"
             >
               {d.label}
             </text>
           </g>
         ))}
 
-        <line x1={ML} y1={MT + CH} x2={ML + CW} y2={MT + CH} stroke="#e5e7eb" strokeWidth={1} />
+        <line x1={ML} y1={MT + CH} x2={ML + CW} y2={MT + CH} stroke="#e7e5e4" strokeWidth={1} />
       </svg>
     </div>
   )

@@ -1,4 +1,4 @@
-import { Lock, Pencil, Trash2 } from 'lucide-react'
+﻿import { Lock, Pencil, Trash2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 export default function WalletCard({ wallet, onEdit, onDelete }) {
@@ -7,7 +7,7 @@ export default function WalletCard({ wallet, onEdit, onDelete }) {
   return (
     <div
       onClick={() => navigate(`/wallets/${wallet.id}`)}
-      className="bg-white rounded-xl border border-gray-200 p-5 flex flex-col gap-3 hover:shadow-md transition-shadow cursor-pointer"
+      className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5 flex flex-col gap-3 hover:shadow-md transition-shadow cursor-pointer"
     >
       {/* Header */}
       <div className="flex items-start justify-between">
@@ -17,13 +17,13 @@ export default function WalletCard({ wallet, onEdit, onDelete }) {
             style={{ backgroundColor: wallet.colour }}
           />
           <div>
-            <h3 className="font-semibold text-gray-800 text-sm">{wallet.name}</h3>
-            <span className="text-xs text-gray-400 capitalize">{wallet.type}</span>
+            <h3 className="font-semibold text-gray-800 dark:text-gray-100 text-sm">{wallet.name}</h3>
+            <span className="text-xs text-gray-400 dark:text-gray-500 capitalize">{wallet.type}</span>
           </div>
         </div>
 
         {wallet.is_system ? (
-          <div className="flex items-center gap-1 text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
+          <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full">
             <Lock size={10} />
             System
           </div>
@@ -31,13 +31,13 @@ export default function WalletCard({ wallet, onEdit, onDelete }) {
           <div className="flex gap-1">
             <button
               onClick={e => { e.stopPropagation(); onEdit(wallet) }}
-              className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+              className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg transition-colors"
             >
               <Pencil size={14} />
             </button>
             <button
               onClick={e => { e.stopPropagation(); onDelete(wallet) }}
-              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+              className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg transition-colors"
             >
               <Trash2 size={14} />
             </button>
@@ -45,27 +45,27 @@ export default function WalletCard({ wallet, onEdit, onDelete }) {
         )}
       </div>
 
-      {/* Budget — hidden for system/unallocated wallets */}
+      {/* Budget — hidden for investment/unallocated wallets */}
       {wallet.type !== 'investment' && wallet.type !== 'unallocated' && (
-        <div className="text-sm text-gray-600">
-          <span className="text-gray-400 text-xs">Monthly budget</span>
-          <p className="font-semibold text-gray-800">€{Number(wallet.budget).toFixed(2)}</p>
+        <div className="text-sm text-gray-600 dark:text-gray-300">
+          <span className="text-gray-400 dark:text-gray-500 text-xs">Monthly budget</span>
+          <p className="font-semibold text-gray-800 dark:text-gray-100">€{Number(wallet.budget).toFixed(2)}</p>
         </div>
       )}
 
       {/* Balance — shown for unallocated/system wallets */}
       {wallet.type === 'unallocated' && (
         <div className="text-sm">
-          <span className="text-gray-400 text-xs">Balance</span>
+          <span className="text-gray-400 dark:text-gray-500 text-xs">Balance</span>
           <p className={`font-semibold ${Number(wallet.balance) >= 0 ? 'text-green-700' : 'text-red-600'}`}>
             €{Number(wallet.balance).toFixed(2)}
           </p>
         </div>
       )}
 
-      {/* Budget type badge */}
+      {/* Budget type pill */}
       <div>
-        <span className="inline-block text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 capitalize">
+        <span className="inline-block text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 capitalize">
           {wallet.budget_type.replace('-', ' ')}
         </span>
       </div>

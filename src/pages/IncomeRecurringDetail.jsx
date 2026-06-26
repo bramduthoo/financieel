@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+﻿import { useEffect, useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Edit2, X } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
@@ -19,6 +19,8 @@ function fmtK(n) {
   if (n >= 1000) return `€${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k`
   return `€${Math.round(n)}`
 }
+
+const inputClass = 'w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent'
 
 function fmt(n) { return `€${Number(n).toFixed(2)}` }
 function todayStr() { return format(new Date(), 'yyyy-MM-dd') }
@@ -60,7 +62,7 @@ function SalaryBarChart({ chain }) {
     <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} width="100%">
       {chain.map((r, i) => {
         const isActive = !r.end_date
-        const fill     = isActive ? '#6366f1' : '#c7d2fe'
+        const fill     = isActive ? '#444441' : '#C0DD97'
         const x        = bX(i)
         const h        = bH(r.amount)
         const y        = bY(r.amount)
@@ -70,7 +72,7 @@ function SalaryBarChart({ chain }) {
             <text
               x={x + barW / 2} y={y - 6}
               textAnchor="middle" fontSize={10}
-              fill={isActive ? '#6366f1' : '#a5b4fc'}
+              fill={isActive ? '#444441' : '#97C459'}
               fontWeight={isActive ? '600' : '400'}
             >
               {fmtK(r.amount)}
@@ -239,44 +241,44 @@ export default function IncomeRecurringDetail() {
       <div className="flex items-center gap-4 mb-6">
         <button
           onClick={() => navigate('/income')}
-          className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+          className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
         >
           <ArrowLeft size={18} />
         </button>
         <div className="flex-1 min-w-0">
-          <h1 className="text-2xl font-bold text-gray-800 truncate">{rule.name}</h1>
-          <p className="text-gray-400 text-sm capitalize mt-0.5">
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 truncate">{rule.name}</h1>
+          <p className="text-gray-400 dark:text-gray-500 text-sm capitalize mt-0.5">
             {rule.frequency}{showDay && rule.day_of_month ? ` · day ${rule.day_of_month}` : ''}
           </p>
         </div>
         <button
           onClick={openEdit}
-          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
         >
           <Edit2 size={15} /> Edit
         </button>
       </div>
 
       {/* Current amount */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
-        <p className="text-xs text-gray-400 mb-1">Current amount</p>
-        <p className="text-3xl font-bold text-gray-900">{fmt(rule.amount)}</p>
-        <p className="text-sm text-gray-400 mt-1 capitalize">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5 mb-6">
+        <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">Current amount</p>
+        <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">{fmt(rule.amount)}</p>
+        <p className="text-sm text-gray-400 dark:text-gray-500 mt-1 capitalize">
           {rule.frequency} · since {format(parseISO(rule.start_date), 'd MMM yyyy')}
         </p>
       </div>
 
       {/* Salary growth chart */}
       {chain.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5 mb-6">
           <div className="flex items-center justify-between mb-1">
-            <h2 className="text-sm font-semibold text-gray-700">Salary growth</h2>
-            <div className="flex items-center gap-4 text-xs text-gray-400">
+            <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Salary growth</h2>
+            <div className="flex items-center gap-4 text-xs text-gray-400 dark:text-gray-500">
               <span className="flex items-center gap-1.5">
-                <span className="inline-block w-3 h-3 rounded-sm bg-indigo-200" /> Archived
+                <span className="inline-block w-3 h-3 rounded-sm bg-[#C0DD97]" /> Archived
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="inline-block w-3 h-3 rounded-sm bg-indigo-500" /> Current
+                <span className="inline-block w-3 h-3 rounded-sm bg-[#444441]" /> Current
               </span>
             </div>
           </div>
@@ -286,30 +288,30 @@ export default function IncomeRecurringDetail() {
 
       {/* Version history table */}
       {chain.length > 1 && (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6">
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
               <tr>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Period</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Frequency</th>
-                <th className="px-4 py-2.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Amount</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Period</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Frequency</th>
+                <th className="px-4 py-2.5 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Amount</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
               {chain.map(r => (
-                <tr key={r.id} className={r.id === rule.id ? 'bg-indigo-50/40' : ''}>
-                  <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap text-xs">
+                <tr key={r.id} className={r.id === rule.id ? 'bg-indigo-50/40 dark:bg-indigo-900/20' : ''}>
+                  <td className="px-4 py-2.5 text-gray-600 dark:text-gray-300 whitespace-nowrap text-xs">
                     {format(parseISO(r.start_date), 'd MMM yyyy')}
                     {r.end_date ? ` – ${format(parseISO(r.end_date), 'd MMM yyyy')}` : ' – present'}
                   </td>
-                  <td className="px-4 py-2.5 text-gray-600 capitalize text-xs">{r.frequency}</td>
-                  <td className="px-4 py-2.5 text-right font-semibold text-gray-800">{fmt(r.amount)}</td>
+                  <td className="px-4 py-2.5 text-gray-600 dark:text-gray-300 capitalize text-xs">{r.frequency}</td>
+                  <td className="px-4 py-2.5 text-right font-semibold text-gray-800 dark:text-gray-100">{fmt(r.amount)}</td>
                   <td className="px-4 py-2.5">
                     {r.end_date ? (
-                      <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-400">Archived</span>
+                      <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-400">Archived</span>
                     ) : (
-                      <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-indigo-50 text-indigo-600 font-medium">Active</span>
+                      <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 font-medium">Active</span>
                     )}
                   </td>
                 </tr>
@@ -320,15 +322,15 @@ export default function IncomeRecurringDetail() {
       )}
 
       {/* Distribution setup */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5 mb-6">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-gray-700">Distribution setup</h2>
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Distribution setup</h2>
           {distributionRules.length > 0 && (
             <button
               onClick={() => setDistPopupOpen(true)}
-              className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+              className="bg-gray-900 text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-gray-800 transition-colors"
             >
-              Edit
+              Edit distribution
             </button>
           )}
         </div>
@@ -337,7 +339,7 @@ export default function IncomeRecurringDetail() {
             <p className="text-sm mb-3">No distribution set up</p>
             <button
               onClick={() => setDistPopupOpen(true)}
-              className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+              className="bg-gray-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
             >
               Set up distribution
             </button>
@@ -354,7 +356,7 @@ export default function IncomeRecurringDetail() {
                     )}
                     <span className="text-gray-700">{wallet?.name ?? '—'}</span>
                   </div>
-                  <span className="font-semibold text-gray-800">€{Number(dr.amount).toFixed(2)}</span>
+                  <span className="font-medium text-gray-900">€{Number(dr.amount).toFixed(2)}</span>
                 </div>
               )
             })}
@@ -366,21 +368,21 @@ export default function IncomeRecurringDetail() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => setLogModal({ amount: String(rule.amount), date: todayStr() })}
-          className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
+          className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
         >
           Log income
         </button>
         {distSuccess && (
-          <span className="text-sm text-green-600 font-medium">Income distributed.</span>
+          <span className="text-sm text-[#3B6D11] font-medium">Income distributed.</span>
         )}
       </div>
 
       {/* Log modal */}
       {logModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-800">Log income</h2>
+              <h2 className="text-lg font-medium text-gray-900">Log income</h2>
               <button onClick={() => setLogModal(null)} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg">
                 <X size={16} />
               </button>
@@ -392,7 +394,7 @@ export default function IncomeRecurringDetail() {
                 <input
                   type="number" value={logModal.amount}
                   onChange={e => setLogModal(m => ({ ...m, amount: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className={inputClass}
                 />
               </div>
               <div>
@@ -400,13 +402,13 @@ export default function IncomeRecurringDetail() {
                 <input
                   type="date" value={logModal.date}
                   onChange={e => setLogModal(m => ({ ...m, date: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className={inputClass}
                 />
               </div>
             </div>
             <div className="flex gap-3 mt-5">
-              <button onClick={() => setLogModal(null)} className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
-              <button onClick={submitLog} className="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">Continue</button>
+              <button onClick={() => setLogModal(null)} className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50">Cancel</button>
+              <button onClick={submitLog} className="flex-1 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800">Continue</button>
             </div>
           </div>
         </div>
@@ -414,22 +416,22 @@ export default function IncomeRecurringDetail() {
 
       {/* Edit modal */}
       {editModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-800">Edit recurring income</h2>
+              <h2 className="text-lg font-medium text-gray-900">Edit recurring income</h2>
               <button onClick={() => setEditModal(null)} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg">
                 <X size={16} />
               </button>
             </div>
-            {editError && <p className="text-red-500 text-sm mb-3">{editError}</p>}
+            {editError && <p className="text-[#A32D2D] text-sm mb-3">{editError}</p>}
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Name</label>
                 <input
                   value={editModal.name}
                   onChange={e => setEditModal(f => ({ ...f, name: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className={inputClass}
                 />
               </div>
               <div>
@@ -437,10 +439,10 @@ export default function IncomeRecurringDetail() {
                 <input
                   type="number" value={editModal.amount}
                   onChange={e => setEditModal(f => ({ ...f, amount: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className={inputClass}
                 />
                 {editModal.amount && Number(editModal.amount) !== Number(editModal.originalAmount) && (
-                  <p className="text-xs text-amber-600 mt-1">Changing the amount will archive the current version.</p>
+                  <p className="text-xs text-[#854F0B] mt-1">Changing the amount will archive the current version.</p>
                 )}
               </div>
               <div>
@@ -448,7 +450,7 @@ export default function IncomeRecurringDetail() {
                 <select
                   value={editModal.frequency}
                   onChange={e => setEditModal(f => ({ ...f, frequency: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className={inputClass}
                 >
                   {FREQ_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
@@ -460,14 +462,14 @@ export default function IncomeRecurringDetail() {
                     type="number" value={editModal.day_of_month}
                     onChange={e => setEditModal(f => ({ ...f, day_of_month: e.target.value }))}
                     min={1} max={editModal.frequency === 'weekly' ? 7 : 31}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className={inputClass}
                   />
                 </div>
               )}
             </div>
             <div className="flex gap-3 mt-5">
-              <button onClick={() => setEditModal(null)} className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
-              <button onClick={submitEdit} className="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">Save changes</button>
+              <button onClick={() => setEditModal(null)} className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50">Cancel</button>
+              <button onClick={submitEdit} className="flex-1 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800">Save changes</button>
             </div>
           </div>
         </div>

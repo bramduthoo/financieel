@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { Plus, Pencil, Trash2, X } from 'lucide-react'
 import { supabase, getCurrentUserId } from '../lib/supabase'
 import { format, addMonths } from 'date-fns'
@@ -148,17 +148,17 @@ export default function RecurringRules({ walletId, onRulesChanged }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm font-semibold text-gray-700">Recurring payments</h2>
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Recurring payments</h2>
         <button onClick={openCreate}
-          className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-700 font-medium">
+          className="flex items-center gap-1.5 text-xs text-gray-900 hover:text-gray-700 font-medium">
           <Plus size={14} /> Add
         </button>
       </div>
 
       {showForm && (
-        <div className="bg-gray-50 rounded-xl p-4 mb-4 border border-gray-200">
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 mb-4 border border-gray-200 dark:border-gray-700">
           <div className="flex justify-between items-center mb-3">
-            <span className="text-xs font-semibold text-gray-600">
+            <span className="text-xs font-semibold text-gray-600 dark:text-gray-300">
               {editingId ? 'Edit payment' : 'New payment'}
             </span>
             <button onClick={() => setShowForm(false)}>
@@ -170,38 +170,38 @@ export default function RecurringRules({ walletId, onRulesChanged }) {
           <div className="space-y-3">
             {/* Name + Description */}
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Name</label>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Name</label>
               <input value={form.name} onChange={e => setField('name', e.target.value)}
                 placeholder="e.g. Rent"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-100" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Description (optional)</label>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Description (optional)</label>
               <input value={form.description} onChange={e => setField('description', e.target.value)}
                 placeholder="e.g. Apartment on Ghent city centre"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-100" />
             </div>
 
             {/* Amount + Start date */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Amount (€)</label>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Amount (€)</label>
                 <input type="number" value={form.amount} onChange={e => setField('amount', e.target.value)}
                   placeholder="0.00"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-100" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Start date</label>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Start date</label>
                 <input type="date" value={form.start_date} onChange={e => setField('start_date', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-100" />
               </div>
             </div>
 
             {/* Frequency */}
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Frequency</label>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Frequency</label>
               <select value={form.frequency} onChange={e => setField('frequency', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-100">
                 {FREQUENCIES.map(f => (
                   <option key={f} value={f}>{formatFrequency(f)}</option>
                 ))}
@@ -211,9 +211,9 @@ export default function RecurringRules({ walletId, onRulesChanged }) {
             {/* Payment day — adapts to frequency */}
             {form.frequency === 'weekly' && (
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Day of week</label>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Day of week</label>
                 <select value={form.day_of_month} onChange={e => setField('day_of_month', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-100">
                   {WEEKDAYS.map((d, i) => (
                     <option key={d} value={i + 1}>{d}</option>
                   ))}
@@ -223,38 +223,38 @@ export default function RecurringRules({ walletId, onRulesChanged }) {
 
             {form.frequency === 'monthly' && (
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Day of month <span className="text-gray-400">(1–31)</span>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
+                  Day of month <span className="text-gray-400 dark:text-gray-500">(1–31)</span>
                 </label>
                 <input type="number" min="1" max="31"
                   value={form.day_of_month} onChange={e => setField('day_of_month', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-100" />
               </div>
             )}
 
             {form.frequency === 'quarterly' && (
               <div className="space-y-2">
-                <label className="block text-xs font-medium text-gray-600">
-                  Payment day within Q1 <span className="text-gray-400">(system extrapolates Q2–Q4)</span>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300">
+                  Payment day within Q1 <span className="text-gray-400 dark:text-gray-500">(system extrapolates Q2–Q4)</span>
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">Month of quarter</label>
+                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Month of quarter</label>
                     <select value={form.quarter_month} onChange={e => setField('quarter_month', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-100">
                       {Q1_MONTHS.map((m, i) => (
                         <option key={m} value={i + 1}>{m}</option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">Day of month (1–31)</label>
+                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Day of month (1–31)</label>
                     <input type="number" min="1" max="31"
                       value={form.day_of_month} onChange={e => setField('day_of_month', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-100" />
                   </div>
                 </div>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-gray-400 dark:text-gray-500">
                   e.g. {Q1_MONTHS[Number(form.quarter_month) - 1]} {form.day_of_month} →
                   also fires on {getQuarterPreview(Number(form.quarter_month), Number(form.day_of_month))}
                 </p>
@@ -263,22 +263,22 @@ export default function RecurringRules({ walletId, onRulesChanged }) {
 
             {form.frequency === 'yearly' && (
               <div className="space-y-2">
-                <label className="block text-xs font-medium text-gray-600">Yearly payment date</label>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300">Yearly payment date</label>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">Month</label>
+                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Month</label>
                     <select value={form.yearly_month} onChange={e => setField('yearly_month', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-100">
                       {MONTHS.map((m, i) => (
                         <option key={m} value={i}>{m}</option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">Day (1–31)</label>
+                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Day (1–31)</label>
                     <input type="number" min="1" max="31"
                       value={form.day_of_month} onChange={e => setField('day_of_month', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-100" />
                   </div>
                 </div>
               </div>
@@ -295,11 +295,11 @@ export default function RecurringRules({ walletId, onRulesChanged }) {
 
           <div className="flex gap-2 mt-4">
             <button onClick={() => { setShowForm(false); setError(null) }}
-              className="px-3 py-1.5 rounded-lg border border-gray-300 text-xs text-gray-600 hover:bg-gray-100">
+              className="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
               Cancel
             </button>
             <button onClick={handleSave} disabled={saving}
-              className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-700 disabled:opacity-50">
+              className="px-3 py-1.5 rounded-lg bg-gray-900 text-white text-xs font-medium hover:bg-gray-800 disabled:opacity-50">
               {saving ? 'Saving...' : editingId ? 'Save changes' : 'Add payment'}
             </button>
           </div>
@@ -312,11 +312,11 @@ export default function RecurringRules({ walletId, onRulesChanged }) {
         <div className="space-y-2">
           {rules.map(r => (
             <div key={r.id}
-              className="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-4 py-3">
+              className="flex items-center justify-between bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3">
               <div>
-                <p className="text-sm font-medium text-gray-800">{r.name}</p>
-                {r.description && <p className="text-xs text-gray-400">{r.description}</p>}
-                <p className="text-xs text-gray-400">
+                <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{r.name}</p>
+                {r.description && <p className="text-xs text-gray-400 dark:text-gray-500">{r.description}</p>}
+                <p className="text-xs text-gray-400 dark:text-gray-500">
                   €{Number(r.amount).toFixed(2)} · {formatFrequency(r.frequency)}
                   {r.frequency === 'monthly'   && r.day_of_month  ? ` · day ${r.day_of_month}` : ''}
                   {r.frequency === 'weekly'    && r.day_of_month  ? ` · ${WEEKDAYS[r.day_of_month - 1]}` : ''}
@@ -327,11 +327,11 @@ export default function RecurringRules({ walletId, onRulesChanged }) {
               </div>
               <div className="flex gap-1">
                 <button onClick={() => openEdit(r)}
-                  className="p-1.5 text-gray-300 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors">
+                  className="p-1.5 text-gray-300 hover:text-gray-700 hover:bg-stone-100 rounded-lg transition-colors">
                   <Pencil size={13} />
                 </button>
                 <button onClick={() => handleDelete(r.id)}
-                  className="p-1.5 text-gray-300 hover:text-red-400 hover:bg-red-50 rounded-lg transition-colors">
+                  className="p-1.5 text-gray-300 hover:text-[#A32D2D] hover:bg-[#FCEBEB] rounded-lg transition-colors">
                   <Trash2 size={13} />
                 </button>
               </div>
@@ -381,7 +381,7 @@ function CustomDatePicker({ form, setField, toggleCustomDate }) {
             type="button"
             onClick={() => setField('custom_repeat', !form.custom_repeat)}
             className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-              form.custom_repeat ? 'bg-indigo-600' : 'bg-gray-300'
+              form.custom_repeat ? 'bg-gray-900' : 'bg-stone-300'
             }`}
           >
             <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
@@ -397,7 +397,7 @@ function CustomDatePicker({ form, setField, toggleCustomDate }) {
           <input type="number" min="1" max="10"
             value={form.custom_cycle_years}
             onChange={e => setField('custom_cycle_years', Number(e.target.value))}
-            className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            className="w-24 px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent" />
         </div>
       )}
 
@@ -415,7 +415,7 @@ function CustomDatePicker({ form, setField, toggleCustomDate }) {
           const firstDay    = (new Date(year, month, 1).getDay() + 6) % 7 // Mon=0
 
           return (
-            <div key={`${year}-${month}`} className="border border-gray-200 rounded-lg p-2">
+            <div key={`${year}-${month}`} className="border border-stone-200 rounded-lg p-2">
               <p className="text-xs font-semibold text-gray-600 text-center mb-2">
                 {MONTHS_FULL[month]} {year}
               </p>
@@ -431,7 +431,7 @@ function CustomDatePicker({ form, setField, toggleCustomDate }) {
                   return (
                     <button key={day} type="button" onClick={() => toggleCustomDate(mmdd)}
                       className={`text-xs rounded py-0.5 transition-colors ${
-                        sel ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-indigo-50'
+                        sel ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-stone-100'
                       }`}>
                       {day}
                     </button>

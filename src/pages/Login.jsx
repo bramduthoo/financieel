@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { CheckCircle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
+const inputClass = 'w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent'
+
 export default function Login() {
   const [tab,  setTab]  = useState('login')
   const [view, setView] = useState('form') // 'form' | 'signupSuccess' | 'forgotPassword' | 'forgotSuccess'
@@ -85,22 +87,22 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-xl shadow-sm w-full max-w-md">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+      <div className="bg-white dark:bg-gray-900 p-8 rounded-xl shadow-sm w-full max-w-md">
 
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">Financieel</h1>
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">Financieel</h1>
 
         {/* ── Signup success ───────────────────────────────────── */}
         {view === 'signupSuccess' && (
           <div className="text-center py-4">
             <CheckCircle size={40} className="mx-auto mb-4 text-green-500" />
-            <h2 className="text-lg font-semibold text-gray-800 mb-2">Almost there</h2>
-            <p className="text-gray-500 text-sm mb-6">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">Almost there</h2>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
               If this email isn't already registered, you'll receive a verification link shortly. If you already have an account, please log in instead.
             </p>
             <button
               onClick={() => switchTab('login')}
-              className="text-indigo-600 text-sm font-medium hover:text-indigo-800"
+              className="text-indigo-600 dark:text-indigo-400 text-sm font-medium hover:text-indigo-800 dark:hover:text-indigo-300"
             >
               Back to login
             </button>
@@ -111,13 +113,13 @@ export default function Login() {
         {view === 'forgotSuccess' && (
           <div className="text-center py-4">
             <CheckCircle size={40} className="mx-auto mb-4 text-green-500" />
-            <h2 className="text-lg font-semibold text-gray-800 mb-2">Check your email</h2>
-            <p className="text-gray-500 text-sm mb-6">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">Check your email</h2>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
               We've sent you a password reset link.
             </p>
             <button
               onClick={() => switchTab('login')}
-              className="text-indigo-600 text-sm font-medium hover:text-indigo-800"
+              className="text-indigo-600 dark:text-indigo-400 text-sm font-medium hover:text-indigo-800 dark:hover:text-indigo-300"
             >
               Back to login
             </button>
@@ -127,24 +129,24 @@ export default function Login() {
         {/* ── Forgot password form ─────────────────────────────── */}
         {view === 'forgotPassword' && (
           <div>
-            <p className="text-gray-500 mb-6">Enter your email to receive a reset link.</p>
+            <p className="text-gray-500 dark:text-gray-400 mb-6">Enter your email to receive a reset link.</p>
 
             {resetError && (
-              <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-lg mb-4">
+              <div className="bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-sm px-4 py-3 rounded-lg mb-4">
                 {resetError}
               </div>
             )}
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Email</label>
                 <input
                   type="email"
                   value={resetEmail}
                   onChange={e => setResetEmail(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleResetPassword()}
                   placeholder="you@example.com"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
                 />
               </div>
               <button
@@ -159,7 +161,7 @@ export default function Login() {
             <div className="mt-4 text-center">
               <button
                 onClick={() => switchTab('login')}
-                className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
+                className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium"
               >
                 Back to login
               </button>
@@ -170,18 +172,18 @@ export default function Login() {
         {/* ── Main form (login / signup tabs) ─────────────────── */}
         {view === 'form' && (
           <>
-            <p className="text-gray-500 mb-6">Sign in to your dashboard</p>
+            <p className="text-gray-500 dark:text-gray-400 mb-6">Sign in to your dashboard</p>
 
             {/* Tabs */}
-            <div className="bg-stone-100 rounded-xl p-1 flex gap-1 mb-6">
+            <div className="bg-stone-100 dark:bg-gray-800 rounded-xl p-1 flex gap-1 mb-6">
               {[['login', 'Log in'], ['signup', 'Sign up']].map(([id, label]) => (
                 <button
                   key={id}
                   onClick={() => switchTab(id)}
                   className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                     tab === id
-                      ? 'bg-white shadow-sm text-gray-900 font-medium'
-                      : 'text-gray-600 hover:text-gray-800'
+                      ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-gray-100 font-medium'
+                      : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100'
                   }`}
                 >
                   {label}
@@ -193,32 +195,32 @@ export default function Login() {
             {tab === 'login' && (
               <div>
                 {error && (
-                  <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-lg mb-4">
+                  <div className="bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-sm px-4 py-3 rounded-lg mb-4">
                     {error}
                   </div>
                 )}
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Email</label>
                     <input
                       type="email"
                       value={email}
                       onChange={e => setEmail(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && handleLogin()}
                       placeholder="you@example.com"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Password</label>
                     <input
                       type="password"
                       value={password}
                       onChange={e => setPassword(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && handleLogin()}
                       placeholder="••••••••"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
                     />
                   </div>
                   <button
@@ -233,7 +235,7 @@ export default function Login() {
                 <div className="mt-4 text-center">
                   <button
                     onClick={() => setView('forgotPassword')}
-                    className="text-sm text-gray-400 hover:text-gray-600"
+                    className="text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                   >
                     Forgot password?
                   </button>
@@ -245,41 +247,41 @@ export default function Login() {
             {tab === 'signup' && (
               <div>
                 {signupError && (
-                  <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-lg mb-4">
+                  <div className="bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-sm px-4 py-3 rounded-lg mb-4">
                     {signupError}
                   </div>
                 )}
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Email</label>
                     <input
                       type="email"
                       value={signupEmail}
                       onChange={e => setSignupEmail(e.target.value)}
                       placeholder="you@example.com"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Password</label>
                     <input
                       type="password"
                       value={signupPassword}
                       onChange={e => setSignupPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Confirm password</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Confirm password</label>
                     <input
                       type="password"
                       value={signupConfirm}
                       onChange={e => setSignupConfirm(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && handleSignup()}
                       placeholder="••••••••"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
                     />
                   </div>
                   <button
