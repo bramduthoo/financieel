@@ -10,12 +10,20 @@ import Income from './pages/Income'
 import IncomeRecurringDetail from './pages/IncomeRecurringDetail'
 import Settings from './pages/Settings'
 import Login from './pages/Login'
+import ResetPassword from './pages/ResetPassword'
 
 export default function App() {
-  const [session, setSession] = useState(undefined)
-  const [theme,   setTheme]   = useState('light')
+  const [session,           setSession]           = useState(undefined)
+  const [showWelcomeBanner, setShowWelcomeBanner] = useState(false)
+  const [theme,             setTheme]             = useState('light')
 
   useEffect(() => {
+    // Detect email-confirmation redirect (Supabase includes type=signup in the hash)
+    if (window.location.hash.includes('type=signup')) {
+      setShowWelcomeBanner(true)
+      setTimeout(() => setShowWelcomeBanner(false), 5000)
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       if (session) {
@@ -52,7 +60,13 @@ export default function App() {
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>
       <BrowserRouter>
+        {session && showWelcomeBanner && (
+          <div className="fixed top-0 inset-x-0 z-50 bg-green-500 text-white text-sm text-center py-3 font-medium">
+            Welcome! Your account is verified.
+          </div>
+        )}
         <Routes>
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/login" element={
             session ? <Navigate to="/" replace /> : <Login />
           } />

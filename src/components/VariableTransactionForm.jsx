@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from 'react'
 import { format, parseISO } from 'date-fns'
-import { supabase } from '../lib/supabase'
+import { supabase, getCurrentUserId } from '../lib/supabase'
 
 function todayStr() { return format(new Date(), 'yyyy-MM-dd') }
 
@@ -50,10 +50,11 @@ export default function VariableTransactionForm({ walletId, onSaved, onCancel, e
         note: name.trim(), remark: remark.trim() || null,
       }).eq('id', editTarget.id)
     } else {
+      const userId = await getCurrentUserId()
       await supabase.from('transactions').insert({
         wallet_id: walletId, amount: amt, type: 'debit', date,
         note: name.trim(), remark: remark.trim() || null,
-        is_confirmed: true, completed_at: new Date().toISOString(),
+        is_confirmed: true, completed_at: new Date().toISOString(), user_id: userId,
       })
       await supabase.rpc('decrement_wallet_balance', { p_wallet_id: walletId, p_amount: amt })
     }

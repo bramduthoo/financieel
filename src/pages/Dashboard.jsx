@@ -3,7 +3,7 @@ import {
   format, addMonths, subMonths, subYears, startOfMonth, endOfMonth, startOfYear,
   isBefore, isAfter, differenceInDays, addDays,
 } from 'date-fns'
-import { AlertTriangle, CheckCircle2, ChevronRight } from 'lucide-react'
+import { AlertCircle, AlertTriangle, CheckCircle2, ChevronRight, TrendingDown, TrendingUp } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import {
   calculateProjectedCash, calculateMonthOutlook, getProjectedBalanceTimeline,
@@ -407,7 +407,7 @@ function MetricCard({ label, value, current, avg, lowerIsBetter = false, unit = 
     <div>
       <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{label}</p>
       <p className="text-xl font-bold text-gray-800 dark:text-gray-100">{value}</p>
-      {comparison}
+      {trend}
     </div>
   )
 }

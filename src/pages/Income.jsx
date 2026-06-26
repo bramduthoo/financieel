@@ -2,7 +2,7 @@
 import { Plus, Edit2, Trash2, X, TrendingUp, FileText, ChevronUp, ChevronDown, ChevronRight } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { supabase, getCurrentUserId } from '../lib/supabase'
 import { generateUpcomingDates } from '../lib/recurringUtils'
 import IncomeConfirmModal from '../components/IncomeConfirmModal'
 import DistributionPopup from '../components/DistributionPopup'
@@ -169,6 +169,7 @@ export default function Income() {
       confirmLabel: isEdit ? 'Update' : 'Add income',
       variant: 'primary',
       onConfirm: async () => {
+        const userId = await getCurrentUserId()
         if (isEdit) {
           await supabase.from('income_entries').update({
             amount: Number(amount), source: source.trim(), date, note: note.trim() || null,
@@ -180,7 +181,7 @@ export default function Income() {
         } else {
           await supabase.from('income_entries').insert({
             amount: Number(amount), source: source.trim(), date,
-            note: note.trim() || null, source_type: 'manual',
+            note: note.trim() || null, source_type: 'manual', user_id: userId,
           })
           setConfirm(null)
           closeModal()
@@ -217,6 +218,7 @@ export default function Income() {
       title, body, variant: 'primary',
       confirmLabel: f.isEdit ? 'Save changes' : 'Save',
       onConfirm: async () => {
+        const userId = await getCurrentUserId()
         const payload = {
           name: f.name.trim(), amount: Number(f.amount),
           frequency: f.frequency,
@@ -224,7 +226,7 @@ export default function Income() {
         }
         if (f.isEdit && amountChanged) {
           await supabase.from('income_recurring').update({ end_date: todayStr() }).eq('id', f.id)
-          const { data: newRule } = await supabase.from('income_recurring').insert({ ...payload, start_date: todayStr(), parent_rule_id: f.id }).select().single()
+          const { data: newRule } = await supabase.from('income_recurring').insert({ ...payload, start_date: todayStr(), parent_rule_id: f.id, user_id: userId }).select().single()
           setConfirm(null)
           closeModal()
           fetchAll()
@@ -235,7 +237,7 @@ export default function Income() {
           closeModal()
           fetchAll()
         } else {
-          const { data: newRule } = await supabase.from('income_recurring').insert({ ...payload, start_date: f.start_date }).select().single()
+          const { data: newRule } = await supabase.from('income_recurring').insert({ ...payload, start_date: f.start_date, user_id: userId }).select().single()
           setConfirm(null)
           closeModal()
           fetchAll()
@@ -273,11 +275,12 @@ export default function Income() {
         : <span>Save <strong>{f.name}</strong> as a template (<strong>{fmt(f.amount)}</strong>)?</span>,
       confirmLabel: f.isEdit ? 'Update' : 'Save', variant: 'primary',
       onConfirm: async () => {
+        const userId = await getCurrentUserId()
         const payload = { name: f.name.trim(), amount: Number(f.amount), note: f.note.trim() || null }
         if (f.isEdit) {
           await supabase.from('income_templates').update(payload).eq('id', f.id)
         } else {
-          await supabase.from('income_templates').insert(payload)
+          await supabase.from('income_templates').insert({ ...payload, user_id: userId })
         }
         setConfirm(null)
         closeModal()
@@ -315,9 +318,10 @@ export default function Income() {
       ),
       confirmLabel: 'Log income', variant: 'primary',
       onConfirm: async () => {
+        const userId = await getCurrentUserId()
         await supabase.from('income_entries').insert({
           amount: Number(amount), source: template.name, date,
-          source_type: 'template', income_template_id: template.id,
+          source_type: 'template', income_template_id: template.id, user_id: userId,
         })
         setLogTemplate(null)
         setConfirm(null)
@@ -898,6 +902,7 @@ export default function Income() {
           strictMode={strictMode}
           onClose={() => setDistributionState(null)}
           onConfirm={async (distributions) => {
+            const userId = await getCurrentUserId()
             const finalDists = [...distributions]
             if (!strictMode) {
               const assigned = distributions.reduce((s, d) => s + Number(d.amount), 0)
@@ -913,6 +918,7 @@ export default function Income() {
               sourceName: distributionState.sourceName,
               date: distributionState.date,
               isAutomated: false,
+              userId,
             })
             setDistributionState(null)
           }}
@@ -927,12 +933,14 @@ export default function Income() {
           onClose={null}
           onConfirm={async (distributions) => {
             if (distributions.length > 0) {
+              const userId = await getCurrentUserId()
               await supabase.from('income_distribution_rules').insert(
                 distributions.map((d, i) => ({
                   income_recurring_id: distributionState.ruleId,
                   wallet_id: d.wallet_id,
                   amount: d.amount,
                   priority: i,
+                  user_id: userId,
                 }))
               )
             }

@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState } from 'react'
 import { Plus } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { supabase, getCurrentUserId } from '../lib/supabase'
 import WalletCard from '../components/WalletCard'
 import WalletModal from '../components/WalletModal'
 
@@ -27,7 +27,8 @@ export default function Wallets() {
     if (editWallet) {
       await supabase.from('wallets').update(values).eq('id', editWallet.id)
     } else {
-      await supabase.from('wallets').insert(values)
+      const userId = await getCurrentUserId()
+      await supabase.from('wallets').insert({ ...values, user_id: userId })
     }
     setModalOpen(false)
     setEditWallet(null)
