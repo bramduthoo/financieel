@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 
-export async function distributeIncome({ distributions, wallets, unallocatedWalletId, sourceName, date, isAutomated = false, userId }) {
+export async function distributeIncome({ distributions, wallets, unallocatedWalletId, sourceName, date, isAutomated = false, userId, incomeEntryId = null }) {
   const transactionRows = []
 
   for (const dist of distributions) {
@@ -15,7 +15,7 @@ export async function distributeIncome({ distributions, wallets, unallocatedWall
       await supabase.rpc('increment_wallet_balance', { p_wallet_id: dist.wallet_id, p_amount: amount })
       transactionRows.push({
         wallet_id: dist.wallet_id, type: 'credit', amount,
-        date, note: `Income distribution — ${sourceName}`, is_confirmed: true, user_id: userId,
+        date, note: `Income distribution — ${sourceName}`, is_confirmed: true, user_id: userId, income_entry_id: incomeEntryId,
       })
       continue
     }
@@ -33,14 +33,14 @@ export async function distributeIncome({ distributions, wallets, unallocatedWall
         await supabase.rpc('increment_wallet_balance', { p_wallet_id: wallet.id, p_amount: creditToWallet })
         transactionRows.push({
           wallet_id: wallet.id, type: 'credit', amount: creditToWallet,
-          date, note: `Income distribution — ${sourceName}`, is_confirmed: true, user_id: userId,
+          date, note: `Income distribution — ${sourceName}`, is_confirmed: true, user_id: userId, income_entry_id: incomeEntryId,
         })
 
         if (excess > 0 && unallocatedWalletId) {
           await supabase.rpc('increment_wallet_balance', { p_wallet_id: unallocatedWalletId, p_amount: excess })
           transactionRows.push({
             wallet_id: unallocatedWalletId, type: 'credit', amount: excess,
-            date, note: `Cap overflow (${wallet.name}) — ${sourceName}`, is_confirmed: true, user_id: userId,
+            date, note: `Cap overflow (${wallet.name}) — ${sourceName}`, is_confirmed: true, user_id: userId, income_entry_id: incomeEntryId,
           })
         }
       } else if (wallet.cap_reduction_enabled) {
@@ -53,14 +53,14 @@ export async function distributeIncome({ distributions, wallets, unallocatedWall
           await supabase.rpc('increment_wallet_balance', { p_wallet_id: wallet.id, p_amount: reducedAmount })
           transactionRows.push({
             wallet_id: wallet.id, type: 'credit', amount: reducedAmount,
-            date, note: `Income distribution (reduced) — ${sourceName}`, is_confirmed: true, user_id: userId,
+            date, note: `Income distribution (reduced) — ${sourceName}`, is_confirmed: true, user_id: userId, income_entry_id: incomeEntryId,
           })
         }
         if (excess > 0 && unallocatedWalletId) {
           await supabase.rpc('increment_wallet_balance', { p_wallet_id: unallocatedWalletId, p_amount: excess })
           transactionRows.push({
             wallet_id: unallocatedWalletId, type: 'credit', amount: excess,
-            date, note: `Cap reduction overflow (${wallet.name}) — ${sourceName}`, is_confirmed: true, user_id: userId,
+            date, note: `Cap reduction overflow (${wallet.name}) — ${sourceName}`, is_confirmed: true, user_id: userId, income_entry_id: incomeEntryId,
           })
         }
       } else {
@@ -69,7 +69,7 @@ export async function distributeIncome({ distributions, wallets, unallocatedWall
           await supabase.rpc('increment_wallet_balance', { p_wallet_id: unallocatedWalletId, p_amount: amount })
           transactionRows.push({
             wallet_id: unallocatedWalletId, type: 'credit', amount,
-            date, note: `Cap overflow (${wallet.name}) — ${sourceName}`, is_confirmed: true, user_id: userId,
+            date, note: `Cap overflow (${wallet.name}) — ${sourceName}`, is_confirmed: true, user_id: userId, income_entry_id: incomeEntryId,
           })
         }
       }
@@ -78,7 +78,7 @@ export async function distributeIncome({ distributions, wallets, unallocatedWall
       await supabase.rpc('increment_wallet_balance', { p_wallet_id: dist.wallet_id, p_amount: amount })
       transactionRows.push({
         wallet_id: dist.wallet_id, type: 'credit', amount,
-        date, note: `Income distribution — ${sourceName}`, is_confirmed: true, user_id: userId,
+        date, note: `Income distribution — ${sourceName}`, is_confirmed: true, user_id: userId, income_entry_id: incomeEntryId,
       })
     }
   }

@@ -7,6 +7,7 @@ import { generateUpcomingDates } from '../lib/recurringUtils'
 import IncomeConfirmModal from '../components/IncomeConfirmModal'
 import DistributionPopup from '../components/DistributionPopup'
 import { distributeIncome } from '../lib/distributeIncome'
+import { evaluateUnallocatedPlans } from '../lib/unallocatedPlans'
 
 const FREQ_OPTIONS = [
   { value: 'weekly',    label: 'Weekly' },
@@ -24,6 +25,7 @@ const TYPE_BADGE = {
 const inputClass = 'w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent'
 
 function fmt(n) { return `€${Number(n).toFixed(2)}` }
+function round2(n) { return Number(Number(n).toFixed(2)) }
 function todayStr() { return format(new Date(), 'yyyy-MM-dd') }
 
 function getNextDue(rule) {
@@ -59,6 +61,9 @@ export default function Income() {
   // modal: null | { tab: 'quick'|'recurring'|'template', editEntry?, editRule?, editTemplate? }
   const [modal,       setModal]       = useState(null)
   const [detailEntry, setDetailEntry] = useState(null)
+  const [detailDist,  setDetailDist]  = useState(null)   // null = loading; { available, rows:[{wallet_id,name,colour,amount}], total }
+  const [editDist,      setEditDist]      = useState(null)   // null | { entry, existingRules }
+  const [editDistError, setEditDistError] = useState(null)
   const [logTemplate, setLogTemplate] = useState(null)
   const [confirm,     setConfirm]     = useState(null)
 
@@ -70,6 +75,9 @@ export default function Income() {
 
   const [templateForm,  setTemplateForm]  = useState({ isEdit: false, name: '', amount: '', note: '' })
   const [templateError, setTemplateError] = useState(null)
+  // Optional distribution set up within the manual template form.
+  const [templateDist,     setTemplateDist]     = useState(null)   // null | { rows: [{wallet_id, mode, value}], sendRemainder }
+  const [templateDistOpen, setTemplateDistOpen] = useState(false)
 
   const [histSort,   setHistSort]   = useState({ field: 'date', dir: 'desc' })
   const [histFilter, setHistFilter] = useState({ sourceType: 'all', search: '' })
@@ -81,6 +89,43 @@ export default function Income() {
   const [distributionState,  setDistributionState]  = useState(null)
 
   useEffect(() => { fetchAll() }, [])
+
+  // Compute the actual distribution (summed credit transactions) for an entry.
+  async function fetchEntryDist(entryId) {
+    const { data } = await supabase
+      .from('transactions')
+      .select('wallet_id, amount, wallets(name, colour)')
+      .eq('income_entry_id', entryId)
+      .eq('type', 'credit')
+    const map = {}
+    for (const t of data ?? []) {
+      if (!map[t.wallet_id]) {
+        map[t.wallet_id] = { wallet_id: t.wallet_id, name: t.wallets?.name ?? '—', colour: t.wallets?.colour, amount: 0 }
+      }
+      map[t.wallet_id].amount += Number(t.amount)
+    }
+    const rows  = Object.values(map).map(r => ({ ...r, amount: round2(r.amount) }))
+    const total = round2(rows.reduce((s, r) => s + r.amount, 0))
+    return { available: rows.length > 0, rows, total }
+  }
+
+  // Load the distribution for the opened entry.
+  useEffect(() => {
+    if (!detailEntry) { setDetailDist(null); return }
+    let cancelled = false
+    setDetailDist(null)
+    fetchEntryDist(detailEntry.id).then(d => { if (!cancelled) setDetailDist(d) })
+    return () => { cancelled = true }
+  }, [detailEntry])
+
+  function openEditDist() {
+    if (!detailEntry || !detailDist?.available) return
+    setEditDistError(null)
+    setEditDist({
+      entry: detailEntry,
+      existingRules: detailDist.rows.map(r => ({ wallet_id: r.wallet_id, mode: 'euro', value: r.amount })),
+    })
+  }
 
   async function fetchAll() {
     setLoading(true)
@@ -136,8 +181,10 @@ export default function Income() {
       if (opts.editTemplate) {
         const t = opts.editTemplate
         setTemplateForm({ isEdit: true, id: t.id, name: t.name, amount: String(t.amount), note: t.note ?? '' })
+        loadTemplateDist(t)
       } else {
         setTemplateForm({ isEdit: false, name: '', amount: '', note: '' })
+        setTemplateDist(null)
       }
     }
 
@@ -171,6 +218,12 @@ export default function Income() {
       onConfirm: async () => {
         const userId = await getCurrentUserId()
         if (isEdit) {
+          // KNOWN PRE-EXISTING ISSUE (flagged, intentionally not fixed here):
+          // Editing the amount here updates only the income_entries row — it does NOT
+          // re-run distribution, so the wallet credits no longer sum to the new amount,
+          // leaving the income and its distribution desynced. Follow-up: route amount
+          // changes on a distributed income through the distribution editor (which
+          // reverses + reapplies credits via the transactional RPC) so they can't desync.
           await supabase.from('income_entries').update({
             amount: Number(amount), source: source.trim(), date, note: note.trim() || null,
           }).eq('id', entry.id)
@@ -179,13 +232,13 @@ export default function Income() {
           setDetailEntry(null)
           fetchAll()
         } else {
-          await supabase.from('income_entries').insert({
+          const { data: ent } = await supabase.from('income_entries').insert({
             amount: Number(amount), source: source.trim(), date,
             note: note.trim() || null, source_type: 'manual', user_id: userId,
-          })
+          }).select().single()
           setConfirm(null)
           closeModal()
-          setDistributionState({ mode: 'income', totalAmount: Number(amount), sourceName: source.trim(), date })
+          setDistributionState({ mode: 'income', totalAmount: Number(amount), sourceName: source.trim(), date, fromQuick: true, note: note.trim() || null, incomeEntryId: ent?.id ?? null })
           fetchAll()
         }
       },
@@ -262,11 +315,25 @@ export default function Income() {
 
   // ─── Templates ─────────────────────────────────────────────────────────────
 
+  async function loadTemplateDist(t) {
+    const { data: items } = await supabase
+      .from('income_template_distribution_items')
+      .select('*')
+      .eq('income_template_id', t.id)
+    setTemplateDist({
+      rows: (items ?? []).map(i => ({ wallet_id: i.wallet_id, mode: i.mode, value: Number(i.value) })),
+      sendRemainder: !!t.send_remainder,
+    })
+  }
+
   function submitTemplate() {
     const f = templateForm
     if (!f.name.trim())                                                { setTemplateError('Enter a name.'); return }
     if (!f.amount || isNaN(Number(f.amount)) || Number(f.amount) <= 0) { setTemplateError('Enter a valid amount.'); return }
     setTemplateError(null)
+
+    const distRows  = (templateDist?.rows ?? []).filter(r => Number(r.value) > 0)
+    const sendRem   = templateDist?.sendRemainder ?? false
 
     setConfirm({
       title: f.isEdit ? 'Update template?' : 'Save template?',
@@ -276,11 +343,25 @@ export default function Income() {
       confirmLabel: f.isEdit ? 'Update' : 'Save', variant: 'primary',
       onConfirm: async () => {
         const userId = await getCurrentUserId()
-        const payload = { name: f.name.trim(), amount: Number(f.amount), note: f.note.trim() || null }
+        const payload = { name: f.name.trim(), amount: Number(f.amount), note: f.note.trim() || null, send_remainder: sendRem }
+        let templateId = f.id
         if (f.isEdit) {
           await supabase.from('income_templates').update(payload).eq('id', f.id)
+          await supabase.from('income_template_distribution_items').delete().eq('income_template_id', f.id)
         } else {
-          await supabase.from('income_templates').insert({ ...payload, user_id: userId })
+          const { data: tpl } = await supabase.from('income_templates').insert({ ...payload, user_id: userId }).select().single()
+          templateId = tpl?.id
+        }
+        if (templateId && distRows.length > 0) {
+          await supabase.from('income_template_distribution_items').insert(
+            distRows.map(r => ({
+              income_template_id: templateId,
+              wallet_id: r.wallet_id,
+              mode: r.mode,
+              value: Number(Number(r.value).toFixed(2)),   // stored as entered — percent stays percent
+              user_id: userId,
+            }))
+          )
         }
         setConfirm(null)
         closeModal()
@@ -319,13 +400,22 @@ export default function Income() {
       confirmLabel: 'Log income', variant: 'primary',
       onConfirm: async () => {
         const userId = await getCurrentUserId()
-        await supabase.from('income_entries').insert({
+        const { data: ent } = await supabase.from('income_entries').insert({
           amount: Number(amount), source: template.name, date,
           source_type: 'template', income_template_id: template.id, user_id: userId,
-        })
+        }).select().single()
+        // Prefill the distribution from the template's saved items + remainder flag.
+        const { data: items } = await supabase
+          .from('income_template_distribution_items')
+          .select('*')
+          .eq('income_template_id', template.id)
+        const existingRules = (items ?? []).map(i => ({ wallet_id: i.wallet_id, mode: i.mode, value: Number(i.value) }))
         setLogTemplate(null)
         setConfirm(null)
-        setDistributionState({ mode: 'income', totalAmount: Number(amount), sourceName: template.name, date })
+        setDistributionState({
+          mode: 'income', totalAmount: Number(amount), sourceName: template.name, date,
+          existingRules, initialSendRemainder: !!template.send_remainder, incomeEntryId: ent?.id ?? null,
+        })
         fetchAll()
       },
     })
@@ -777,6 +867,32 @@ export default function Income() {
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
                       />
                     </div>
+                    {/* Distribution (optional) */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Distribution (optional)</label>
+                      <div className="flex items-center justify-between gap-3 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {templateDist?.rows?.length
+                            ? `${templateDist.rows.length} wallet${templateDist.rows.length > 1 ? 's' : ''}${templateDist.sendRemainder ? ' · remainder → Unallocated' : ''}`
+                            : 'No distribution set'}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setTemplateDistOpen(true)}
+                          disabled={!(Number(templateForm.amount) > 0)}
+                          className={`text-xs font-medium whitespace-nowrap ${
+                            Number(templateForm.amount) > 0
+                              ? 'text-indigo-600 hover:text-indigo-700'
+                              : 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                          }`}
+                        >
+                          {templateDist?.rows?.length ? 'Edit distribution' : 'Set up distribution'}
+                        </button>
+                      </div>
+                      {!(Number(templateForm.amount) > 0) && (
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Enter an amount first to set up a distribution.</p>
+                      )}
+                    </div>
                   </div>
                   <div className="flex gap-3 mt-5">
                     <button onClick={closeModal} className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">Cancel</button>
@@ -827,18 +943,55 @@ export default function Income() {
                 </div>
               )}
             </div>
-            <div className="flex gap-3 mt-6">
-              <button onClick={() => setDetailEntry(null)} className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">Close</button>
-              <button
-                onClick={() => {
-                  const e = detailEntry
-                  setDetailEntry(null)
-                  openModal('quick', { editEntry: e })
-                }}
-                className="flex-1 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800"
-              >
-                Edit
-              </button>
+
+            {/* Distribution — derived from the credit transactions linked to this entry */}
+            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+              <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Distribution</p>
+              {detailDist === null ? (
+                <p className="text-sm text-gray-400 dark:text-gray-500">Loading…</p>
+              ) : !detailDist.available ? (
+                <p className="text-sm text-gray-400 dark:text-gray-500">Distribution details aren't available for this entry.</p>
+              ) : (
+                <div className="space-y-2">
+                  {detailDist.rows.map(r => (
+                    <div key={r.wallet_id} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: r.colour }} />
+                        <span className="text-gray-700 dark:text-gray-200 truncate">{r.name}</span>
+                      </div>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{fmt(r.amount)}</span>
+                    </div>
+                  ))}
+                  <div className="flex items-center justify-between text-sm pt-2 border-t border-gray-100 dark:border-gray-800">
+                    <span className="text-gray-500 dark:text-gray-400">Total</span>
+                    <span className="font-semibold text-gray-900 dark:text-gray-100">{fmt(detailDist.total)}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 space-y-3">
+              {detailDist?.available && (
+                <button
+                  onClick={openEditDist}
+                  className="w-full py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
+                >
+                  Edit distribution
+                </button>
+              )}
+              <div className="flex gap-3">
+                <button onClick={() => setDetailEntry(null)} className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">Close</button>
+                <button
+                  onClick={() => {
+                    const e = detailEntry
+                    setDetailEntry(null)
+                    openModal('quick', { editEntry: e })
+                  }}
+                  className="flex-1 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800"
+                >
+                  Edit
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -900,27 +1053,88 @@ export default function Income() {
         <DistributionPopup
           totalAmount={distributionState.totalAmount}
           strictMode={strictMode}
+          allowTemplates={distributionState.fromQuick === true}
+          existingRules={distributionState.existingRules ?? []}
+          initialSendRemainder={distributionState.initialSendRemainder}
+          entryName={distributionState.sourceName}
+          entryNote={distributionState.note ?? null}
+          onSaved={fetchAll}
           onClose={() => setDistributionState(null)}
           onConfirm={async (distributions) => {
             const userId = await getCurrentUserId()
-            const finalDists = [...distributions]
-            if (!strictMode) {
-              const assigned = distributions.reduce((s, d) => s + Number(d.amount), 0)
-              const rem = Number((distributionState.totalAmount - assigned).toFixed(2))
-              if (rem > 0.005 && unallocatedWalletId) {
-                finalDists.push({ wallet_id: unallocatedWalletId, amount: rem })
-              }
-            }
+            // The popup already resolves every row to euros and appends the
+            // Unallocated remainder sweep when its checkbox is checked.
             await distributeIncome({
-              distributions: finalDists,
+              distributions,
               wallets: allWallets,
               unallocatedWalletId,
               sourceName: distributionState.sourceName,
               date: distributionState.date,
               isAutomated: false,
               userId,
+              incomeEntryId: distributionState.incomeEntryId ?? null,
             })
+            // Check-on-change: the distribution may have credited Unallocated.
+            await evaluateUnallocatedPlans(unallocatedWalletId)
             setDistributionState(null)
+          }}
+        />
+      )}
+
+      {/* ══ Distribution popup — manual template distribution setup ══════════════ */}
+      {templateDistOpen && (
+        <DistributionPopup
+          totalAmount={Number(templateForm.amount) || 0}
+          strictMode={false}
+          allowTemplates={false}
+          existingRules={templateDist?.rows ?? []}
+          initialSendRemainder={templateDist?.sendRemainder ?? false}
+          onClose={() => setTemplateDistOpen(false)}
+          onConfirm={(distributions, meta) => {
+            setTemplateDist({
+              rows: (meta?.rows ?? []).map(r => ({ wallet_id: r.wallet_id, mode: r.mode, value: r.value })),
+              sendRemainder: !!meta?.sendRemainder,
+            })
+            setTemplateDistOpen(false)
+          }}
+        />
+      )}
+
+      {/* ══ Edit distribution of a logged income (atomic RPC) ════════════════════ */}
+      {editDistError && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] max-w-md bg-[#FCEBEB] dark:bg-red-900/40 text-[#A32D2D] dark:text-red-300 text-sm px-4 py-2 rounded-lg shadow-lg border border-[#A32D2D]/20">
+          {editDistError}
+        </div>
+      )}
+      {editDist && (
+        <DistributionPopup
+          totalAmount={Number(editDist.entry.amount)}
+          strictMode={strictMode}
+          allowTemplates={false}
+          existingRules={editDist.existingRules}
+          onClose={() => { setEditDist(null); setEditDistError(null) }}
+          onConfirm={async (distributions) => {
+            // The popup's `distributions` already includes any remainder sweep and sums
+            // to the entry amount. The RPC performs ALL balance changes atomically —
+            // the client does no reverse/delete/reapply or balance math itself.
+            setEditDistError(null)
+            const entry = editDist.entry
+            const { error } = await supabase.rpc('edit_income_distribution', {
+              p_income_entry_id: entry.id,
+              p_new_credits: distributions,
+              p_source_name: entry.source,
+              p_date: entry.date,
+            })
+            if (error) {
+              setEditDistError(error.message || 'Could not update the distribution. Nothing was changed.')
+              return   // keep the popup open so the user can adjust and retry
+            }
+            setEditDist(null)
+            // Check-on-change: editing a distribution can change the Unallocated balance.
+            await evaluateUnallocatedPlans(unallocatedWalletId)
+            const d = await fetchEntryDist(entry.id)   // refresh the inspect view
+            setDetailDist(d)
+            fetchAll()                                  // refresh history + wallet balances
           }}
         />
       )}
@@ -931,14 +1145,19 @@ export default function Income() {
           totalAmount={distributionState.ruleAmount}
           strictMode={true}
           onClose={null}
-          onConfirm={async (distributions) => {
-            if (distributions.length > 0) {
+          onConfirm={async (distributions, meta) => {
+            const ruleRows = meta?.allRows ?? []
+            if (ruleRows.length > 0) {
               const userId = await getCurrentUserId()
+              // Persist the user's %/€ intent (mode + value); keep amount in
+              // sync with the resolved euro value for backward compatibility.
               await supabase.from('income_distribution_rules').insert(
-                distributions.map((d, i) => ({
+                ruleRows.map((r, i) => ({
                   income_recurring_id: distributionState.ruleId,
-                  wallet_id: d.wallet_id,
-                  amount: d.amount,
+                  wallet_id: r.wallet_id,
+                  mode: r.mode,
+                  value: r.value,
+                  amount: r.amount,
                   priority: i,
                   user_id: userId,
                 }))

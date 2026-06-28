@@ -13,6 +13,7 @@ import {
 import IncomeSpendingChart from '../components/IncomeSpendingChart'
 import CashTrendChart from '../components/CashTrendChart'
 import ProjectedBalanceChart from '../components/ProjectedBalanceChart'
+import UnallocatedConflictBanner from '../components/UnallocatedConflictBanner'
 
 function fmtEUR(val) {
   const n = Number(val)
@@ -28,6 +29,7 @@ export default function Dashboard() {
   const [incomeEntries,      setIncomeEntries]      = useState([])
   const [viewMode,           setViewMode]           = useState('monthly')
   const [loading,            setLoading]            = useState(true)
+  const [refreshKey,         setRefreshKey]         = useState(0)
 
   const now        = new Date()
   const monthStart = startOfMonth(now)
@@ -54,7 +56,7 @@ export default function Dashboard() {
       setLoading(false)
     }
     fetchAll()
-  }, [])
+  }, [refreshKey])
 
   if (loading) return <p className="text-gray-400">Loading dashboard...</p>
 
@@ -124,6 +126,9 @@ export default function Dashboard() {
         <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Dashboard</h1>
         <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{monthLabel}</p>
       </div>
+
+      {/* Multi-plan conflict banner */}
+      <UnallocatedConflictBanner onChange={() => setRefreshKey(k => k + 1)} />
 
       {/* Section 1 — Projected cash position */}
       <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">

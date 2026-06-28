@@ -6,6 +6,7 @@ import { supabase, getCurrentUserId } from '../lib/supabase'
 import IncomeConfirmModal from '../components/IncomeConfirmModal'
 import DistributionPopup from '../components/DistributionPopup'
 import { distributeIncome } from '../lib/distributeIncome'
+import { evaluateUnallocatedPlans } from '../lib/unallocatedPlans'
 
 const FREQ_OPTIONS = [
   { value: 'weekly',    label: 'Weekly' },
@@ -149,14 +150,14 @@ export default function IncomeRecurringDetail() {
       confirmLabel: 'Log income', variant: 'primary',
       onConfirm: async () => {
         const userId = await getCurrentUserId()
-        await supabase.from('income_entries').insert({
+        const { data: ent } = await supabase.from('income_entries').insert({
           amount: Number(logModal.amount),
           source: rule.name,
           date: logModal.date,
           source_type: 'recurring',
           income_recurring_id: rule.id,
           user_id: userId,
-        })
+        }).select().single()
         if (distributionRules.length > 0) {
           await distributeIncome({
             distributions: distributionRules.map(dr => ({ wallet_id: dr.wallet_id, amount: Number(dr.amount) })),
@@ -166,7 +167,10 @@ export default function IncomeRecurringDetail() {
             date: logModal.date,
             isAutomated: true,
             userId,
+            incomeEntryId: ent?.id ?? null,
           })
+          // Check-on-change: an income distribution may have credited Unallocated.
+          await evaluateUnallocatedPlans(unallocatedWalletId)
           setDistSuccess(true)
           setTimeout(() => setDistSuccess(false), 3000)
         }
@@ -356,7 +360,11 @@ export default function IncomeRecurringDetail() {
                     )}
                     <span className="text-gray-700">{wallet?.name ?? '—'}</span>
                   </div>
-                  <span className="font-medium text-gray-900">€{Number(dr.amount).toFixed(2)}</span>
+                  <span className="font-medium text-gray-900">
+                    {dr.mode === 'percent'
+                      ? `${Number(dr.value)}% · €${Number(dr.amount).toFixed(2)}`
+                      : `€${Number(dr.amount).toFixed(2)}`}
+                  </span>
                 </div>
               )
             })}
@@ -492,17 +500,24 @@ export default function IncomeRecurringDetail() {
         <DistributionPopup
           totalAmount={Number(rule.amount)}
           strictMode={true}
-          existingRules={distributionRules.map(dr => ({ wallet_id: dr.wallet_id, amount: Number(dr.amount) }))}
+          existingRules={distributionRules.map(dr => ({
+            wallet_id: dr.wallet_id,
+            mode: dr.mode ?? 'euro',
+            value: Number(dr.value ?? dr.amount),
+          }))}
           onClose={() => setDistPopupOpen(false)}
-          onConfirm={async (distributions) => {
+          onConfirm={async (distributions, meta) => {
             await supabase.from('income_distribution_rules').delete().eq('income_recurring_id', id)
-            if (distributions.length > 0) {
+            const ruleRows = meta?.allRows ?? []
+            if (ruleRows.length > 0) {
               const userId = await getCurrentUserId()
               await supabase.from('income_distribution_rules').insert(
-                distributions.map((d, i) => ({
+                ruleRows.map((r, i) => ({
                   income_recurring_id: id,
-                  wallet_id: d.wallet_id,
-                  amount: d.amount,
+                  wallet_id: r.wallet_id,
+                  mode: r.mode,
+                  value: r.value,
+                  amount: r.amount,
                   priority: i,
                   user_id: userId,
                 }))
