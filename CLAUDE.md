@@ -14,7 +14,9 @@ are tracked. Two-person project: Bram (`b/` branches) and Wouter (`f/` branches)
 - Build: `npm run build`
 - Preview built app: `npm run preview`
 - Lint: `npm run lint` (ESLint flat config, `eslint.config.js`)
-- Tests: not yet configured (Vitest planned — see testing-setup-plan.md)
+- Tests: `npm test` (Vitest, one-shot) / `npm run test:watch`. Behaviour tests for `src/lib/`
+  pure logic live in `src/lib/*.test.js`; scope/decisions in `docs/testing-notes.md`. A Stop hook
+  also runs `npm test` on session end; CI runs it on every PR.
 
 ## Stack
 

@@ -321,11 +321,30 @@ KNOWN OPEN ISSUE (carried forward, not a blocker):
   amount changes through the distribution editor (the atomic RPC) so they can't desync. Fold into the
   settings/feature work or a dedicated fix.
 
-**NEXT PHASE (promoted): (1) Testing setup.**
-- Vitest **behaviour** tests on the pure logic in `lib/` (distributeIncome, unallocatedPlans,
-  recurringUtils, dashboardCalcs), then **GitHub Actions CI**, then tie to branch protection's
-  "require status checks." See `testing-setup-plan.md`. (Behaviour-first so tests survive the later
-  encryption migration — see §7.)
+**Testing setup phase (Phase 1): BUILT — on branch `b/testing-setup`, PR #4 open (NOT merged).**
+(Autonomous Claude Code session, 2026-07-07. All 41 tests green locally AND on GitHub Actions CI.)
+- **Vitest** added (dedicated `vitest.config.js`, node env; scripts `test` / `test:watch`). **41
+  behaviour tests** across `src/lib/`: `distributeIncome` (12 — caps ignored for manual/template;
+  automated cap-fill+overflow, cap-reduction, at-cap-reduction-off; rounding conserved within 0.005;
+  one credit row per credit stamped with `income_entry_id`), `unallocatedPlans` (13 — `planAmount`
+  eligibility per mode; `firePlan` resolves % as % of TOTAL not remainder + under-allocation guard),
+  `recurringUtils` (10 — date generation), `dashboardCalcs` (6 — deterministic month calcs).
+- Tests are **behaviour, not implementation**: they assert euro outcomes (Supabase mocked at the
+  boundary, calls aggregated to per-wallet euro totals), so they survive the encryption migration.
+- **GitHub Actions CI** (`.github/workflows/test.yml`) runs the suite on every PR + push to main —
+  **verified green** on PR #4 via `gh`. **Stop hook** added to `.claude/settings.json` (runs
+  `npm test` on session end; valid JSON confirmed).
+- **HARD CONSTRAINT honoured: no `src/` logic changed** — test files only. code-reviewer subagent
+  found **no Critical issues** and hand-verified the cap math and %-of-total values against source.
+- **No code/doc discrepancies found** — capped-wallet behaviour matches §5 exactly.
+- Refactor-gated gaps (documented in `docs/testing-notes.md`, NOT done this session): the canonical
+  euro/% resolver + remainder-sweep live inside `DistributionPopup.jsx` (component-inline, no
+  exported pure fn); the time-relative dashboard projections key off `new Date()`. Both need a small
+  `src/` refactor (lift resolver to `lib/`; inject a `now` param) to be unit-testable — recommended
+  follow-ups.
+- **REMAINING for this phase (owner action):** review + merge PR #4; then tick **"Require status
+  checks to pass"** on the `main` ruleset (enforcement limited on the free plan — see
+  `testing-setup-plan.md`).
 
 **Then — new feature list (agreed direction):**
 2. **Settings page fix / extension** (also a natural home for the amount-edit-mismatch fix and the
@@ -376,6 +395,19 @@ Deferred / smaller:
 - **Tests must be BEHAVIOUR tests, not implementation tests**, the correct euro answer is the same
   whether math runs in SQL or the browser, encrypted or not, so behaviour tests survive the encryption
   migration and even protect it. Target the pure logic in `lib/`.
+- **Behaviour-test mechanics (testing phase):** for the executor functions with no return value
+  (`distributeIncome`, `firePlan`), mock Supabase at the boundary and **aggregate the recorded
+  RPC/insert calls into per-wallet euro totals**, then assert on the totals — never on call order.
+  "How much money each wallet ended with" is the invariant; the call sequence is not. The `%`-of-total
+  rule is tested via `unallocatedPlans.firePlan` (same resolver as DistributionPopup), because
+  `distributeIncome` receives pre-resolved euros and never sees percentages.
+- **Refactor-gated test gaps are documented, not forced:** the canonical euro/% resolver + the
+  remainder-sweep live inside `DistributionPopup.jsx` (component-inline), and the projection dashboard
+  calcs depend on `new Date()`. Rather than break the "no `src/` changes in a test-only session" rule,
+  these are logged in `docs/testing-notes.md` with recommended follow-up refactors (lift the resolver
+  to `lib/`; inject a `now` param) so they become unit-testable later.
+- **A Stop hook runs the suite on session end** (`.claude/settings.json`) as a backstop so a session
+  that breaks a test can't silently stop; CI (`test.yml`) is the authoritative PR gate.
 - **One chat per phase + this central file**, to stop paying to re-read irrelevant history every turn.
 - **Encryption stance:** desirable to the owner (cares about data privacy) but accepted as a large,
   later project. Key derived from password in the browser via Web Crypto (PBKDF2) + per-user salt;

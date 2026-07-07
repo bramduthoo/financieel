@@ -19,8 +19,8 @@ instruction). Written for later review.
 ### Files
 - `src/lib/distributeIncome.test.js` — the priority target. 12 tests.
 - `src/lib/unallocatedPlans.test.js` — 13 tests.
-- `src/lib/recurringUtils.test.js` — 8 tests.
-- `src/lib/dashboardCalcs.test.js` — 8 tests.
+- `src/lib/recurringUtils.test.js` — 10 tests.
+- `src/lib/dashboardCalcs.test.js` — 6 tests.
 
 ## How the Supabase boundary is mocked
 
