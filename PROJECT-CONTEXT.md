@@ -381,6 +381,23 @@ Deferred / smaller:
   later project. Key derived from password in the browser via Web Crypto (PBKDF2) + per-user salt;
   **key must never touch the server** (the whole security rests on this). Accepts loss of DB-side
   atomicity on balances and DB-side computation on encrypted fields; no user-facing feature is lost.
+- **Claude Code runs on a versioned workflow config** (`CLAUDE.md` + `.claude/` hooks/skills/agents),
+  and it is **verified against the live repo/DB before being trusted** — it was drafted outside the
+  repo from context and had wrong assumptions (React 18/Router v6, a bad MCP server name). Config gets
+  checked, not assumed, same discipline as migrations.
+- **A PreToolUse Bash guard is the deterministic backstop** for the never-do rules (force-push,
+  push-to-main, recursive force-delete, `npm audit fix --force`, destructive SQL, hard reset/clean).
+  CLAUDE.md prose is advisory; the hook is not. Note: it's a substring guard, so a Bash command that
+  merely *mentions* a blocked pattern (e.g. an `echo`/`grep`) is also blocked — feed test payloads via
+  a file, not inline.
+- **PostToolUse runs `eslint --fix` on edited js/jsx, non-blocking** (repo has ESLint, no Prettier).
+  A lint hook must never fail an edit; real lint errors still surface via `npm run lint`. A dedicated
+  formatter (Prettier) is a candidate for the testing phase.
+- **Claude Code now has a read-only Supabase MCP** (`claude_ai_Supabase`) for verifying schema/data;
+  **write migrations still go through the owner's channel** (db-migration skill). Read-only power does
+  not change the "Claude Code never applies DB writes" rule.
+- **ARCHITECTURE.md retired to a pointer**, not maintained. A second schema doc drifts and has caused
+  incidents; single source of truth is live DB > PROJECT-CONTEXT.md > CLAUDE.md.
 
 ---
 
