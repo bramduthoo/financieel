@@ -39,8 +39,8 @@ shows up under the name "WOUTER" in branches/commits. Two-person project, GitHub
 
 ## 2. Tech stack & infrastructure
 
-- **Frontend:** React 18 + Vite, Tailwind CSS, React Router v6. Dark mode via `ThemeContext`
-  (`src/lib/ThemeContext.jsx`).
+- **Frontend:** React 19 + Vite 8, Tailwind CSS v4 (`@tailwindcss/vite`), React Router v7. Dark mode
+  via `ThemeContext` (`src/lib/ThemeContext.jsx`).
 - **Icons:** lucide-react. **Dates:** date-fns. **Charts:** inline SVG only (no chart library).
 - **Backend/DB/Auth:** Supabase (PostgreSQL). Project ID: `duyttdjfvblhhjihybal`.
 - **Hosting:** Vercel, auto-deploys from GitHub `main`. **`vercel.json`** in the repo root rewrites

@@ -9,6 +9,11 @@
  * NON-BLOCKING BY DESIGN: it always exits 0. A lint hook must never fail an
  * edit — that would strand Claude mid-task. Lint *errors* still surface via
  * `npm run lint`; this hook only applies the auto-fixable subset.
+ *
+ * Trade-off: when eslint --fix actually rewrites the file, the harness's
+ * cached view of that file goes stale, so the *next* Edit to the same file may
+ * force a re-read. That's friction, not a failure — usually eslint changes
+ * nothing (recommended config has few fixable rules) so it rarely fires.
  */
 
 const { spawnSync } = require("node:child_process");
@@ -33,9 +38,11 @@ process.stdin.on("end", () => {
   if (/\/(node_modules|dist)\//i.test(normalized)) process.exit(0);
 
   // shell:true so `npx` resolves to npx.cmd on Windows.
+  // timeout so a cold/hung `npx eslint` can't stall the edit indefinitely.
   const res = spawnSync("npx", ["eslint", "--fix", path.resolve(filePath)], {
     stdio: "ignore",
     shell: true,
+    timeout: 30000,
   });
 
   // Report nothing on success; a short note on spawn failure. Either way exit 0.

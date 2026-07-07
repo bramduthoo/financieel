@@ -1,7 +1,7 @@
 ---
 name: db-verifier
 description: Read-only database invariant checker for the financieel Supabase DB. Use proactively after any UI flow or feature that touches balances, income, distributions, or the Unallocated wallet — e.g. after logging/editing income, running an Unallocated distribute or plan, or completing a Playwright test run. Verifies the data actually nets out instead of trusting the UI.
-tools: Read, Grep, Glob
+tools: Read, Grep, Glob, mcp__claude_ai_Supabase__list_tables, mcp__claude_ai_Supabase__execute_sql
 mcpServers:
   - claude_ai_Supabase
 ---
