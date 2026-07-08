@@ -93,3 +93,37 @@ Unallocated; manual/template ignores caps). No test was written to a doc claim t
 
 No blockers. The only "not done" items are the refactor-gated ones listed under decision 2, which
 are deliberately out of scope for a test-only session and are recommended as follow-ups.
+
+---
+
+## Update — 2026-07-08 (branch `b/testing-finish`): resolver lift + dashboard deferral
+
+**Gap 2, first item — CLOSED.** The euro/% resolver + remainder-sweep were lifted out of
+`DistributionPopup.jsx` into a pure module **`src/lib/resolveDistribution.js`** and are now directly
+unit-tested (`src/lib/resolveDistribution.test.js`, 18 tests):
+- `resolveRowExact(mode, value, base)` — the per-item primitive (unrounded).
+- `resolveDistribution(rows, total, { sendRemainder, unallocatedWalletId })` — full resolver
+  returning `explicit / distributed / remainder / complete / notOver / remainderRow / allRows /
+  distributions`, preserving row order (rule `priority`).
+- This was a **pure code move**: `DistributionPopup.jsx` now calls the resolver; behaviour is
+  identical, `onConfirm(distributions, meta)` shape unchanged. Verified by the full suite (59 green),
+  a line-by-line code-reviewer parity check, a production `vite build`, and a Playwright smoke (app
+  mounts, `/login` renders, zero console errors). The authenticated popup flow (mixed euro/% + sweep)
+  is a **manual step for the owner** — see the PR description / final report — because Playwright's
+  fresh context has no Supabase session; db-verifier (invariants 1 & 2) to be run on that entry.
+
+**Shared-primitive decision (answers the brief's "only if truly identical").** `firePlan`
+(`unallocatedPlans.js`) now calls `resolveRowExact` for its per-item math — the truly-identical part.
+Its own base (`planAmount`), unrounded-sum guard, and no-sweep behaviour stay in `firePlan`; the full
+`resolveDistribution` was **not** forced onto it, because its guard needs the unrounded running sum
+the popup resolver doesn't expose. The existing 13 `firePlan` tests pass unchanged, proving parity.
+- *Awareness note (no runtime impact):* the old `firePlan` defaulted an **unknown** `mode` to
+  euro/literal; `resolveRowExact` defaults unknown modes to percent. Plan/rule items are only ever
+  `'euro'` or `'percent'` (DB CHECK), so the two valid modes are byte-identical and nothing changes in
+  practice — noted only so a future reader isn't surprised.
+
+**Dashboard `now`-parameter testability — DEFERRED (plan of record).** Gap 2's second item (injecting
+a `now` param into the time-relative projection functions so they're deterministically testable) is
+**deliberately NOT done here** and is deferred to the **dashboard rebuild** phase (PROJECT-CONTEXT §6
+feature #4). Rationale: those functions will be reworked in that phase, so adding a seam now would be
+churn; the deterministic month-scoped calcs remain covered in the meantime.
