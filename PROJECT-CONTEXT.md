@@ -201,9 +201,23 @@ shows up under the name "WOUTER" in branches/commits. Two-person project, GitHub
   the assistant and verified correct against the live DB** (a self-contained set-up/edit/assert/teardown
   test confirmed reverse+reapply nets exactly, no drift, with no residue left behind).
 
+- `reset_user_data(p_full boolean)`: **transactional two-tier data reset**, SECURITY INVOKER,
+  `search_path=''`, everything scoped to `auth.uid()` (raises if null). Always deletes the caller's
+  `transactions`, `income_entries`, `budget_allocations`, `unallocated_pending_conflicts` and resets
+  every wallet `balance` to 0 **inside the function** (this is why the Settings delete flow no longer
+  writes `wallets.balance` from the client). `p_full=true` additionally deletes
+  `income_distribution_rules`, `income_recurring`, `recurring_rules`, `income_templates` (+items),
+  `unallocated_templates` (+items), `unallocated_plans` (+items). Always keeps wallets (incl.
+  Unallocated) + the settings row. Powers Settings → Danger zone "Clear activity" / "Full reset".
+  **Verified against the live DB** (seed→clear→full under a real test-user session; activity cleared &
+  balances zeroed while structure survived clear-tier, structure gone after full-tier, another user's
+  15-table counts unchanged).
+
 > Note on testing SECURITY INVOKER functions via the connector: `auth.uid()` is **null** when the
 > assistant runs raw SQL (not an app session). Test by setting `request.jwt.claims` to a real user id
 > inside a `DO $$ ... $$` block, exercise the function, assert, then **clean up all test data**.
+> (Alternatively — as done for `reset_user_data` — drive it through an authenticated `supabase-js`
+> session with the test account so RLS + `auth.uid()` are real.)
 
 ---
 
@@ -349,14 +363,37 @@ primitive `resolveRowExact` (truly-identical part only; keeps its own base/guard
 - **REMAINING (owner action):** merge PR #4's successor; tick **"Require status checks to pass"** on the
   `main` ruleset (enforcement limited on the free plan — see `testing-setup-plan.md`).
 
-**NEXT PHASE: Settings page.** Reconnaissance done → `docs/settings-recon.md` (current state, blast
-radius, danger-zone debt incl. the delete-all balance-invariant violation, candidate inventory with
-S/M/L effort). Start the settings planning session from that doc.
+**Settings page — phase 1 (hygiene): DONE.** (Branch `b/settings-hygiene`, 2026-07-09. Recon:
+`docs/settings-recon.md`.) Implemented + **verified by Claude Code** via Playwright as the test account
++ db-verifier + build/59 tests green:
+- **Two-tier data reset** replacing the old client-side deletes/`wallets.balance` write (a real
+  invariant-#1 violation). New `reset_user_data(p_full)` RPC (see §4) behind Settings → Danger zone
+  "Clear activity" / "Full reset", each with honest deleted/kept/irreversible copy, both keeping the
+  OTP confirmation. **Verified live:** seed→clear→full under a real test-user session cleared activity &
+  zeroed balances while structure survived the clear tier, structure gone after full, another user's
+  15-table counts untouched (db-verifier PASS).
+- **In-app password change** (verify current via `signInWithPassword` → `updateUser`, min-8/match,
+  never logged) — verified end-to-end (changed → re-logged-in → reverted).
+- **Profile card** (account email + member-since). **Log out of all devices** (`signOut({scope:'global'})`
+  + confirm) — verified (confirm → back to `/login`).
+- **Dead-UI cleanup:** removed the inert `month_start_day` input (DB column left as dead); Currency card
+  is an honest static "EUR €" (dead `currency`/`currency_symbol` columns left).
+- Test-account plumbing: `.env.test.local` (gitignored via `*.local`); CLAUDE.md browser-testing note.
+- **Owner still to do:** run one real OTP-gated delete through the UI (the OTP email can't be read
+  autonomously — the underlying RPC is already live-verified); then merge the PR.
+
+**DEFERRED from settings phase 1 (with why):**
+- **Privacy mode (hide balances)** — deferred: amounts are hand-written `€{n.toFixed(2)}` inline across
+  ~22 files with **no shared formatter**, so masking would be a per-component brute-force. **Plan of
+  record:** introduce ONE shared money formatter during the **layout redesign** (every component gets
+  touched anyway), after which privacy mode is a trivial toggle; the same formatter is what a future
+  real-currency feature needs too.
+- **Email change, account deletion, backup/export** — out of scope for hygiene (account deletion needs
+  an edge function; backup is its own phase); **`month_start_day` wiring** — removed by decision, not
+  wanted.
 
 **Then — new feature list (agreed direction):**
-2. **Settings page fix / extension** (also a natural home for the amount-edit-mismatch fix and the
-   delete-all-data fix below).
-3. **Full layout redesign.**
+3. **Full layout redesign** (also: introduce the shared money formatter → then privacy mode).
 4. **New dashboard.**
 5. **PDF transaction import.**
 
@@ -366,7 +403,8 @@ S/M/L effort). Start the settings planning session from that doc.
   lost DB-side filtering/sorting). See `encryption-with-key-plan.md`.
 
 Deferred / smaller:
-- Fix the delete-all-data feature properly (a past incident wiped settings + the Unallocated wallet).
+- ~~Fix the delete-all-data feature properly~~ **DONE** in settings phase 1 (two-tier `reset_user_data`
+  RPC; keeps settings + the Unallocated wallet; no client-side balance writes).
 - Phase 7, an Investment wallet type.
 - Optional AI features (friend has $20 Claude API credit; natural-language transaction entry was the
   top candidate).
@@ -446,6 +484,20 @@ Deferred / smaller:
   not change the "Claude Code never applies DB writes" rule.
 - **ARCHITECTURE.md retired to a pointer**, not maintained. A second schema doc drifts and has caused
   incidents; single source of truth is live DB > PROJECT-CONTEXT.md > CLAUDE.md.
+- **Data reset is two-tier, not one "delete all" button** (settings phase 1): "Clear activity" (wipe
+  transactions/income/allocations/pending-conflicts + zero balances, keep templates/rules/plans) vs.
+  "Full reset" (also remove the structure). One button conflated two very different intents and its copy
+  lied about what it kept. `unallocated_pending_conflicts` clears in **both** tiers — it's transient
+  resolution state, so leaving it would orphan rows pointing at deleted plans. All of it runs in one
+  `auth.uid()`-scoped transactional RPC so balances are never written client-side.
+- **`month_start_day` removed by decision** (settings phase 1): the input was inert (consumed nowhere;
+  dashboard uses calendar months) and a custom budget-month start is **not wanted**. Removed the UI;
+  left the DB column as dead rather than migrate it away, to avoid a write migration for nothing.
+- **Privacy mode deferred to the layout redesign, on purpose** (settings phase 1): masking balances
+  cleanly needs ONE shared money formatter, but amounts are currently hand-written `€{n.toFixed(2)}`
+  inline across ~22 files. Brute-forcing 22 files now would be redone in the redesign (which touches
+  every component anyway). **Plan of record:** the redesign introduces the shared formatter → privacy
+  mode becomes a trivial toggle → and the same formatter is what a future real-currency feature needs.
 
 ---
 
