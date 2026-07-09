@@ -1,4 +1,5 @@
 import { supabase, getCurrentUserId } from './supabase'
+import { resolveRowExact } from './resolveDistribution'
 
 const round2 = n => Number(Number(n).toFixed(2))
 
@@ -27,10 +28,11 @@ export async function firePlan(unallocatedWalletId, plan, balance) {
   const distributions = []
   let resolvedExact = 0   // unrounded, to judge the split against the amount (ignores per-item rounding)
   for (const it of items) {
-    const v = Number(it.value)
-    if (!v || v <= 0) continue
-    // Same resolution as DistributionPopup: percent = that % of the amount, euro = literal euros.
-    const exact = it.mode === 'percent' ? (v / 100) * amount : v
+    // Same per-item resolution as DistributionPopup, via the shared primitive: percent = that %
+    // of the amount, euro = literal euros. We keep the unrounded `exact` for the allocation guard
+    // below and round per item for the actual distribution.
+    const exact = resolveRowExact(it.mode, it.value, amount)
+    if (exact <= 0) continue
     resolvedExact += exact
     const euros = round2(exact)
     if (euros > 0) distributions.push({ wallet_id: it.wallet_id, amount: euros })

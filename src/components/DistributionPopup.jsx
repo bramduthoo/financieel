@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { X, Check } from 'lucide-react'
 import { supabase, getCurrentUserId } from '../lib/supabase'
+import { resolveDistribution } from '../lib/resolveDistribution'
 
 const round2  = n => Number(Number(n).toFixed(2))
 const fmtEur  = n => `€${round2(n).toFixed(2)}`
@@ -113,13 +114,11 @@ export default function DistributionPopup({ totalAmount, onConfirm, onClose, str
   // Target wallets: in outbound mode the Unallocated wallet itself is never a target.
   const listWallets = outbound ? wallets.filter(w => !w.is_system) : wallets
 
-  function resolveAmount(row) {
-    const v = Number(row?.value || 0)
-    if (!v || v <= 0) return 0
-    return round2(row.mode === 'euro' ? v : (v / 100) * total)
-  }
+  // Single call into the pure resolver drives the live totals, gating, and the confirm payload.
+  const ordered = listWallets.map(w => ({ wallet_id: w.id, ...(rows[w.id] ?? {}) }))
+  const resolved = resolveDistribution(ordered, total, { sendRemainder, unallocatedWalletId: unallocatedId })
 
-  const resolvedTotal = listWallets.reduce((s, w) => s + resolveAmount(rows[w.id]), 0)
+  const resolvedTotal = resolved.distributed
   const percentSum    = listWallets.reduce((s, w) => {
     const r = rows[w.id]
     const v = Number(r?.value || 0)
@@ -127,9 +126,9 @@ export default function DistributionPopup({ totalAmount, onConfirm, onClose, str
     return s + (r.mode === 'percent' ? v : (v / total) * 100)
   }, 0)
 
-  const remainder = round2(total - resolvedTotal)
-  const complete  = Math.abs(resolvedTotal - total) < 0.005
-  const notOver   = resolvedTotal <= total + 0.005
+  const remainder = resolved.remainder
+  const complete  = resolved.complete
+  const notOver   = resolved.notOver
 
   // In outbound mode the chosen amount must be positive and within the available balance.
   const amountValid = !outbound || (total > 0 && total <= maxAmount + 0.005)
@@ -176,22 +175,9 @@ export default function DistributionPopup({ totalAmount, onConfirm, onClose, str
   // ── Confirm ─────────────────────────────────────────────────────────────────
 
   function handleConfirm() {
-    // Explicit per-wallet rows the user actually assigned (no auto-sweep entry).
-    const explicit = []
-    for (const w of listWallets) {
-      const r = rows[w.id]
-      const amount = resolveAmount(r)
-      if (amount <= 0) continue
-      explicit.push({ wallet_id: w.id, mode: r.mode, value: round2(r.value), amount })
-    }
-    // The dynamic remainder sweep, materialised as a euro entry only where a concrete
-    // distribution is needed (income crediting, recurring rules).
-    const remainderRow = (sendRemainder && remainder > 0.005 && unallocatedId)
-      ? { wallet_id: unallocatedId, mode: 'euro', value: remainder, amount: remainder }
-      : null
-    const allRows = remainderRow ? [...explicit, remainderRow] : explicit
-
-    const distributions = allRows.map(({ wallet_id, amount }) => ({ wallet_id, amount }))
+    // The pure resolver produces the explicit rows, the materialised remainder sweep, and the
+    // euro distributions — identical to the previous inline logic.
+    const { explicit, remainderRow, allRows, distributions } = resolved
     onConfirm(distributions, {
       rows: explicit,        // explicit rows only — consumers that store a flag (templates) use this
       allRows,               // explicit rows + materialised remainder — recurring rules use this
