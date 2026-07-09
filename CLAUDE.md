@@ -72,6 +72,9 @@ remove it).
 - Use the `code-reviewer` subagent on the diff before declaring a feature done.
 - Use the `db-verifier` subagent (read-only DB) to check data invariants after flows that touch
   balances or distributions.
+- **Browser testing:** browser/Playwright flows always log in with the test account from
+  `.env.test.local` (`TEST_USER_EMAIL` / `TEST_USER_PASSWORD`) — never automate the owner's real
+  account. Scope any `db-verifier` checks after a browser run to that test account's `user_id`.
 - End every working session with the `wrapup` skill so `PROJECT-CONTEXT.md` stays current.
 - Owner's machine is **Windows / PowerShell**: `Remove-Item -Recurse -Force` not `rm -rf`;
   commit with `git commit -m "..."`; LF→CRLF warnings are harmless.
