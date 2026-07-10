@@ -2,6 +2,7 @@
 import { format, startOfDay, addDays, endOfMonth, endOfWeek } from 'date-fns'
 import { Calendar, Table, CheckCircle2, XCircle } from 'lucide-react'
 import { generatePaymentDates, generateUpcomingDates } from '../lib/recurringUtils'
+import { formatMoney } from '../lib/format'
 
 export default function UpcomingPayments({ rules, transactions = [] }) {
   const [view,      setView]      = useState('table')
@@ -100,7 +101,7 @@ export default function UpcomingPayments({ rules, transactions = [] }) {
                         {format(item.date, 'd MMM yyyy')}
                       </td>
                       <td className="px-4 py-2.5 text-right font-semibold text-gray-700 dark:text-gray-200">
-                        €{Number(item.rule.amount).toFixed(2)}
+                        {formatMoney(Number(item.rule.amount))}
                       </td>
                     </tr>
                   ))}
@@ -230,7 +231,7 @@ function CalendarView({ rules, transactions, today }) {
                         ? 'bg-[#EAF3DE] text-[#3B6D11]'
                         : 'bg-[#FCEBEB] text-[#A32D2D]'
                   }`}
-                  title={`${item.rule.name} — €${Number(item.rule.amount).toFixed(2)}`}
+                  title={`${item.rule.name} — ${formatMoney(Number(item.rule.amount))}`}
                 >
                   {!item.isFuture && (
                     item.confirmed

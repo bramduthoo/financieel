@@ -7,6 +7,7 @@ import IncomeConfirmModal from '../components/IncomeConfirmModal'
 import DistributionPopup from '../components/DistributionPopup'
 import { distributeIncome } from '../lib/distributeIncome'
 import { evaluateUnallocatedPlans } from '../lib/unallocatedPlans'
+import { formatMoney } from '../lib/format'
 
 const FREQ_OPTIONS = [
   { value: 'weekly',    label: 'Weekly' },
@@ -23,7 +24,7 @@ function fmtK(n) {
 
 const inputClass = 'w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent'
 
-function fmt(n) { return `€${Number(n).toFixed(2)}` }
+function fmt(n) { return formatMoney(n) }
 function todayStr() { return format(new Date(), 'yyyy-MM-dd') }
 
 function buildChain(ruleId, allRules) {
@@ -362,8 +363,8 @@ export default function IncomeRecurringDetail() {
                   </div>
                   <span className="font-medium text-gray-900">
                     {dr.mode === 'percent'
-                      ? `${Number(dr.value)}% · €${Number(dr.amount).toFixed(2)}`
-                      : `€${Number(dr.amount).toFixed(2)}`}
+                      ? `${Number(dr.value)}% · ${formatMoney(Number(dr.amount))}`
+                      : formatMoney(Number(dr.amount))}
                   </span>
                 </div>
               )

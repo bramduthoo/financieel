@@ -1,4 +1,4 @@
-﻿import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, Wallet, ArrowDownCircle, Settings, LogOut } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
@@ -8,11 +8,13 @@ const navItems = [
   { path: '/income',   label: 'Income',    icon: ArrowDownCircle },
 ]
 
+// Active item inverts via tokens: bg-ink + text-cream both flip per theme
+// (dark ink = #F1EFE8, dark cream = #14140F), giving the spec's inverted pill.
 const linkClass = ({ isActive }) =>
-  `flex items-center gap-2.5 px-3 py-2 text-[13px] rounded-lg mb-0.5 transition-colors ${
+  `flex items-center gap-2.5 px-3 py-2 text-[13px] rounded-[9px] mb-0.5 transition-colors ${
     isActive
-      ? 'bg-stone-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium'
-      : 'text-gray-600 dark:text-gray-300 hover:bg-stone-100 dark:hover:bg-gray-800'
+      ? 'bg-ink text-cream font-medium'
+      : 'text-ink-muted hover:bg-track'
   }`
 
 export default function Layout({ children }) {
@@ -24,51 +26,58 @@ export default function Layout({ children }) {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="flex h-screen overflow-hidden bg-cream">
 
       {/* Sidebar */}
-      <aside className="w-56 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col">
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-          <h1 className="text-lg font-bold text-indigo-600">Financieel</h1>
+      <aside className="w-56 shrink-0 bg-card border-r border-card-border flex flex-col">
+        <div className="p-5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-[9px] bg-accent-solid flex items-center justify-center">
+              <Wallet size={16} className="text-white" />
+            </div>
+            <h1 className="text-[15px] font-medium text-ink tracking-tight">Financieel</h1>
+          </div>
         </div>
 
-        <nav>
-          {navItems.map(item => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              end={item.path === '/'}
-              className={({ isActive }) =>
-                `block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-indigo-50 text-indigo-600'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-                }`
-              }
-            >
-              {item.label}
-            </NavLink>
-          ))}
+        <nav className="flex-1 px-3">
+          {navItems.map(item => {
+            const Icon = item.icon
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end={item.path === '/'}
+                className={linkClass}
+              >
+                <Icon size={16} />
+                {item.label}
+              </NavLink>
+            )
+          })}
 
-          <div className="h-px bg-stone-200 mx-2 my-3" />
+          <div className="h-px bg-card-border mx-1 my-3" />
 
           <NavLink to="/settings" className={linkClass}>
-            <Settings size={15} />
+            <Settings size={16} />
             Settings
           </NavLink>
         </nav>
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+
+        <div className="p-3">
           <button
             onClick={handleSignOut}
-            className="w-full px-3 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors text-left"
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] rounded-[9px] text-ink-muted hover:text-negative hover:bg-negative-tint transition-colors text-left"
           >
+            <LogOut size={16} />
             Sign out
           </button>
         </div>
       </aside>
 
-      {/* Main content */}
-      <main className="flex-1 overflow-auto bg-stone-50 dark:bg-gray-950">
+      {/* Main content — min-w-0 lets main shrink to the viewport so wide page
+          content is contained inside it (scrolls within main) instead of
+          pushing the whole shell wider and shoving the scrollbar off-screen. */}
+      <main className="flex-1 min-w-0 overflow-y-auto bg-cream">
         <div className="px-7 py-6">
           {children}
         </div>

@@ -3,6 +3,7 @@ import { format, parseISO, startOfMonth, endOfMonth, startOfWeek, endOfWeek } fr
 import { Plus, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import VariableTransactionForm from './VariableTransactionForm'
+import { formatMoney } from '../lib/format'
 
 export default function VariableOverview({ walletId, onBalanceChanged }) {
   const [showForm,     setShowForm]     = useState(false)
@@ -144,7 +145,7 @@ export default function VariableOverview({ walletId, onBalanceChanged }) {
                       {format(parseISO(t.date), 'd MMM yyyy')}
                     </td>
                     <td className="px-4 py-2.5 text-right font-medium text-[#A32D2D]">
-                      −€{Number(t.amount).toFixed(2)}
+                      {formatMoney(-Number(t.amount))}
                     </td>
                   </tr>
                 ))}
@@ -155,7 +156,7 @@ export default function VariableOverview({ walletId, onBalanceChanged }) {
                     {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
                   </td>
                   <td className="px-4 py-2 text-right font-medium text-[#A32D2D]">
-                    −€{total.toFixed(2)}
+                    {formatMoney(-total)}
                   </td>
                 </tr>
               </tfoot>
@@ -181,7 +182,7 @@ export default function VariableOverview({ walletId, onBalanceChanged }) {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Amount</span>
-                <span className="font-medium text-[#A32D2D]">−€{Number(detail.amount).toFixed(2)}</span>
+                <span className="font-medium text-[#A32D2D]">{formatMoney(-Number(detail.amount))}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Date</span>
@@ -226,7 +227,7 @@ export default function VariableOverview({ walletId, onBalanceChanged }) {
             <p className="text-gray-500 text-sm mb-6">
               Remove{' '}
               <span className="font-medium text-gray-700">
-                {deleteTarget.note ?? '—'} · −€{Number(deleteTarget.amount).toFixed(2)}
+                {deleteTarget.note ?? '—'} · {formatMoney(-Number(deleteTarget.amount))}
               </span>{' '}
               from {format(parseISO(deleteTarget.date), 'd MMM yyyy')}? The wallet balance will be corrected.
             </p>

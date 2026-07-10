@@ -1,2 +1,59 @@
 @import "tailwindcss";
 @variant dark (&:where(.dark, .dark *));
+
+/* ── Redesign "the blend" tokens (DESIGN-SPEC.md §2, locked) ──────────────────
+   Light values below; the .dark block overrides the same CSS variables so every
+   `bg-cream` / `text-positive` / … utility auto-adapts (Tailwind v4 utilities
+   compile to var(--color-x)). Tokens whose value must NOT shift in dark
+   (solid fills) get their own *-solid / *-bar names. Pattern: primary buttons &
+   active nav use `bg-ink text-cream` — both flip, so the pair inverts per theme. */
+@theme {
+  --color-cream: #F4F0E7;
+  --color-card: #FFFFFF;
+  --color-card-border: #E4DFD3;
+  --color-inner-border: #ECE7DB;
+  --color-field: #F7F4EC;
+  --color-track: #F1EFE8;
+
+  --color-ink: #2C2C2A;
+  --color-ink-soft: #5F5E5A;
+  --color-ink-muted: #888780;
+  --color-ink-faint: #B4B2A9;
+
+  --color-accent: #D85A30;        /* accent text/highlights (shifts lighter in dark) */
+  --color-accent-solid: #D85A30;  /* solid fills — logo mark, active checkbox (fixed) */
+
+  --color-positive: #3B6D11;      /* positive text */
+  --color-positive-bar: #639922;  /* bars/chart positive fill (fixed both themes) */
+  --color-positive-tint: #EAF3DE;
+
+  --color-negative: #993C1D;      /* negative text */
+  --color-negative-bar: #E24B4A;  /* chart/over-budget spending fill (fixed) */
+  --color-negative-tint: #FAECE7;
+
+  --color-warning: #EF9F27;       /* amber bar (75% budget) */
+}
+
+.dark {
+  --color-cream: #14140F;         /* page canvas; also nested-card fill */
+  --color-card: #1E1E17;
+  --color-card-border: #2C2C2A;
+  --color-inner-border: #2C2C2A;
+  --color-field: #14140F;
+  --color-track: #2C2C2A;
+
+  --color-ink: #F1EFE8;           /* text primary; inverted button bg */
+  --color-ink-soft: #B4B2A9;
+  --color-ink-muted: #888780;
+  --color-ink-faint: #5F5E5A;
+
+  --color-accent: #F0997B;        /* coral shifted lighter for contrast */
+  /* accent-solid stays #D85A30 */
+
+  --color-positive: #97C459;
+  --color-positive-tint: rgba(99, 153, 34, 0.18);
+
+  --color-negative: #F09595;
+  --color-negative-tint: rgba(226, 75, 74, 0.15);
+  /* positive-bar / negative-bar / warning stay fixed */
+}

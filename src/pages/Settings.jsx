@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AlertTriangle, LogOut } from 'lucide-react'
 import { format } from 'date-fns'
@@ -7,7 +7,7 @@ import { useTheme } from '../lib/ThemeContext'
 import IncomeConfirmModal from '../components/IncomeConfirmModal'
 
 const authInputClass =
-  'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100'
+  'w-full px-3 py-2 bg-field border border-card-border rounded-[8px] text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-accent/30'
 
 // Two-tier reset copy. Mirrors reset_user_data(p_full) exactly (Task B).
 const RESET_TIERS = {
@@ -35,18 +35,20 @@ const RESET_TIERS = {
   },
 }
 
+// On/off switch. Active = coral (accent-solid), off = ink-faint — both fixed
+// across themes so the white knob stays visible in light and dark. No purple.
 function Toggle({ checked, onChange }) {
   return (
     <button
       type="button"
       onClick={() => onChange(!checked)}
-      className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none ${
-        checked ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-600'
+      className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-accent/30 ${
+        checked ? 'bg-accent-solid' : 'bg-ink-faint'
       }`}
     >
       <div
         className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full shadow transition-transform ${
-          checked ? 'translate-x-4' : 'translate-x-0'
+          checked ? 'translate-x-5' : 'translate-x-0'
         }`}
       />
     </button>
@@ -55,12 +57,12 @@ function Toggle({ checked, onChange }) {
 
 function SettingCard({ label, description, children }) {
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+    <div className="bg-card border border-card-border rounded-[14px] p-6">
       <div className="flex items-start justify-between gap-6">
         <div className="flex-1">
-          <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">{label}</p>
+          <p className="text-sm font-medium text-ink">{label}</p>
           {description && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">{description}</p>
+            <p className="text-xs text-ink-muted mt-1 leading-relaxed">{description}</p>
           )}
         </div>
         <div className="flex-shrink-0 flex items-center">
@@ -237,18 +239,18 @@ export default function Settings() {
     setDeleteError(null)
   }
 
-  if (loading) return <p className="text-gray-400">Loading settings...</p>
-  if (!settings) return <p className="text-gray-400">No settings found.</p>
+  if (loading) return <p className="text-ink-muted">Loading settings...</p>
+  if (!settings) return <p className="text-ink-muted">No settings found.</p>
 
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Settings</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">App preferences and configuration</p>
+          <h1 className="text-2xl font-medium tracking-tight text-ink">Settings</h1>
+          <p className="text-ink-soft text-sm mt-1">App preferences and configuration</p>
         </div>
         <span
-          className={`text-sm font-medium text-[#3B6D11] transition-opacity duration-500 ${
+          className={`text-sm font-medium text-positive transition-opacity duration-500 ${
             saved ? 'opacity-100' : 'opacity-0'
           }`}
         >
@@ -258,18 +260,18 @@ export default function Settings() {
 
       <div className="max-w-2xl space-y-4">
         {/* Profile (Task D) */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-          <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">Profile</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">Your account details.</p>
+        <div className="bg-card border border-card-border rounded-[14px] p-6">
+          <p className="text-sm font-medium text-ink">Profile</p>
+          <p className="text-xs text-ink-muted mt-1 leading-relaxed">Your account details.</p>
           <dl className="mt-4 space-y-2">
             <div className="flex items-center justify-between gap-6">
-              <dt className="text-sm text-gray-500 dark:text-gray-400">Email</dt>
-              <dd className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">{userEmail ?? '—'}</dd>
+              <dt className="text-sm text-ink-muted">Email</dt>
+              <dd className="text-sm font-medium text-ink truncate">{userEmail ?? '—'}</dd>
             </div>
             {memberSince && (
               <div className="flex items-center justify-between gap-6">
-                <dt className="text-sm text-gray-500 dark:text-gray-400">Member since</dt>
-                <dd className="text-sm font-medium text-gray-800 dark:text-gray-100">{format(new Date(memberSince), 'd MMM yyyy')}</dd>
+                <dt className="text-sm text-ink-muted">Member since</dt>
+                <dd className="text-sm font-medium text-ink">{format(new Date(memberSince), 'd MMM yyyy')}</dd>
               </div>
             )}
           </dl>
@@ -279,7 +281,7 @@ export default function Settings() {
           label="Currency"
           description="The currency used throughout the app."
         >
-          <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-lg">
+          <span className="text-sm font-medium text-ink-soft bg-field px-3 py-1.5 rounded-[8px]">
             EUR €
           </span>
         </SettingCard>
@@ -289,14 +291,14 @@ export default function Settings() {
           description="Switch between light and dark mode."
         >
           <div className="flex items-center gap-3">
-            <span className={`text-sm ${settings.theme === 'light' ? 'text-gray-800 dark:text-gray-100 font-medium' : 'text-gray-400 dark:text-gray-500'}`}>
+            <span className={`text-sm ${settings.theme === 'light' ? 'text-ink font-medium' : 'text-ink-muted'}`}>
               Light
             </span>
             <Toggle
               checked={settings.theme === 'dark'}
               onChange={isDark => updateSetting('theme', isDark ? 'dark' : 'light')}
             />
-            <span className={`text-sm ${settings.theme === 'dark' ? 'text-gray-800 dark:text-gray-100 font-medium' : 'text-gray-400 dark:text-gray-500'}`}>
+            <span className={`text-sm ${settings.theme === 'dark' ? 'text-ink font-medium' : 'text-ink-muted'}`}>
               Dark
             </span>
           </div>
@@ -311,40 +313,40 @@ export default function Settings() {
           }
         >
           <div className="flex items-center gap-3">
-            <span className={`text-sm ${!settings.strict_distribution ? 'text-gray-800 dark:text-gray-100 font-medium' : 'text-gray-400 dark:text-gray-500'}`}>
+            <span className={`text-sm ${!settings.strict_distribution ? 'text-ink font-medium' : 'text-ink-muted'}`}>
               OFF
             </span>
             <Toggle
               checked={settings.strict_distribution ?? true}
               onChange={val => updateSetting('strict_distribution', val)}
             />
-            <span className={`text-sm ${settings.strict_distribution ? 'text-gray-800 dark:text-gray-100 font-medium' : 'text-gray-400 dark:text-gray-500'}`}>
+            <span className={`text-sm ${settings.strict_distribution ? 'text-ink font-medium' : 'text-ink-muted'}`}>
               ON
             </span>
           </div>
         </SettingCard>
 
         {/* Password change (Task C) */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-          <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">Change password</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">
+        <div className="bg-card border border-card-border rounded-[14px] p-6">
+          <p className="text-sm font-medium text-ink">Change password</p>
+          <p className="text-xs text-ink-muted mt-1 leading-relaxed">
             Enter your current password, then choose a new one (at least 8 characters).
           </p>
 
           {pwError && (
-            <div className="bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-sm px-4 py-3 rounded-lg mt-4">
+            <div className="bg-negative-tint text-negative text-sm px-4 py-3 rounded-[8px] mt-4">
               {pwError}
             </div>
           )}
           {pwSuccess && (
-            <div className="bg-green-50 dark:bg-green-950/40 text-[#3B6D11] dark:text-green-400 text-sm px-4 py-3 rounded-lg mt-4">
+            <div className="bg-positive-tint text-positive text-sm px-4 py-3 rounded-[8px] mt-4">
               Password updated successfully.
             </div>
           )}
 
           <div className="space-y-3 mt-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Current password</label>
+              <label className="block text-sm font-medium text-ink-soft mb-1">Current password</label>
               <input
                 type="password"
                 value={pwCurrent}
@@ -355,7 +357,7 @@ export default function Settings() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">New password</label>
+              <label className="block text-sm font-medium text-ink-soft mb-1">New password</label>
               <input
                 type="password"
                 value={pwNew}
@@ -366,7 +368,7 @@ export default function Settings() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Confirm new password</label>
+              <label className="block text-sm font-medium text-ink-soft mb-1">Confirm new password</label>
               <input
                 type="password"
                 value={pwConfirm}
@@ -380,7 +382,7 @@ export default function Settings() {
             <button
               onClick={handlePasswordChange}
               disabled={pwLoading || !pwCurrent || !pwNew || !pwConfirm}
-              className="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 disabled:opacity-50"
+              className="px-4 py-2 rounded-[9px] bg-ink text-cream text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
             >
               {pwLoading ? 'Updating…' : 'Update password'}
             </button>
@@ -388,17 +390,17 @@ export default function Settings() {
         </div>
 
         {/* Log out of all devices (Task F) */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-card border border-card-border rounded-[14px] p-6">
           <div className="flex items-start justify-between gap-6">
             <div className="flex-1">
-              <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">Log out of all devices</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">
+              <p className="text-sm font-medium text-ink">Log out of all devices</p>
+              <p className="text-xs text-ink-muted mt-1 leading-relaxed">
                 Ends every active session, including this one. You'll need to sign in again everywhere.
               </p>
             </div>
             <button
               onClick={() => { setLogoutAllError(null); setLogoutAllModal(true) }}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-ink-soft bg-transparent border border-[#D3D1C7] dark:border-card-border rounded-[9px] hover:bg-track transition-colors flex-shrink-0"
             >
               <LogOut size={14} />
               Log out everywhere
@@ -407,39 +409,39 @@ export default function Settings() {
         </div>
 
         {/* Danger zone (Task B — two tiers) */}
-        <div className="bg-[#FCEBEB] border border-[#F7C1C1] rounded-2xl p-5 space-y-5">
-          <p className="text-sm font-semibold text-[#A32D2D]">Danger zone</p>
+        <div className="bg-negative-tint border border-negative-bar/25 rounded-[14px] p-5 space-y-5">
+          <p className="text-sm font-medium text-negative">Danger zone</p>
 
           {/* Clear activity */}
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
-              <p className="text-sm font-medium text-[#A32D2D]">Clear activity</p>
-              <p className="text-xs text-[#A32D2D]/80 mt-1 leading-relaxed">
+              <p className="text-sm font-medium text-negative">Clear activity</p>
+              <p className="text-xs text-negative/80 mt-1 leading-relaxed">
                 Deletes all transactions, income entries, budget allocations and pending conflicts, and resets every wallet balance to €0. Your wallets, distribution rules, recurring income, templates and plans are kept. This cannot be undone.
               </p>
             </div>
             <button
               onClick={() => openDelete('activity')}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#A32D2D] bg-white border border-[#A32D2D] rounded-lg hover:bg-[#FCEBEB] transition-colors flex-shrink-0"
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-negative bg-card border border-negative-bar/50 rounded-[9px] hover:bg-negative-tint transition-colors flex-shrink-0"
             >
               <AlertTriangle size={14} />
               Clear activity
             </button>
           </div>
 
-          <div className="border-t border-[#F7C1C1]" />
+          <div className="border-t border-negative-bar/20" />
 
           {/* Full reset */}
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
-              <p className="text-sm font-medium text-[#A32D2D]">Full reset</p>
-              <p className="text-xs text-[#A32D2D]/80 mt-1 leading-relaxed">
+              <p className="text-sm font-medium text-negative">Full reset</p>
+              <p className="text-xs text-negative/80 mt-1 leading-relaxed">
                 Everything in “Clear activity”, and also removes your distribution rules, recurring income &amp; rules, income templates, and unallocated templates &amp; plans. Only your wallets (including Unallocated) and settings are kept. This cannot be undone.
               </p>
             </div>
             <button
               onClick={() => openDelete('full')}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-[#A32D2D] border border-[#A32D2D] rounded-lg hover:bg-[#8a2626] transition-colors flex-shrink-0"
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-negative-bar border border-negative-bar rounded-[9px] hover:opacity-90 transition-opacity flex-shrink-0"
             >
               <AlertTriangle size={14} />
               Full reset
@@ -451,27 +453,27 @@ export default function Settings() {
       {/* ── Warning modal ──────────────────────────────────────────────────────── */}
       {deleteModal === 'warning' && deleteTier && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
-            <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3">{RESET_TIERS[deleteTier].title}</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">The following will be permanently deleted:</p>
-            <ul className="text-sm text-gray-700 dark:text-gray-200 space-y-1.5 mb-3 ml-1">
+          <div className="bg-card border border-card-border rounded-[14px] shadow-xl w-full max-w-sm p-6">
+            <h2 className="text-lg font-medium text-ink mb-3">{RESET_TIERS[deleteTier].title}</h2>
+            <p className="text-sm text-ink-soft mb-3">The following will be permanently deleted:</p>
+            <ul className="text-sm text-ink space-y-1.5 mb-3 ml-1">
               {RESET_TIERS[deleteTier].deleted.map(item => (
                 <li key={item}>• {item}</li>
               ))}
             </ul>
-            <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">{RESET_TIERS[deleteTier].kept}</p>
-            <p className="text-sm font-medium text-[#A32D2D] mb-5">This cannot be undone.</p>
+            <p className="text-sm text-ink-soft mb-3">{RESET_TIERS[deleteTier].kept}</p>
+            <p className="text-sm font-medium text-negative mb-5">This cannot be undone.</p>
             <div className="flex gap-3">
               <button
                 onClick={closeDeleteModals}
-                className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                className="flex-1 py-2 rounded-[9px] border border-card-border text-sm text-ink-soft hover:bg-track transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={sendOtp}
                 disabled={deleteLoading}
-                className="flex-1 py-2 rounded-lg bg-[#A32D2D] text-white text-sm font-medium hover:bg-[#8a2626] disabled:opacity-50"
+                className="flex-1 py-2 rounded-[9px] bg-negative-bar text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
               >
                 {deleteLoading ? 'Sending…' : 'Send confirmation code'}
               </button>
@@ -483,14 +485,14 @@ export default function Settings() {
       {/* ── Code modal ─────────────────────────────────────────────────────────── */}
       {deleteModal === 'code' && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
-            <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">Check your email</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          <div className="bg-card border border-card-border rounded-[14px] shadow-xl w-full max-w-sm p-6">
+            <h2 className="text-lg font-medium text-ink mb-2">Check your email</h2>
+            <p className="text-sm text-ink-muted mb-4">
               We sent a 6-digit confirmation code to{' '}
-              <span className="font-medium text-gray-700 dark:text-gray-200">{userEmail}</span>.
+              <span className="font-medium text-ink">{userEmail}</span>.
               Enter it below to confirm deletion.
             </p>
-            {deleteError && <p className="text-[#A32D2D] text-sm mb-3">{deleteError}</p>}
+            {deleteError && <p className="text-negative text-sm mb-3">{deleteError}</p>}
             <input
               type="text"
               inputMode="numeric"
@@ -498,19 +500,19 @@ export default function Settings() {
               value={otpCode}
               onChange={e => setOtpCode(e.target.value.replace(/\D/g, ''))}
               placeholder="000000"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-red-500 mb-4 dark:bg-gray-800 dark:text-gray-100"
+              className="w-full px-3 py-2 bg-field border border-card-border rounded-[8px] text-sm text-ink text-center tracking-widest placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-negative-bar/40 mb-4"
             />
             <div className="flex gap-3">
               <button
                 onClick={closeDeleteModals}
-                className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                className="flex-1 py-2 rounded-[9px] border border-card-border text-sm text-ink-soft hover:bg-track transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDeletion}
                 disabled={deleteLoading || otpCode.length < 6}
-                className="flex-1 py-2 rounded-lg bg-[#A32D2D] text-white text-sm font-medium hover:bg-[#8a2626] disabled:opacity-50"
+                className="flex-1 py-2 rounded-[9px] bg-negative-bar text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
               >
                 {deleteLoading ? 'Deleting…' : 'Confirm deletion'}
               </button>
@@ -527,7 +529,7 @@ export default function Settings() {
           body={
             <>
               This ends every active session, including this one. You'll be returned to the login screen and will need to sign in again everywhere.
-              {logoutAllError && <span className="block mt-2 text-[#A32D2D] font-medium">{logoutAllError}</span>}
+              {logoutAllError && <span className="block mt-2 text-negative font-medium">{logoutAllError}</span>}
             </>
           }
           confirmLabel={logoutAllLoading ? 'Logging out…' : 'Log out everywhere'}
@@ -538,7 +540,7 @@ export default function Settings() {
 
       {/* ── Success toast ──────────────────────────────────────────────────────── */}
       {deleteSuccess && (
-        <div className="fixed bottom-6 right-6 bg-gray-900 text-white px-4 py-3 rounded-xl shadow-lg text-sm font-medium z-50">
+        <div className="fixed bottom-6 right-6 bg-ink text-cream px-4 py-3 rounded-[14px] shadow-lg text-sm font-medium z-50">
           Your data has been reset
         </div>
       )}

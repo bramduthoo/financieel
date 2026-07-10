@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   format, addMonths, subMonths, subYears, startOfMonth, endOfMonth, startOfYear,
   isBefore, isAfter, differenceInDays, addDays,
@@ -10,15 +10,11 @@ import {
   getOverduePayments, getOverspentWallets, getUnderfundedWallets,
   calculateMonthMetrics, calculateMonthlyAverage, getHistoricalSeries, getYearlySeries,
 } from '../lib/dashboardCalcs'
+import { formatMoney } from '../lib/format'
 import IncomeSpendingChart from '../components/IncomeSpendingChart'
 import CashTrendChart from '../components/CashTrendChart'
 import ProjectedBalanceChart from '../components/ProjectedBalanceChart'
 import UnallocatedConflictBanner from '../components/UnallocatedConflictBanner'
-
-function fmtEUR(val) {
-  const n = Number(val)
-  return n < 0 ? `−€${Math.abs(n).toFixed(2)}` : `€${n.toFixed(2)}`
-}
 
 export default function Dashboard() {
   const [wallets,            setWallets]            = useState([])
@@ -58,7 +54,7 @@ export default function Dashboard() {
     fetchAll()
   }, [refreshKey])
 
-  if (loading) return <p className="text-gray-400">Loading dashboard...</p>
+  if (loading) return <p className="text-ink-muted">Loading dashboard...</p>
 
   const cash     = calculateProjectedCash(wallets, incomeRecurring, recurringRules, transactions)
   const timeline = getProjectedBalanceTimeline(wallets, incomeRecurring, recurringRules, transactions, 30)
@@ -119,34 +115,37 @@ export default function Dashboard() {
       .map(d => ({ label: format(d.year, 'yyyy'), income: d.income, spending: d.spending, totalCash: d.totalCash }))
   }
 
+  const sectionLabel = 'text-[11px] font-medium uppercase tracking-wider text-ink-muted'
+  const cardClass = 'bg-card border border-card-border rounded-[14px] p-6'
+
   return (
-    <div>
+    <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Dashboard</h1>
-        <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{monthLabel}</p>
+        <h1 className="text-2xl font-medium tracking-tight text-ink">Dashboard</h1>
+        <p className="text-ink-soft text-sm mt-1">{monthLabel}</p>
       </div>
 
       {/* Multi-plan conflict banner */}
       <UnallocatedConflictBanner onChange={() => setRefreshKey(k => k + 1)} />
 
       {/* Section 1 — Projected cash position */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">Next 30 days</h2>
+      <div className={cardClass}>
+        <h2 className={`${sectionLabel} mb-4`}>Next 30 days</h2>
 
-        <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-300 mb-4">
-          <span>Cash now: <span className="font-semibold text-gray-800 dark:text-gray-100">€{cash.cashNow.toFixed(2)}</span></span>
+        <div className="flex flex-wrap items-center gap-2 text-sm text-ink-soft mb-4">
+          <span>Cash now: <span className="font-medium text-ink">{formatMoney(cash.cashNow)}</span></span>
           <span>+</span>
-          <span>Expected income: <span className="font-semibold text-green-600">€{cash.expectedIncome.toFixed(2)}</span></span>
+          <span>Expected income: <span className="font-medium text-positive">{formatMoney(cash.expectedIncome)}</span></span>
           <span>−</span>
-          <span>Upcoming costs: <span className="font-semibold text-red-500">€{cash.upcomingCosts.toFixed(2)}</span></span>
+          <span>Upcoming costs: <span className="font-medium text-negative">{formatMoney(cash.upcomingCosts)}</span></span>
           <span>=</span>
           <span>Projected balance:</span>
         </div>
 
         <ProjectedBalanceChart timeline={timeline} />
 
-        <p className="text-xs text-gray-400 dark:text-gray-500 mt-4">
+        <p className="text-xs text-ink-faint mt-4">
           If today is the 5th of the month and your salary arrives on the 30th, this shows
           your projected balance at the end of the next 30-day window.
         </p>
@@ -154,75 +153,75 @@ export default function Dashboard() {
 
       {/* Section 1.5 — Months ahead outlook */}
       <div>
-        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">6-month outlook</p>
+        <p className={`${sectionLabel} mb-2`}>6-month outlook</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {months.map(m => (
-            <div key={m.month.toISOString()} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{format(m.month, 'MMM yyyy')}</p>
-              <div className={`flex items-center gap-1 text-sm font-semibold ${
-                m.projectedNet >= 0 ? 'text-green-600' : 'text-red-500'
+            <div key={m.month.toISOString()} className="min-w-0 bg-card border border-card-border rounded-[14px] p-4">
+              <p className="text-xs text-ink-muted mb-1">{format(m.month, 'MMM yyyy')}</p>
+              <div className={`flex items-center gap-1 min-w-0 text-sm font-medium ${
+                m.projectedNet >= 0 ? 'text-positive' : 'text-negative'
               }`}>
-                {m.projectedNet >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-                €{m.projectedNet.toFixed(2)}
+                {m.projectedNet >= 0 ? <TrendingUp size={14} className="shrink-0" /> : <TrendingDown size={14} className="shrink-0" />}
+                <span className="truncate tabular-nums">{formatMoney(m.projectedNet)}</span>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1.5 text-[11px] text-gray-600">
-            <span className="inline-block w-2.5 h-2.5 rounded-sm bg-[#C0DD97]" /> Income
+        <div className="flex items-center gap-4 mt-3">
+          <span className="flex items-center gap-1.5 text-[11px] text-ink-muted">
+            <span className="inline-block w-2.5 h-2.5 rounded-sm bg-positive-bar" /> Income
           </span>
-          <span className="flex items-center gap-1.5 text-[11px] text-gray-600">
-            <span className="inline-block w-2.5 h-2.5 rounded-sm bg-[#F09595]" /> Costs
+          <span className="flex items-center gap-1.5 text-[11px] text-ink-muted">
+            <span className="inline-block w-2.5 h-2.5 rounded-sm bg-negative-bar" /> Costs
           </span>
         </div>
       </div>
 
       {/* Needs attention */}
       {hasAlerts && (
-        <div className="bg-white border border-stone-200 rounded-2xl p-5 mb-4">
+        <div className={cardClass}>
           <div className="flex items-center gap-2 mb-1">
-            <AlertTriangle size={16} color="#BA7517" />
-            <h2 className="text-sm font-medium text-gray-900">Needs attention</h2>
-            <span className="bg-[#FAEEDA] text-[#854F0B] text-[11px] font-medium px-2 py-0.5 rounded-full">
+            <AlertTriangle size={16} className="text-warning" />
+            <h2 className="text-sm font-medium text-ink">Needs attention</h2>
+            <span className="bg-[#FAEEDA] text-[#854F0B] dark:bg-warning/15 dark:text-warning text-[11px] font-medium px-2 py-0.5 rounded-full">
               {alertCount} alert{alertCount === 1 ? '' : 's'}
             </span>
           </div>
 
           {overdueGroups.map(g => (
-            <div key={g.rule.id} className="flex items-center justify-between pt-3 pb-3 border-t border-stone-200">
+            <div key={g.rule.id} className="flex items-center justify-between pt-3 pb-3 border-t border-inner-border">
               <div>
-                <p className="text-[13px] font-medium text-gray-900">{g.rule.name}</p>
-                <p className="text-xs text-gray-600">
-                  {g.count} payment{g.count === 1 ? '' : 's'} overdue · {fmtEUR(g.total)}
+                <p className="text-[13px] font-medium text-ink">{g.rule.name}</p>
+                <p className="text-xs text-ink-soft">
+                  {g.count} payment{g.count === 1 ? '' : 's'} overdue · {formatMoney(g.total)}
                 </p>
               </div>
-              <ChevronRight size={16} className="text-gray-400" />
+              <ChevronRight size={16} className="text-ink-faint" />
             </div>
           ))}
 
           {overspent.map(o => (
-            <div key={o.wallet.id} className="flex items-center justify-between pt-3 pb-3 border-t border-stone-200">
+            <div key={o.wallet.id} className="flex items-center justify-between pt-3 pb-3 border-t border-inner-border">
               <div>
-                <p className="text-[13px] font-medium text-gray-900">{o.wallet.name}</p>
-                <p className="text-xs text-gray-600">
-                  {fmtEUR(o.spent)} spent of {fmtEUR(o.budget)} budget
+                <p className="text-[13px] font-medium text-ink">{o.wallet.name}</p>
+                <p className="text-xs text-ink-soft">
+                  {formatMoney(o.spent)} spent of {formatMoney(o.budget)} budget
                 </p>
               </div>
-              <ChevronRight size={16} className="text-gray-400" />
+              <ChevronRight size={16} className="text-ink-faint" />
             </div>
           ))}
 
           {underfunded.map(u => (
-            <div key={u.wallet.id} className="flex items-center justify-between pt-3 pb-3 border-t border-stone-200">
+            <div key={u.wallet.id} className="flex items-center justify-between pt-3 pb-3 border-t border-inner-border">
               <div>
-                <p className="text-[13px] font-medium text-gray-900">{u.wallet.name}</p>
-                <p className="text-xs text-gray-600">
-                  Needs {fmtEUR(u.shortfall)} more for upcoming payments
+                <p className="text-[13px] font-medium text-ink">{u.wallet.name}</p>
+                <p className="text-xs text-ink-soft">
+                  Needs {formatMoney(u.shortfall)} more for upcoming payments
                 </p>
               </div>
-              <ChevronRight size={16} className="text-gray-400" />
+              <ChevronRight size={16} className="text-ink-faint" />
             </div>
           ))}
         </div>
@@ -230,28 +229,27 @@ export default function Dashboard() {
 
       {/* Section 2 — Needs attention */}
       <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Needs attention</h2>
+        <h2 className={sectionLabel}>Needs attention</h2>
 
         {!hasAlerts && (
-          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5 flex items-center gap-2 text-green-600">
+          <div className={`${cardClass} flex items-center gap-2 text-positive`}>
             <CheckCircle2 size={18} />
             <span className="text-sm font-medium">All clear</span>
           </div>
         )}
 
         {overdue.length > 0 && (
-          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-red-500 p-5">
-            <div className="flex items-center gap-2 text-red-500 mb-2">
+          <div className={`${cardClass} border-l-4 border-l-negative-bar`}>
+            <div className="flex items-center gap-2 text-negative mb-2">
               <AlertCircle size={18} />
-              <span className="text-sm font-semibold">
-                {overdue.length} overdue payment{overdue.length === 1 ? '' : 's'} totalling €
-                {overdue.reduce((s, o) => s + o.amount, 0).toFixed(2)}
+              <span className="text-sm font-medium">
+                {overdue.length} overdue payment{overdue.length === 1 ? '' : 's'} totalling {formatMoney(overdue.reduce((s, o) => s + o.amount, 0))}
               </span>
             </div>
-            <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+            <ul className="text-sm text-ink-soft space-y-1">
               {overdue.slice(0, 5).map((o, i) => (
                 <li key={i}>
-                  {o.rule.name} — €{o.amount.toFixed(2)} — due {format(o.dueDate, 'd MMM yyyy')}
+                  {o.rule.name} — {formatMoney(o.amount)} — due {format(o.dueDate, 'd MMM yyyy')}
                 </li>
               ))}
             </ul>
@@ -259,17 +257,17 @@ export default function Dashboard() {
         )}
 
         {overspent.length > 0 && (
-          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-red-500 p-5">
-            <div className="flex items-center gap-2 text-red-500 mb-2">
+          <div className={`${cardClass} border-l-4 border-l-negative-bar`}>
+            <div className="flex items-center gap-2 text-negative mb-2">
               <AlertCircle size={18} />
-              <span className="text-sm font-semibold">
+              <span className="text-sm font-medium">
                 {overspent.length} wallet{overspent.length === 1 ? '' : 's'} overspent this month
               </span>
             </div>
-            <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+            <ul className="text-sm text-ink-soft space-y-1">
               {overspent.map(o => (
                 <li key={o.wallet.id}>
-                  {o.wallet.name}: €{o.spent.toFixed(2)} spent of €{o.budget.toFixed(2)} budget
+                  {o.wallet.name}: {formatMoney(o.spent)} spent of {formatMoney(o.budget)} budget
                 </li>
               ))}
             </ul>
@@ -277,17 +275,17 @@ export default function Dashboard() {
         )}
 
         {underfunded.length > 0 && (
-          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-orange-500 p-5">
-            <div className="flex items-center gap-2 text-orange-500 mb-2">
+          <div className={`${cardClass} border-l-4 border-l-warning`}>
+            <div className="flex items-center gap-2 text-warning mb-2">
               <AlertTriangle size={18} />
-              <span className="text-sm font-semibold">
+              <span className="text-sm font-medium">
                 {underfunded.length} wallet{underfunded.length === 1 ? '' : 's'} need more funding
               </span>
             </div>
-            <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+            <ul className="text-sm text-ink-soft space-y-1">
               {underfunded.map(u => (
                 <li key={u.wallet.id}>
-                  {u.wallet.name}: needs €{u.shortfall.toFixed(2)} more for upcoming payments
+                  {u.wallet.name}: needs {formatMoney(u.shortfall)} more for upcoming payments
                 </li>
               ))}
             </ul>
@@ -297,19 +295,19 @@ export default function Dashboard() {
 
       {/* Section 3 — This month's performance */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">This month's performance</h2>
+        <div className={cardClass}>
+          <h2 className={`${sectionLabel} mb-4`}>This month's performance</h2>
           <div className="grid grid-cols-2 gap-6">
             <MetricCard
-              label="Income" value={`€${metrics.income.toFixed(2)}`}
+              label="Income" value={formatMoney(metrics.income)}
               current={metrics.income} avg={averages.income}
             />
             <MetricCard
-              label="Spending" value={`€${metrics.spending.toFixed(2)}`}
+              label="Spending" value={formatMoney(metrics.spending)}
               current={metrics.spending} avg={averages.spending} lowerIsBetter
             />
             <MetricCard
-              label="Net" value={`€${metrics.net.toFixed(2)}`}
+              label="Net" value={formatMoney(metrics.net)}
               current={metrics.net} avg={averages.net}
             />
             {metrics.income > 0 && (
@@ -321,29 +319,29 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">Wallet progress</h2>
+        <div className={cardClass}>
+          <h2 className={`${sectionLabel} mb-4`}>Wallet progress</h2>
           {progressWallets.length === 0 ? (
-            <p className="text-sm text-gray-400 dark:text-gray-500">No wallets to show.</p>
+            <p className="text-sm text-ink-muted">No wallets to show.</p>
           ) : (
             <div className="space-y-4">
               {progressWallets.map(w => {
                 const budget = Number(w.budget)
                 const pct    = budget > 0 ? (w.spent / budget) * 100 : 0
-                const barColour = pct >= 100 ? 'bg-red-500' : pct >= 75 ? 'bg-orange-500' : 'bg-green-500'
+                const barColour = pct >= 100 ? 'bg-negative-bar' : pct >= 75 ? 'bg-warning' : 'bg-positive-bar'
                 return (
                   <div key={w.id}>
                     <div className="flex items-center gap-2 text-sm mb-1">
                       <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: w.colour }} />
-                      <span className="text-gray-700 dark:text-gray-200 font-medium">{w.name}</span>
+                      <span className="text-ink font-medium">{w.name}</span>
                     </div>
-                    <div className="h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-1">
+                    <div className="h-1.5 bg-track rounded-full overflow-hidden mb-1">
                       <div className={`h-full rounded-full ${barColour}`} style={{ width: `${Math.min(pct, 100)}%` }} />
                     </div>
-                    <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                      <span>€{w.spent.toFixed(2)} spent of €{budget.toFixed(2)} budget</span>
+                    <div className="flex items-center justify-between text-xs text-ink-muted">
+                      <span>{formatMoney(w.spent)} spent of {formatMoney(budget)} budget</span>
                       {w.type === 'variable' && w.budget_type === 'accumulating' && (
-                        <span className="text-gray-400 dark:text-gray-500">Balance: €{Number(w.balance).toFixed(2)}</span>
+                        <span className="text-ink-faint">Balance: {formatMoney(Number(w.balance))}</span>
                       )}
                     </div>
                   </div>
@@ -357,17 +355,17 @@ export default function Dashboard() {
       {/* Section 4 — Over time */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Over time</h2>
+          <h2 className={sectionLabel}>Over time</h2>
           {hasYearOfData && (
-            <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+            <div className="flex gap-1 bg-track rounded-[9px] p-1">
               {[['monthly', 'Monthly'], ['yearly', 'Yearly']].map(([id, label]) => (
                 <button
                   key={id}
                   onClick={() => setViewMode(id)}
                   className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
                     viewMode === id
-                      ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                      ? 'bg-card text-ink shadow-sm'
+                      : 'text-ink-muted hover:text-ink'
                   }`}
                 >
                   {label}
@@ -385,7 +383,7 @@ export default function Dashboard() {
 
       {/* No data state */}
       {wallets.length === 0 && (
-        <div className="text-center py-16 text-gray-400 dark:text-gray-500">
+        <div className="text-center py-16 text-ink-muted">
           <p className="text-lg font-medium mb-1">Nothing here yet</p>
           <p className="text-sm">Add your wallets and log your income to see your overview</p>
         </div>
@@ -400,9 +398,9 @@ function MetricCard({ label, value, current, avg, lowerIsBetter = false, unit = 
     const diff   = current - avg
     const good   = lowerIsBetter ? diff <= 0 : diff >= 0
     const arrow  = diff >= 0 ? '↑' : '↓'
-    const amount = unit === 'pp' ? `${Math.abs(diff).toFixed(1)}pp` : `€${Math.abs(diff).toFixed(0)}`
+    const amount = unit === 'pp' ? `${Math.abs(diff).toFixed(1)}pp` : formatMoney(Math.abs(diff), { decimals: 0 })
     trend = (
-      <span className={`text-[11px] font-medium ${good ? 'text-[#3B6D11]' : 'text-[#A32D2D]'}`}>
+      <span className={`text-[11px] font-medium ${good ? 'text-positive' : 'text-negative'}`}>
         {arrow} {amount}
       </span>
     )
@@ -410,8 +408,8 @@ function MetricCard({ label, value, current, avg, lowerIsBetter = false, unit = 
 
   return (
     <div>
-      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{label}</p>
-      <p className="text-xl font-bold text-gray-800 dark:text-gray-100">{value}</p>
+      <p className="text-xs font-medium text-ink-muted mb-1">{label}</p>
+      <p className="text-xl font-medium text-ink">{value}</p>
       {trend}
     </div>
   )

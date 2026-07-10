@@ -382,19 +382,51 @@ primitive `resolveRowExact` (truly-identical part only; keeps its own base/guard
 - **Owner still to do:** run one real OTP-gated delete through the UI (the OTP email can't be read
   autonomously — the underlying RPC is already live-verified); then merge the PR.
 
+**Redesign foundation — R1 ("the blend"): DONE.** (Branch `b/redesign-foundation`, PR #7, 2026-07-10.
+Spec: `DESIGN-SPEC.md` — owner-approved, direction B structure × direction C warmth, the single source
+of truth for the reskin rollout.) Pure reskin + the shared money formatter + a layout-shell fix; no
+business logic/query/RPC/signature changed. **Verified by Claude Code:** 67 tests green, `vite build`
+clean, `design-check` + `verify-merge` clean, `code-reviewer` clean pass, Playwright (test account)
+screenshots Dashboard/Wallets/Settings light+dark + an in-browser scroll proof.
+- **Design tokens** in `src/index.css`: DESIGN-SPEC §2 palette as Tailwind v4 `@theme` tokens with a
+  `.dark {}` block overriding the same CSS vars — so `bg-cream`/`text-ink`/`text-positive`/… auto-adapt
+  per theme with almost no per-element `dark:` classes. `bg-ink text-cream` inverts cleanly (both flip).
+- **`src/lib/format.js` `formatMoney()`** (+ 8 behaviour tests): European `€ 1.234,56`, hand-rolled
+  (not `Intl`) for deterministic output; U+2212 negatives; `−€ 0,00` suppressed. **All ~19 euro display
+  sites routed through it** (formatter-only diffs; lib math sites excluded). This is the shared formatter
+  the privacy-mode plan was waiting on — privacy mode is now a trivial toggle away.
+- **Reskinned:** Layout/sidebar (coral logo mark, unified icon nav, inverted active pill), Dashboard,
+  and the post-hygiene **Settings** page. 3 Dashboard charts recolored per §6 via `fill-*`/`stroke-*`
+  token utilities (theme-aware, still inline SVG).
+- **Layout scroll-shell fix:** `main` → `min-w-0 overflow-y-auto`, root `overflow-hidden`, sidebar
+  `shrink-0`. Root cause of the "vertical scroll broken on every page except Dashboard" bug: `main`
+  lacked `min-w-0`, so wide content on data-heavy pages expanded it past the viewport and pushed its
+  scrollbar off-screen. Now wide content is contained *inside* `main`; no horizontal page scroll.
+- **De-purpled** the interactive switches (`indigo` → coral `accent-solid`). Tightened the `design-check`
+  skill: its table is now the §7 token reference, and its procedure mandates an `indigo|purple|violet`
+  grep + scanning a reskinned surface's full render tree.
+- **Branch was rebased onto `origin/main`** after diagnosing it was cut from stale local `main` (7
+  commits behind; settings-hygiene had merged as PR #6). One conflict (`DistributionPopup.jsx`) resolved
+  keeping both `resolveDistribution` + `formatMoney`.
+- **Owner still to do:** review/merge PR #7.
+
 **DEFERRED from settings phase 1 (with why):**
-- **Privacy mode (hide balances)** — deferred: amounts are hand-written `€{n.toFixed(2)}` inline across
-  ~22 files with **no shared formatter**, so masking would be a per-component brute-force. **Plan of
-  record:** introduce ONE shared money formatter during the **layout redesign** (every component gets
-  touched anyway), after which privacy mode is a trivial toggle; the same formatter is what a future
-  real-currency feature needs too.
+- **Privacy mode (hide balances)** — **prerequisite now DONE:** the shared `formatMoney()`
+  (`src/lib/format.js`, R1) replaced the inline `€{n.toFixed(2)}` call sites, so privacy mode is now a
+  trivial toggle inside that one function (and the same formatter is what a future real-currency feature
+  needs). Still unbuilt — pick it up any time.
 - **Email change, account deletion, backup/export** — out of scope for hygiene (account deletion needs
   an edge function; backup is its own phase); **`month_start_day` wiring** — removed by decision, not
   wanted.
 
 **Then — new feature list (agreed direction):**
-3. **Full layout redesign** (also: introduce the shared money formatter → then privacy mode).
-4. **New dashboard.**
+3. **Full layout redesign** — **R1 (foundation) DONE** (PR #7): tokens, `formatMoney`, Layout+Dashboard
+   +Settings reskin, charts, scroll-shell fix. **R2 = IMMEDIATE NEXT:** roll the reskin across the
+   remaining pages (Wallets, WalletDetail, Income, IncomeRecurringDetail, Login/ResetPassword) using the
+   DESIGN-SPEC + the now-live tokens; purge the remaining `indigo` on those pages; and update CLAUDE.md's
+   "Design system" section (still lists the old `bg-stone-50`/`rounded-2xl` tokens). Run `design-check`
+   (now with the purple grep) per page.
+4. **New dashboard** (content redesign — explicitly separate from the reskin).
 5. **PDF transaction import.**
 
 **Later phases (plans already written, unchanged):**
@@ -498,6 +530,28 @@ Deferred / smaller:
   inline across ~22 files. Brute-forcing 22 files now would be redone in the redesign (which touches
   every component anyway). **Plan of record:** the redesign introduces the shared formatter → privacy
   mode becomes a trivial toggle → and the same formatter is what a future real-currency feature needs.
+- **Redesign tokens live as Tailwind v4 `@theme` CSS vars overridden under `.dark`** (R1), not a
+  `tailwind.config` (there is none) and not per-element `dark:` classes. Overriding the same
+  `--color-*` var in a `.dark {}` block makes every token utility auto-theme, so a component ships both
+  themes almost for free. Tokens that must NOT flip in dark (solid fills) get their own `*-solid`/`*-bar`
+  names. `DESIGN-SPEC.md` is the locked authority; the `design-check` skill table mirrors it.
+- **`formatMoney` is hand-rolled, not `Intl.NumberFormat`** (R1): `Intl` emits a non-breaking space and
+  varies by Node/ICU version, which makes behaviour tests brittle and the spec string (`€ 1.234,56`,
+  normal space) non-deterministic. A tiny hand-rolled formatter gives exact, stable output. It is the
+  single euro-DISPLAY path; calculation/rounding stays in the pure `lib/` modules (never routed).
+- **Charts stay inline SVG but theme via `fill-*`/`stroke-*` token utilities** (R1), not a `useTheme()`
+  color object — Tailwind generates `fill-{token}`/`stroke-{token}` from the same `@theme` vars, so SVG
+  recolors auto-adapt with the rest. Fills that carry meaning (positive/negative) use the fixed `*-bar`
+  tokens so they read in both themes.
+- **The app shell scrolls via one container: `main` with `min-w-0 overflow-y-auto`** (R1). Without
+  `min-w-0`, a flex child keeps `min-width:auto` and won't shrink below its content, so wide page content
+  expands `main` past the viewport and shoves its scrollbar off-screen — which read as "vertical scroll
+  broken on every page except Dashboard" (Dashboard content is narrow). `min-w-0` contains wide content
+  inside `main` and kills horizontal page scroll. Any future page must own its own wide-content overflow.
+- **Interactive controls are ink/coral, never indigo** (R1): the app shipped a lot of leftover
+  `indigo-*` (Tailwind default accent). The redesign's only accent is coral (`accent-solid`, fixed both
+  themes so a white knob stays visible on toggles). `indigo|purple|violet` is now an explicit
+  `design-check` grep. Un-reskinned pages still carry indigo — that's later-rollout scope, not a bug.
 
 ---
 
@@ -518,6 +572,11 @@ Deferred / smaller:
   the browser console**, don't trust a green build; scan merged files for dropped imports / undefined
   references.
 - **Branch protection is NOT enforced on the free private plan**, rely on the branch+PR discipline.
+- **`git checkout -b` off local `main` can be stale.** R1 was branched from local `main` while
+  `origin/main` was 7 commits ahead (the settings-hygiene merge, PR #6, had landed) — the reskin ended up
+  sitting on the *pre-hygiene* Settings page. Lesson: `git fetch` and branch off `origin/main` (or
+  `merge-base`-check) before starting; if caught later, `git rebase origin/main` and re-verify with the
+  `verify-merge` skill.
 - **Supabase connector here is read-WRITE** (auto-connected with default scope). Assistant reads
   first, shows the change, applies only on the owner's go-ahead.
 - **`auth.uid()` is null when the assistant runs raw SQL** via the connector, test SECURITY INVOKER
