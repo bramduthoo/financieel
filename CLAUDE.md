@@ -56,11 +56,18 @@ remove it).
 
 ## Design system (locked — do not deviate without explicit approval)
 
-- Page bg `bg-stone-50`; cards `bg-white border border-stone-200 rounded-2xl p-5`
-- Hero numbers `text-3xl font-medium tracking-tight` — **never bold/semibold**
-- Tiny labels `text-[11px] uppercase tracking-wider text-gray-400`
-- Accent coral `#D85A30`; positive `#3B6D11`; negative `#A32D2D`; primary buttons `bg-gray-900`
-- Dark mode via `ThemeContext` (`src/lib/ThemeContext.jsx`) — every new UI must support it
+Live system is **"the blend"** — authority is `DESIGN-SPEC.md`; tokens are defined in `src/index.css`
+(`@theme` + `.dark` overrides). **Reskin rollout in progress:** Layout, Dashboard, Settings are done
+(R1); other pages are still old-style pending R2. Prefer the token utilities over raw hex.
+
+- Page bg `bg-cream`; cards `bg-card border border-card-border rounded-[14px]` (dark: fill-separated)
+- Numbers `font-medium tracking-tight` — **never bold/semibold**
+- Section labels `text-[11px] uppercase tracking-wider text-ink-muted`
+- Accent coral (`accent` / `accent-solid`); positive/negative via `text-positive` / `text-negative`;
+  primary buttons & active items `bg-ink text-cream` (inverts per theme). Interactive controls are
+  ink/coral — **never indigo/purple**.
+- Money renders via `formatMoney()` (`src/lib/format.js`) — never inline `toFixed` on amounts
+- Dark mode is automatic via the tokens (`.dark` overrides the CSS vars); every new UI must support it
 - Run the `design-check` skill after building or changing UI
 
 ## Workflow conventions
