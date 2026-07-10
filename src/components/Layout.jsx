@@ -26,10 +26,10 @@ export default function Layout({ children }) {
   }
 
   return (
-    <div className="flex h-screen bg-cream">
+    <div className="flex h-screen overflow-hidden bg-cream">
 
       {/* Sidebar */}
-      <aside className="w-56 bg-card border-r border-card-border flex flex-col">
+      <aside className="w-56 shrink-0 bg-card border-r border-card-border flex flex-col">
         <div className="p-5">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-[9px] bg-accent-solid flex items-center justify-center">
@@ -74,8 +74,10 @@ export default function Layout({ children }) {
         </div>
       </aside>
 
-      {/* Main content */}
-      <main className="flex-1 overflow-auto bg-cream">
+      {/* Main content — min-w-0 lets main shrink to the viewport so wide page
+          content is contained inside it (scrolls within main) instead of
+          pushing the whole shell wider and shoving the scrollbar off-screen. */}
+      <main className="flex-1 min-w-0 overflow-y-auto bg-cream">
         <div className="px-7 py-6">
           {children}
         </div>

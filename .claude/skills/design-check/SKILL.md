@@ -30,15 +30,23 @@ utilities (`bg-cream`, `text-ink`, `text-positive`, `border-card-border`, …) o
 | Dark mode | every element ships both themes; dark uses lighter text stops, alpha tints, fill separation |
 | Money rendering | via `formatMoney()` — inline `toFixed` on amounts is a violation |
 | Budget hints | grey hint only for fixed/capped wallets with non-zero budget; never render "€ 0" |
+| Interactive controls | toggles/switches, active states, focus rings use **ink or coral** — `indigo`/`purple`/`violet` anywhere is a violation (not a spec color) |
 
 ## Procedure
 
 1. `git diff --name-only` (or session file list) → filter to `.jsx` files under `src/`.
-2. Grep each for violations: stray `font-bold`/`font-semibold` on large text, hardcoded colors
-   outside the palette, `rounded-lg`/`rounded-xl` on cards, chart library imports, missing
-   dark-mode classes on new containers.
+   **Also scan the whole page/component tree a reskinned surface renders** (a reskinned page
+   pulling in an un-migrated child — e.g. a `Toggle`, modal, or form — is how off-palette color
+   reaches the screenshot). Do not scope the grep to only the top-level file you touched.
+2. Grep each for violations. Run these explicitly and treat any hit as a finding:
+   - `grep -nE "indigo|purple|violet|fuchsia"` → **purple leakage** (toggles, focus rings,
+     buttons, active tabs). This is the pattern reviews keep missing — always run it.
+   - `grep -nE "font-(bold|semibold)"` on large/number text.
+   - `grep -nE "rounded-(lg|xl|2xl)"` on cards (should be `rounded-[14px]`).
+   - hardcoded hex outside the DESIGN-SPEC palette; chart-library imports; containers missing a
+     dark treatment (token utilities auto-theme; raw `bg-*`/`text-*` grays usually don't).
 3. If a browser tool is available, screenshot the affected pages in **both** light and dark
-   mode and eyeball against the rules.
+   mode and eyeball against the rules — including every interactive control in each state.
 4. Report violations with file:line and the fix; apply fixes if in scope, otherwise list them.
 
 Note: the redesign ("the blend") has landed — this table is now the live token reference.

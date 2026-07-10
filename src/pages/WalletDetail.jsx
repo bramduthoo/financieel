@@ -620,7 +620,7 @@ export default function WalletDetail() {
                             aria-checked={p.is_active}
                             onClick={() => togglePlan(p)}
                             className={`relative w-11 h-6 rounded-full transition-colors ${
-                              p.is_active ? 'bg-gray-900 dark:bg-indigo-600' : 'bg-gray-200 dark:bg-gray-600'
+                              p.is_active ? 'bg-accent-solid' : 'bg-gray-200 dark:bg-gray-600'
                             }`}
                           >
                             <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${

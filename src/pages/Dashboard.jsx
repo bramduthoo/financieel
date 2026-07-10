@@ -156,13 +156,13 @@ export default function Dashboard() {
         <p className={`${sectionLabel} mb-2`}>6-month outlook</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {months.map(m => (
-            <div key={m.month.toISOString()} className="bg-card border border-card-border rounded-[14px] p-4">
+            <div key={m.month.toISOString()} className="min-w-0 bg-card border border-card-border rounded-[14px] p-4">
               <p className="text-xs text-ink-muted mb-1">{format(m.month, 'MMM yyyy')}</p>
-              <div className={`flex items-center gap-1 text-sm font-medium ${
+              <div className={`flex items-center gap-1 min-w-0 text-sm font-medium ${
                 m.projectedNet >= 0 ? 'text-positive' : 'text-negative'
               }`}>
-                {m.projectedNet >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-                {formatMoney(m.projectedNet)}
+                {m.projectedNet >= 0 ? <TrendingUp size={14} className="shrink-0" /> : <TrendingDown size={14} className="shrink-0" />}
+                <span className="truncate tabular-nums">{formatMoney(m.projectedNet)}</span>
               </div>
             </div>
           ))}

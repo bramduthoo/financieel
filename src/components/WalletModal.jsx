@@ -176,7 +176,7 @@ export default function WalletModal({ wallet, onClose, onSave }) {
                 type="button"
                 onClick={() => setCapReductionEnabled(v => !v)}
                 className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none ${
-                  capReductionEnabled ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-600'
+                  capReductionEnabled ? 'bg-accent-solid' : 'bg-gray-200 dark:bg-gray-600'
                 }`}
               >
                 <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
