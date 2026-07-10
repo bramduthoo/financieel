@@ -38,18 +38,18 @@ export default function SalaryGrowthChart({ chain }) {
   }))
 
   return (
-    <div className="mt-3 pt-3 border-t border-gray-100">
-      <p className="text-xs text-gray-400 mb-1.5">Amount history</p>
+    <div className="mt-3 pt-3 border-t border-inner-border">
+      <p className="text-xs text-ink-muted mb-1.5">Amount history</p>
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} className="overflow-visible">
-        <path d={pathD} fill="none" stroke="#818cf8" strokeWidth="1.5" strokeLinejoin="round" />
+        <path d={pathD} fill="none" className="stroke-positive-bar" strokeWidth="1.5" strokeLinejoin="round" />
         {dots.map((d, i) => (
           <g key={i}>
             <title>{d.label}</title>
-            <circle cx={d.x} cy={d.y} r={3} fill="#6366f1" />
+            <circle cx={d.x} cy={d.y} r={3} className="fill-positive-bar" />
           </g>
         ))}
       </svg>
-      <div className="flex justify-between text-xs text-gray-400">
+      <div className="flex justify-between text-xs text-ink-muted">
         <span>{formatMoney(Number(chain[0].amount), { decimals: 0 })}</span>
         <span>{formatMoney(Number(chain[chain.length - 1].amount), { decimals: 0 })}</span>
       </div>

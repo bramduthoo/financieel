@@ -9,6 +9,7 @@ import DistributionPopup from '../components/DistributionPopup'
 import { distributeIncome } from '../lib/distributeIncome'
 import { evaluateUnallocatedPlans } from '../lib/unallocatedPlans'
 import { formatMoney } from '../lib/format'
+import { walletIcon } from '../lib/walletIcons'
 
 const FREQ_OPTIONS = [
   { value: 'weekly',    label: 'Weekly' },
@@ -95,13 +96,13 @@ export default function Income() {
   async function fetchEntryDist(entryId) {
     const { data } = await supabase
       .from('transactions')
-      .select('wallet_id, amount, wallets(name, colour)')
+      .select('wallet_id, amount, wallets(name, icon, type)')
       .eq('income_entry_id', entryId)
       .eq('type', 'credit')
     const map = {}
     for (const t of data ?? []) {
       if (!map[t.wallet_id]) {
-        map[t.wallet_id] = { wallet_id: t.wallet_id, name: t.wallets?.name ?? '—', colour: t.wallets?.colour, amount: 0 }
+        map[t.wallet_id] = { wallet_id: t.wallet_id, name: t.wallets?.name ?? '—', icon: t.wallets?.icon, type: t.wallets?.type, amount: 0 }
       }
       map[t.wallet_id].amount += Number(t.amount)
     }
@@ -954,15 +955,18 @@ export default function Income() {
                 <p className="text-sm text-gray-400 dark:text-gray-500">Distribution details aren't available for this entry.</p>
               ) : (
                 <div className="space-y-2">
-                  {detailDist.rows.map(r => (
-                    <div key={r.wallet_id} className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: r.colour }} />
-                        <span className="text-gray-700 dark:text-gray-200 truncate">{r.name}</span>
+                  {detailDist.rows.map(r => {
+                    const RIcon = walletIcon(r)
+                    return (
+                      <div key={r.wallet_id} className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <RIcon size={14} className="text-ink-soft flex-shrink-0" />
+                          <span className="text-gray-700 dark:text-gray-200 truncate">{r.name}</span>
+                        </div>
+                        <span className="font-medium text-gray-900 dark:text-gray-100">{fmt(r.amount)}</span>
                       </div>
-                      <span className="font-medium text-gray-900 dark:text-gray-100">{fmt(r.amount)}</span>
-                    </div>
-                  ))}
+                    )
+                  })}
                   <div className="flex items-center justify-between text-sm pt-2 border-t border-gray-100 dark:border-gray-800">
                     <span className="text-gray-500 dark:text-gray-400">Total</span>
                     <span className="font-semibold text-gray-900 dark:text-gray-100">{fmt(detailDist.total)}</span>

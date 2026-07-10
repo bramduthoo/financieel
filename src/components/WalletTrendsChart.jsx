@@ -69,26 +69,26 @@ export default function WalletTrendsChart({ walletId }) {
 
   if (loading) {
     return (
-      <div className="bg-white border border-stone-200 rounded-2xl p-5">
-        <p className="text-sm text-gray-400">Loading chart…</p>
+      <div className="bg-card border border-card-border rounded-[14px] p-6">
+        <p className="text-sm text-ink-muted">Loading chart…</p>
       </div>
     )
   }
 
   return (
-    <div className="bg-white border border-stone-200 rounded-2xl p-5">
+    <div className="bg-card border border-card-border rounded-[14px] p-6">
       <div className="flex items-start justify-between mb-4">
         <div>
-          <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Monthly activity</p>
-          <p className="text-xs text-gray-400 mt-0.5">Last 6 months</p>
+          <p className="text-[11px] font-medium text-ink-muted uppercase tracking-wider">Monthly activity</p>
+          <p className="text-xs text-ink-faint mt-0.5">Last 6 months</p>
         </div>
-        <div className="flex items-center gap-4 text-xs text-gray-500">
+        <div className="flex items-center gap-4 text-xs text-ink-muted">
           <span className="flex items-center gap-1.5">
-            <span className="inline-block w-3 h-3 rounded-sm bg-[#E24B4A]" />
+            <span className="inline-block w-3 h-3 rounded-sm bg-negative-bar" />
             Spent
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="inline-block w-3 h-3 rounded-sm bg-[#97C459]" />
+            <span className="inline-block w-3 h-3 rounded-sm bg-positive-bar" />
             Credit
           </span>
         </div>
@@ -101,13 +101,13 @@ export default function WalletTrendsChart({ walletId }) {
             <line
               x1={ML}      y1={bY(tick)}
               x2={ML + CW} y2={bY(tick)}
-              stroke={i === 0 ? '#e5e7eb' : '#f3f4f6'}
+              className={i === 0 ? 'stroke-ink-faint' : 'stroke-track'}
               strokeWidth={1}
             />
             <text
               x={ML - 6} y={bY(tick) + 4}
               textAnchor="end"
-              fontSize={10} fill="#9ca3af"
+              fontSize={10} className="fill-ink-faint"
             >
               {fmtY(tick)}
             </text>
@@ -121,7 +121,7 @@ export default function WalletTrendsChart({ walletId }) {
               <rect
                 x={bX(i, 0)} y={bY(d.debit)}
                 width={barW}  height={bH(d.debit)}
-                fill="#E24B4A" rx={2}
+                className="fill-negative-bar" rx={2}
               >
                 <title>{d.month} · Spent: {formatMoney(d.debit)}</title>
               </rect>
@@ -130,7 +130,7 @@ export default function WalletTrendsChart({ walletId }) {
               <rect
                 x={bX(i, 1)} y={bY(d.credit)}
                 width={barW}  height={bH(d.credit)}
-                fill="#97C459" rx={2}
+                className="fill-positive-bar" rx={2}
               >
                 <title>{d.month} · Credit: {formatMoney(d.credit)}</title>
               </rect>
@@ -139,7 +139,7 @@ export default function WalletTrendsChart({ walletId }) {
               x={ML + i * slotW + slotW / 2}
               y={MT + CH + 18}
               textAnchor="middle"
-              fontSize={10} fill="#9ca3af"
+              fontSize={10} className="fill-ink-faint"
             >
               {d.month}
             </text>
@@ -150,7 +150,7 @@ export default function WalletTrendsChart({ walletId }) {
         <line
           x1={ML} y1={MT + CH}
           x2={ML + CW} y2={MT + CH}
-          stroke="#e5e7eb" strokeWidth={1}
+          className="stroke-ink-faint" strokeWidth={1}
         />
       </svg>
     </div>

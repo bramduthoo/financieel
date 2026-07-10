@@ -3,6 +3,7 @@ import { X, Check } from 'lucide-react'
 import { supabase, getCurrentUserId } from '../lib/supabase'
 import { resolveDistribution } from '../lib/resolveDistribution'
 import { formatMoney } from '../lib/format'
+import { walletIcon } from '../lib/walletIcons'
 
 const round2  = n => Number(Number(n).toFixed(2))
 const fmtEur  = n => formatMoney(n)
@@ -197,7 +198,7 @@ export default function DistributionPopup({ totalAmount, onConfirm, onClose, str
   function ModePill({ mode, onChange, size = 'sm' }) {
     const pad = size === 'sm' ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-sm'
     return (
-      <div className="inline-flex bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5">
+      <div className="inline-flex bg-track rounded-[8px] p-0.5">
         {['euro', 'percent'].map(m => (
           <button
             key={m}
@@ -205,8 +206,8 @@ export default function DistributionPopup({ totalAmount, onConfirm, onClose, str
             onClick={() => onChange(m)}
             className={`${pad} rounded-md font-medium transition-colors ${
               mode === m
-                ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-gray-100'
-                : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
+                ? 'bg-ink text-cream shadow-sm'
+                : 'text-ink-muted hover:text-ink'
             }`}
           >
             {m === 'euro' ? '€' : '%'}
@@ -221,15 +222,15 @@ export default function DistributionPopup({ totalAmount, onConfirm, onClose, str
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-lg max-h-[85vh] flex flex-col">
+      <div className="bg-cream border border-card-border rounded-[14px] shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-stone-100 dark:border-gray-800 flex-shrink-0">
-          <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">
+        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-card-border flex-shrink-0">
+          <h2 className="text-lg font-medium text-ink">
             {outbound ? 'Distribute from Unallocated' : `Distribute ${fmtEur(totalAmount)}`}
           </h2>
           {onClose && (
-            <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg">
+            <button onClick={onClose} className="p-1.5 text-ink-faint hover:text-ink rounded-lg transition-colors">
               <X size={16} />
             </button>
           )}
@@ -237,10 +238,10 @@ export default function DistributionPopup({ totalAmount, onConfirm, onClose, str
 
         {/* Amount to distribute (outbound only) */}
         {outbound && (
-          <div className="px-6 py-3 border-b border-stone-100 dark:border-gray-800 flex-shrink-0">
+          <div className="px-6 py-3 border-b border-card-border flex-shrink-0">
             <div className="flex items-center justify-between mb-1">
-              <label className="text-xs text-gray-500 dark:text-gray-400">Amount to distribute</label>
-              <span className="text-xs text-gray-400 dark:text-gray-500">Available: {fmtEur(maxAmount)}</span>
+              <label className="text-xs text-ink-muted">Amount to distribute</label>
+              <span className="text-xs text-ink-faint">Available: {fmtEur(maxAmount)}</span>
             </div>
             <div className="flex items-center gap-2">
               <input
@@ -251,52 +252,69 @@ export default function DistributionPopup({ totalAmount, onConfirm, onClose, str
                 value={outboundAmount}
                 onChange={e => setOutboundAmount(e.target.value)}
                 placeholder="0.00"
-                className="flex-1 px-3 py-2 text-sm text-right border border-stone-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                className="flex-1 px-3 py-2 text-sm text-right bg-field border border-card-border rounded-[8px] text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-accent/30"
               />
               <button
                 type="button"
                 onClick={() => setOutboundAmount(String(round2(maxAmount)))}
-                className="px-3 py-2 rounded-lg text-xs font-medium border border-stone-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-stone-50 dark:hover:bg-gray-800"
+                className="px-3 py-2 rounded-[8px] text-xs font-medium border border-card-border text-ink-soft hover:bg-track transition-colors"
               >
                 Max
               </button>
             </div>
             {total > maxAmount + 0.005 && (
-              <p className="text-xs text-[#A32D2D] mt-1">Amount exceeds the available balance.</p>
+              <p className="text-xs text-negative mt-1">Amount exceeds the available balance.</p>
             )}
           </div>
         )}
 
-        {/* Global mode toggle */}
-        <div className="flex items-center justify-between px-6 py-3 border-b border-stone-100 dark:border-gray-800 flex-shrink-0">
-          <span className="text-xs text-gray-500 dark:text-gray-400">Set all wallets to</span>
-          <ModePill mode={globalMode} onChange={setAllMode} size="md" />
+        {/* Controls: global mode + remainder sweep on one compact row */}
+        <div className="flex items-center justify-between gap-4 px-6 py-2 border-b border-card-border flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-ink-muted">Set all wallets to</span>
+            <ModePill mode={globalMode} onChange={setAllMode} size="md" />
+          </div>
+          {!outbound && unallocatedId && (
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={sendRemainder}
+                onChange={e => setSendRemainder(e.target.checked)}
+                className="w-4 h-4 rounded border-card-border accent-[#D85A30]"
+              />
+              <span className="text-xs text-ink-soft">Send remainder to Unallocated</span>
+              <span className={`text-xs font-medium ${remainder < -0.005 ? 'text-negative' : 'text-ink-muted'}`}>
+                {remainder >= 0 ? fmtEur(remainder) : `−${fmtEur(Math.abs(remainder))}`}
+              </span>
+            </label>
+          )}
         </div>
 
         {/* Wallet list */}
-        <div className="flex-1 overflow-auto px-6 py-4">
+        <div className="flex-1 overflow-auto px-6 py-3">
           {loading ? (
-            <p className="text-gray-400 dark:text-gray-500 text-sm">Loading wallets…</p>
+            <p className="text-ink-muted text-sm">Loading wallets…</p>
           ) : wallets.length === 0 ? (
-            <p className="text-gray-400 dark:text-gray-500 text-sm text-center py-6">No wallets available.</p>
+            <p className="text-ink-muted text-sm text-center py-6">No wallets available.</p>
           ) : (
-            <div className="space-y-5">
+            <div className="space-y-3">
               {groups.map(group => (
-                <div key={group.key}>
-                  <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">
+                <div key={group.key} className="flex gap-4">
+                  <p className="w-20 shrink-0 pt-2 text-[10px] font-medium text-ink-muted uppercase tracking-wider">
                     {group.label}
                   </p>
-                  <div>
+                  <div className="flex-1 min-w-0 bg-card border border-card-border rounded-[11px] px-3">
                     {group.list.map(wallet => {
                       const r    = rows[wallet.id] ?? { value: '', mode: globalMode }
                       const hint = budgetHint(wallet)
+                      const WIcon = walletIcon(wallet)
                       return (
-                        <div key={wallet.id} className="flex items-center justify-between gap-3 py-2.5 border-b border-stone-100 dark:border-gray-800 last:border-0">
+                        <div key={wallet.id} className="flex items-center justify-between gap-3 py-1 border-b border-inner-border last:border-0">
                           <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: wallet.colour }} />
+                            <WIcon size={14} className="text-ink-soft flex-shrink-0" />
                             <div className="min-w-0">
-                              <p className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">{wallet.name}</p>
-                              {hint && <p className="text-xs text-gray-400 dark:text-gray-500">{hint}</p>}
+                              <p className="text-sm font-medium text-ink truncate">{wallet.name}</p>
+                              {hint && <p className="text-xs text-ink-faint">{hint}</p>}
                             </div>
                           </div>
                           <div className="flex items-center gap-2 flex-shrink-0">
@@ -307,7 +325,7 @@ export default function DistributionPopup({ totalAmount, onConfirm, onClose, str
                               value={r.value}
                               onChange={e => setRowValue(wallet.id, e.target.value)}
                               placeholder={r.mode === 'euro' ? '0.00' : '0'}
-                              className="w-20 px-2 py-1.5 text-sm text-right border border-stone-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                              className="w-20 px-2 py-1.5 text-sm text-right bg-field border border-card-border rounded-[8px] text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-accent/30"
                             />
                             <ModePill mode={r.mode} onChange={m => setRowMode(wallet.id, m)} />
                           </div>
@@ -322,52 +340,34 @@ export default function DistributionPopup({ totalAmount, onConfirm, onClose, str
         </div>
 
         {/* Footer */}
-        <div className="px-6 pb-5 pt-3 border-t border-stone-100 dark:border-gray-800 flex-shrink-0 space-y-3">
-
-          {/* Remainder sweep — never shown in outbound mode (money is leaving Unallocated) */}
-          {!outbound && unallocatedId && (
-            <label className="flex items-center justify-between gap-2 cursor-pointer">
-              <span className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                <input
-                  type="checkbox"
-                  checked={sendRemainder}
-                  onChange={e => setSendRemainder(e.target.checked)}
-                  className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500"
-                />
-                Send remainder to Unallocated
-              </span>
-              <span className={`text-sm font-medium ${remainder < -0.005 ? 'text-[#A32D2D]' : 'text-gray-500 dark:text-gray-400'}`}>
-                {remainder >= 0 ? fmtEur(remainder) : `−${fmtEur(Math.abs(remainder))}`}
-              </span>
-            </label>
-          )}
+        <div className="px-6 pb-5 pt-3 border-t border-card-border flex-shrink-0 space-y-3">
 
           {/* Two progress bars, side by side */}
           <div className="flex gap-3">
             <div className="flex-1">
               <div className="flex items-center justify-between text-xs mb-1">
-                <span className="text-gray-500 dark:text-gray-400">Euro</span>
-                <span className={`font-semibold ${complete ? 'text-[#3B6D11]' : 'text-gray-600 dark:text-gray-300'}`}>
+                <span className="text-ink-muted">Euro</span>
+                <span className={`font-medium ${complete ? 'text-positive' : 'text-ink-soft'}`}>
                   {fmtEur(resolvedTotal)} of {fmtEur(total)}
                 </span>
               </div>
-              <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5">
+              <div className="w-full bg-track rounded-full h-1.5">
                 <div
-                  className={`h-1.5 rounded-full transition-all ${complete ? 'bg-[#3B6D11]' : 'bg-indigo-500'}`}
+                  className={`h-1.5 rounded-full transition-all ${complete ? 'bg-positive-bar' : 'bg-accent-solid'}`}
                   style={{ width: `${euroPct}%` }}
                 />
               </div>
             </div>
             <div className="flex-1">
               <div className="flex items-center justify-between text-xs mb-1">
-                <span className="text-gray-500 dark:text-gray-400">Percent</span>
-                <span className={`font-semibold ${complete ? 'text-[#3B6D11]' : 'text-gray-600 dark:text-gray-300'}`}>
+                <span className="text-ink-muted">Percent</span>
+                <span className={`font-medium ${complete ? 'text-positive' : 'text-ink-soft'}`}>
                   {fmtPct(percentSum)}% of 100%
                 </span>
               </div>
-              <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5">
+              <div className="w-full bg-track rounded-full h-1.5">
                 <div
-                  className={`h-1.5 rounded-full transition-all ${complete ? 'bg-[#3B6D11]' : 'bg-indigo-500'}`}
+                  className={`h-1.5 rounded-full transition-all ${complete ? 'bg-positive-bar' : 'bg-accent-solid'}`}
                   style={{ width: `${pctPct}%` }}
                 />
               </div>
@@ -383,22 +383,22 @@ export default function DistributionPopup({ totalAmount, onConfirm, onClose, str
                 onChange={e => setSaveName(e.target.value)}
                 placeholder="Template name"
                 autoFocus
-                className="flex-1 px-3 py-2 text-sm border border-stone-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                className="flex-1 px-3 py-2 text-sm bg-field border border-card-border rounded-[8px] text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-accent/30"
               />
               <button
                 onClick={saveTemplate}
                 disabled={!saveName.trim()}
-                className={`py-2 px-3 rounded-lg text-sm font-medium ${
+                className={`py-2 px-3 rounded-[9px] text-sm font-medium transition-colors ${
                   saveName.trim()
-                    ? 'bg-gray-900 text-white hover:bg-gray-800'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                    ? 'bg-ink text-cream hover:opacity-90'
+                    : 'bg-track text-ink-faint cursor-not-allowed'
                 }`}
               >
                 Save
               </button>
               <button
                 onClick={() => { setSaving(false); setSaveName('') }}
-                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg"
+                className="p-2 text-ink-faint hover:text-ink rounded-lg transition-colors"
               >
                 <X size={16} />
               </button>
@@ -407,17 +407,17 @@ export default function DistributionPopup({ totalAmount, onConfirm, onClose, str
             <div className="flex gap-3 items-center">
               <button
                 onClick={() => { setSaveName(entryName ?? ''); setSaving(true) }}
-                className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 whitespace-nowrap"
+                className="text-sm font-medium text-ink-soft border border-card-border rounded-[9px] px-3 py-2 hover:bg-track whitespace-nowrap transition-colors"
               >
                 {savedMsg
-                  ? <span className="text-[#3B6D11] flex items-center gap-1"><Check size={14} /> Saved</span>
+                  ? <span className="text-positive flex items-center gap-1"><Check size={14} /> Saved</span>
                   : 'Save as template'}
               </button>
               <div className="flex gap-3 flex-1 justify-end">
                 {onClose && (
                   <button
                     onClick={onClose}
-                    className="px-4 py-2 rounded-lg border border-stone-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-stone-50 dark:hover:bg-gray-800"
+                    className="px-4 py-2 rounded-[9px] border border-card-border text-sm text-ink-soft hover:bg-track transition-colors"
                   >
                     Cancel
                   </button>
@@ -425,10 +425,10 @@ export default function DistributionPopup({ totalAmount, onConfirm, onClose, str
                 <button
                   onClick={handleConfirm}
                   disabled={!canConfirm}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-[9px] text-sm font-medium transition-colors ${
                     canConfirm
-                      ? 'bg-gray-900 text-white hover:bg-gray-800'
-                      : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                      ? 'bg-ink text-cream hover:opacity-90'
+                      : 'bg-track text-ink-faint cursor-not-allowed'
                   }`}
                 >
                   Distribute
@@ -440,7 +440,7 @@ export default function DistributionPopup({ totalAmount, onConfirm, onClose, str
               {onClose && (
                 <button
                   onClick={onClose}
-                  className="flex-1 py-2 rounded-lg border border-stone-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-stone-50 dark:hover:bg-gray-800"
+                  className="flex-1 py-2 rounded-[9px] border border-card-border text-sm text-ink-soft hover:bg-track transition-colors"
                 >
                   Cancel
                 </button>
@@ -448,10 +448,10 @@ export default function DistributionPopup({ totalAmount, onConfirm, onClose, str
               <button
                 onClick={handleConfirm}
                 disabled={!canConfirm}
-                className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex-1 py-2 rounded-[9px] text-sm font-medium transition-colors ${
                   canConfirm
-                    ? 'bg-gray-900 text-white hover:bg-gray-800'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                    ? 'bg-ink text-cream hover:opacity-90'
+                    : 'bg-track text-ink-faint cursor-not-allowed'
                 }`}
               >
                 Distribute
