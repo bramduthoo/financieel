@@ -14,6 +14,7 @@ import WalletTrendsChart from '../components/WalletTrendsChart'
 import DistributionPopup from '../components/DistributionPopup'
 import UnallocatedConflictBanner from '../components/UnallocatedConflictBanner'
 import { evaluateUnallocatedPlans } from '../lib/unallocatedPlans'
+import { formatMoney } from '../lib/format'
 
 const round2 = n => Number(Number(n).toFixed(2))
 
@@ -99,13 +100,13 @@ export default function WalletDetail() {
     const items = p.unallocated_plan_items ?? []
     return items.length === 0
       ? '—'
-      : items.map(i => `${walletName(i.wallet_id)} ${i.mode === 'percent' ? `${Number(i.value)}%` : `€${Number(i.value).toFixed(2)}`}`).join(', ')
+      : items.map(i => `${walletName(i.wallet_id)} ${i.mode === 'percent' ? `${Number(i.value)}%` : formatMoney(Number(i.value))}`).join(', ')
   }
   function planTrigger(p) {
-    const thr = `€${Number(p.threshold).toFixed(2)}`
+    const thr = formatMoney(Number(p.threshold))
     const targets = planTargets(p)
     if (p.distribute_mode === 'amount_over_threshold') return `Sweep everything above ${thr} → ${targets}`
-    if (p.distribute_mode === 'fixed_amount')          return `When over ${thr}, distribute €${Number(p.distribute_amount).toFixed(2)} → ${targets}`
+    if (p.distribute_mode === 'fixed_amount')          return `When over ${thr}, distribute ${formatMoney(Number(p.distribute_amount))} → ${targets}`
     return `When over ${thr}, distribute the full balance → ${targets}`
   }
   // Label an Unallocated outgoing (debit) move from its note.
@@ -226,7 +227,7 @@ export default function WalletDetail() {
     if (isFixed) {
       const target = round2(Number(planForm.distribute_amount))
       const sum = round2(items.reduce((s, it) => s + (it.mode === 'percent' ? (Number(it.value) / 100) * target : Number(it.value)), 0))
-      if (Math.abs(target - sum) >= 0.005) { setPlanError(`The split must add up to €${target.toFixed(2)} (currently €${sum.toFixed(2)}).`); return }
+      if (Math.abs(target - sum) >= 0.005) { setPlanError(`The split must add up to ${formatMoney(target)} (currently ${formatMoney(sum)}).`); return }
     } else {
       if (items.some(it => Number(it.value) < 0 || Number(it.value) > 100)) { setPlanError('Percentages must be between 0 and 100.'); return }
       const pct = round2(items.reduce((s, it) => s + Number(it.value), 0))
@@ -346,7 +347,7 @@ export default function WalletDetail() {
               <p className="text-gray-400 dark:text-gray-500 text-sm capitalize">
                 {wallet.type === 'unallocated'
                   ? 'System wallet'
-                  : `${wallet.type} · ${wallet.budget_type.replace('-', ' ')}${wallet.type !== 'investment' ? ` · €${Number(wallet.budget).toFixed(2)}/mo` : ''}`
+                  : `${wallet.type} · ${wallet.budget_type.replace('-', ' ')}${wallet.type !== 'investment' ? ` · ${formatMoney(Number(wallet.budget))}/mo` : ''}`
                 }
               </p>
             </div>
@@ -368,7 +369,7 @@ export default function WalletDetail() {
                 />
               </div>
               <p className="text-xs text-gray-400 dark:text-gray-500">
-                €{monthDebits.toFixed(2)} / €{budget.toFixed(2)}
+                {formatMoney(monthDebits)} / {formatMoney(budget)}
               </p>
             </div>
           )}
@@ -379,7 +380,7 @@ export default function WalletDetail() {
               ? 'bg-[#EAF3DE] text-[#3B6D11]'
               : 'bg-[#FCEBEB] text-[#A32D2D]'
           }`}>
-            Balance: €{Number(wallet.balance).toFixed(2)}
+            Balance: {formatMoney(Number(wallet.balance))}
           </div>
 
           {!wallet.is_system && (
@@ -481,7 +482,7 @@ export default function WalletDetail() {
           {/* Header: available to distribute + what the wallet collects */}
           <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
             <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Available to distribute</p>
-            <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">€{Number(wallet.balance).toFixed(2)}</p>
+            <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">{formatMoney(Number(wallet.balance))}</p>
             <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mt-2">
               This wallet automatically collects unassigned income and overflow from capped wallets.
             </p>
@@ -555,7 +556,7 @@ export default function WalletDetail() {
                           <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm truncate">{t.name}</p>
                           {!t.affordable && (
                             <span className="text-xs font-medium text-[#854F0B] whitespace-nowrap">
-                              needs €{round2(t.floor - unallocBalance).toFixed(2)} more
+                              needs {formatMoney(t.floor - unallocBalance)} more
                             </span>
                           )}
                         </div>
@@ -563,7 +564,7 @@ export default function WalletDetail() {
                           {t.items.length === 0
                             ? 'No destinations'
                             : t.items
-                                .map(i => `${walletName(i.wallet_id)} ${i.mode === 'percent' ? `${Number(i.value)}%` : `€${Number(i.value).toFixed(2)}`}`)
+                                .map(i => `${walletName(i.wallet_id)} ${i.mode === 'percent' ? `${Number(i.value)}%` : formatMoney(Number(i.value))}`)
                                 .join(' · ')}
                         </p>
                       </button>
@@ -661,7 +662,7 @@ export default function WalletDetail() {
                             <p className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">{t.note || 'Credit'}</p>
                             <p className="text-xs text-gray-400 dark:text-gray-500">{format(new Date(t.date), 'dd MMM yyyy')}</p>
                           </div>
-                          <span className="text-sm font-medium text-[#3B6D11] whitespace-nowrap">+€{Number(t.amount).toFixed(2)}</span>
+                          <span className="text-sm font-medium text-[#3B6D11] whitespace-nowrap">+{formatMoney(Number(t.amount))}</span>
                         </div>
                       ))}
                     </div>
@@ -690,7 +691,7 @@ export default function WalletDetail() {
                               </div>
                               <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{format(new Date(t.date), 'dd MMM yyyy')}</p>
                             </div>
-                            <span className="text-sm font-medium text-[#A32D2D] whitespace-nowrap">−€{Number(t.amount).toFixed(2)}</span>
+                            <span className="text-sm font-medium text-[#A32D2D] whitespace-nowrap">{formatMoney(-Number(t.amount))}</span>
                           </div>
                         )
                       })}
@@ -957,10 +958,10 @@ export default function WalletDetail() {
                 <span className="text-gray-500 dark:text-gray-400">{planIsFixed ? 'Allocated' : 'Total'}</span>
                 {planIsFixed ? (
                   <span className={`font-semibold ${planSplitValid ? 'text-[#3B6D11]' : planRemaining < 0 ? 'text-[#A32D2D]' : 'text-[#854F0B]'}`}>
-                    €{planEuroSum.toFixed(2)} of €{planTargetAmount.toFixed(2)}
+                    {formatMoney(planEuroSum)} of {formatMoney(planTargetAmount)}
                     {!planSplitValid && planTargetAmount > 0 && (planRemaining >= 0
-                      ? ` · €${planRemaining.toFixed(2)} remaining`
-                      : ` · over by €${Math.abs(planRemaining).toFixed(2)}`)}
+                      ? ` · ${formatMoney(planRemaining)} remaining`
+                      : ` · over by ${formatMoney(Math.abs(planRemaining))}`)}
                   </span>
                 ) : (
                   <span className={`font-semibold ${planSplitValid ? 'text-[#3B6D11]' : 'text-[#854F0B]'}`}>

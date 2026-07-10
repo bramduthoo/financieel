@@ -3,6 +3,7 @@ import { CheckCircle2, Circle, X } from 'lucide-react'
 import { supabase, getCurrentUserId } from '../lib/supabase'
 import { format, startOfDay } from 'date-fns'
 import { generatePaymentDates } from '../lib/recurringUtils'
+import { formatMoney } from '../lib/format'
 
 export default function TransactionChecklist({ walletId, onBalanceChanged }) {
   const [rules,        setRules]        = useState([])
@@ -118,7 +119,7 @@ export default function TransactionChecklist({ walletId, onBalanceChanged }) {
                 </div>
               </div>
               <span className="text-sm font-medium text-[#993C1D]">
-                €{Number(item.rule.amount).toFixed(2)}
+                {formatMoney(Number(item.rule.amount))}
               </span>
             </div>
           ))}
@@ -145,7 +146,7 @@ export default function TransactionChecklist({ walletId, onBalanceChanged }) {
                 Due {format(confirmItem.date, 'd MMM yyyy')}
               </p>
               <p className="text-xl font-bold text-gray-800 dark:text-gray-100 mt-2">
-                €{Number(confirmItem.rule.amount).toFixed(2)}
+                {formatMoney(Number(confirmItem.rule.amount))}
               </p>
             </div>
 

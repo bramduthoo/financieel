@@ -1,4 +1,5 @@
 import { format, parseISO } from 'date-fns'
+import { formatMoney } from '../lib/format'
 
 export default function SalaryGrowthChart({ chain }) {
   if (!chain || chain.length < 2) return null
@@ -33,7 +34,7 @@ export default function SalaryGrowthChart({ chain }) {
   const dots = chain.map(r => ({
     x: toX(new Date(r.start_date).getTime()),
     y: toY(r.amount),
-    label: `€${Number(r.amount).toFixed(0)} · from ${format(parseISO(r.start_date), 'd MMM yyyy')}`,
+    label: `${formatMoney(Number(r.amount), { decimals: 0 })} · from ${format(parseISO(r.start_date), 'd MMM yyyy')}`,
   }))
 
   return (
@@ -49,8 +50,8 @@ export default function SalaryGrowthChart({ chain }) {
         ))}
       </svg>
       <div className="flex justify-between text-xs text-gray-400">
-        <span>€{Number(chain[0].amount).toFixed(0)}</span>
-        <span>€{Number(chain[chain.length - 1].amount).toFixed(0)}</span>
+        <span>{formatMoney(Number(chain[0].amount), { decimals: 0 })}</span>
+        <span>{formatMoney(Number(chain[chain.length - 1].amount), { decimals: 0 })}</span>
       </div>
     </div>
   )

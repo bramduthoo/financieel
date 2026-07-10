@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { AlertTriangle, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { fetchPendingConflict, firePlan } from '../lib/unallocatedPlans'
+import { formatMoney } from '../lib/format'
 
 // Prominent banner + Review flow for a persisted multi-plan conflict (Stage 4d).
 // Self-contained: queries the user's pending conflict, resolves the eligible plan ids to rows,
@@ -45,12 +46,12 @@ export default function UnallocatedConflictBanner({ refreshSignal, onChange }) {
 
   function walletName(id) { return walletMap[id] ?? '—' }
   function describe(p) {
-    const thr = `€${Number(p.threshold).toFixed(2)}`
+    const thr = formatMoney(Number(p.threshold))
     const targets = (p.unallocated_plan_items ?? [])
-      .map(i => `${walletName(i.wallet_id)} ${i.mode === 'percent' ? `${Number(i.value)}%` : `€${Number(i.value).toFixed(2)}`}`)
+      .map(i => `${walletName(i.wallet_id)} ${i.mode === 'percent' ? `${Number(i.value)}%` : formatMoney(Number(i.value))}`)
       .join(', ')
     if (p.distribute_mode === 'amount_over_threshold') return `Sweep everything above ${thr} → ${targets}`
-    if (p.distribute_mode === 'fixed_amount')          return `When over ${thr}, distribute €${Number(p.distribute_amount).toFixed(2)} → ${targets}`
+    if (p.distribute_mode === 'fixed_amount')          return `When over ${thr}, distribute ${formatMoney(Number(p.distribute_amount))} → ${targets}`
     return `When over ${thr}, distribute the full balance → ${targets}`
   }
 

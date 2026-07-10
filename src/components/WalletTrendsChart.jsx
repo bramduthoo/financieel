@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns'
 import { supabase } from '../lib/supabase'
+import { formatMoney } from '../lib/format'
 
 // SVG layout
 const W = 560, H = 210
@@ -122,7 +123,7 @@ export default function WalletTrendsChart({ walletId }) {
                 width={barW}  height={bH(d.debit)}
                 fill="#E24B4A" rx={2}
               >
-                <title>{d.month} · Spent: €{d.debit.toFixed(2)}</title>
+                <title>{d.month} · Spent: {formatMoney(d.debit)}</title>
               </rect>
             )}
             {d.credit > 0 && (
@@ -131,7 +132,7 @@ export default function WalletTrendsChart({ walletId }) {
                 width={barW}  height={bH(d.credit)}
                 fill="#97C459" rx={2}
               >
-                <title>{d.month} · Credit: €{d.credit.toFixed(2)}</title>
+                <title>{d.month} · Credit: {formatMoney(d.credit)}</title>
               </rect>
             )}
             <text

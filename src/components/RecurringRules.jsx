@@ -3,6 +3,7 @@ import { Plus, Pencil, Trash2, X } from 'lucide-react'
 import { supabase, getCurrentUserId } from '../lib/supabase'
 import { format, addMonths } from 'date-fns'
 import { formatFrequency } from '../lib/recurringUtils'
+import { formatMoney } from '../lib/format'
 
 const FREQUENCIES = ['daily', 'weekly', 'monthly', 'quarterly', 'yearly', 'custom']
 const WEEKDAYS    = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
@@ -317,7 +318,7 @@ export default function RecurringRules({ walletId, onRulesChanged }) {
                 <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{r.name}</p>
                 {r.description && <p className="text-xs text-gray-400 dark:text-gray-500">{r.description}</p>}
                 <p className="text-xs text-gray-400 dark:text-gray-500">
-                  €{Number(r.amount).toFixed(2)} · {formatFrequency(r.frequency)}
+                  {formatMoney(Number(r.amount))} · {formatFrequency(r.frequency)}
                   {r.frequency === 'monthly'   && r.day_of_month  ? ` · day ${r.day_of_month}` : ''}
                   {r.frequency === 'weekly'    && r.day_of_month  ? ` · ${WEEKDAYS[r.day_of_month - 1]}` : ''}
                   {r.frequency === 'quarterly' && r.day_of_month  ? ` · Q-month ${r.quarter_month}, day ${r.day_of_month}` : ''}

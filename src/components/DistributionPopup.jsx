@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react'
 import { X, Check } from 'lucide-react'
 import { supabase, getCurrentUserId } from '../lib/supabase'
 import { resolveDistribution } from '../lib/resolveDistribution'
+import { formatMoney } from '../lib/format'
 
 const round2  = n => Number(Number(n).toFixed(2))
-const fmtEur  = n => `€${round2(n).toFixed(2)}`
+const fmtEur  = n => formatMoney(n)
 const fmtPct  = n => `${Number(round2(n))}`   // trims trailing zeros for display
 
 // Groups shown in order; Unallocated always last in its own group.

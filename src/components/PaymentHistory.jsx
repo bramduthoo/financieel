@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { formatMoney } from '../lib/format'
 import { format, parseISO } from 'date-fns'
 import { ChevronUp, ChevronDown, X } from 'lucide-react'
 
@@ -206,7 +207,7 @@ export default function PaymentHistory({ walletId }) {
                     }
                   </td>
                   <td className="px-4 py-2.5 text-right font-medium text-[#3B6D11]">
-                    €{Number(t.amount).toFixed(2)}
+                    {formatMoney(Number(t.amount))}
                   </td>
                 </tr>
               ))}
@@ -220,7 +221,7 @@ export default function PaymentHistory({ walletId }) {
                   }
                 </td>
                 <td className="px-4 py-2 text-right text-xs font-semibold text-gray-700 dark:text-gray-200">
-                  €{sorted.reduce((s, t) => s + Number(t.amount), 0).toFixed(2)} total
+                  {formatMoney(sorted.reduce((s, t) => s + Number(t.amount), 0))} total
                 </td>
               </tr>
             </tfoot>
@@ -261,7 +262,7 @@ export default function PaymentHistory({ walletId }) {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500 dark:text-gray-400">Amount</span>
-                <span className="font-semibold text-green-600">€{Number(detail.amount).toFixed(2)}</span>
+                <span className="font-semibold text-green-600">{formatMoney(Number(detail.amount))}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500 dark:text-gray-400">Remark</span>
@@ -358,7 +359,7 @@ export default function PaymentHistory({ walletId }) {
             <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">Save changes?</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
               {Number(editForm?.amount) !== Number(editForm?.oldAmount)
-                ? `The amount will change from €${Number(editForm?.oldAmount).toFixed(2)} to €${Number(editForm?.amount).toFixed(2)} and the wallet balance will be updated.`
+                ? `The amount will change from ${formatMoney(Number(editForm?.oldAmount))} to ${formatMoney(Number(editForm?.amount))} and the wallet balance will be updated.`
                 : 'The payment details will be updated.'
               }
             </p>

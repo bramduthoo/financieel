@@ -1,5 +1,6 @@
 ﻿import { Lock, Pencil, Trash2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { formatMoney } from '../lib/format'
 
 export default function WalletCard({ wallet, onEdit, onDelete }) {
   const navigate = useNavigate()
@@ -49,7 +50,7 @@ export default function WalletCard({ wallet, onEdit, onDelete }) {
       {wallet.type !== 'investment' && wallet.type !== 'unallocated' && (
         <div className="text-sm text-gray-600 dark:text-gray-300">
           <span className="text-gray-400 dark:text-gray-500 text-xs">Monthly budget</span>
-          <p className="font-semibold text-gray-800 dark:text-gray-100">€{Number(wallet.budget).toFixed(2)}</p>
+          <p className="font-semibold text-gray-800 dark:text-gray-100">{formatMoney(Number(wallet.budget))}</p>
         </div>
       )}
 
@@ -58,7 +59,7 @@ export default function WalletCard({ wallet, onEdit, onDelete }) {
         <div className="text-sm">
           <span className="text-gray-400 dark:text-gray-500 text-xs">Balance</span>
           <p className={`font-semibold ${Number(wallet.balance) >= 0 ? 'text-green-700' : 'text-red-600'}`}>
-            €{Number(wallet.balance).toFixed(2)}
+            {formatMoney(Number(wallet.balance))}
           </p>
         </div>
       )}

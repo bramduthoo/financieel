@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect } from 'react'
 import { format, parseISO } from 'date-fns'
 import { supabase, getCurrentUserId } from '../lib/supabase'
+import { formatMoney } from '../lib/format'
 
 function todayStr() { return format(new Date(), 'yyyy-MM-dd') }
 
@@ -139,7 +140,7 @@ export default function VariableTransactionForm({ walletId, onSaved, onCancel, e
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500 dark:text-gray-400">Amount</span>
-                <span className="font-bold text-base text-red-600">-€{Number(amount).toFixed(2)}</span>
+                <span className="font-bold text-base text-red-600">{formatMoney(-Number(amount))}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500 dark:text-gray-400">Date</span>

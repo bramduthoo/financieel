@@ -1,3 +1,5 @@
+import { formatMoney } from '../lib/format'
+
 // SVG layout
 const W = 720, H = 240
 const MT = 15, MR = 15, MB = 30, ML = 60
@@ -31,16 +33,16 @@ export default function IncomeSpendingChart({ data }) {
   }
 
   return (
-    <div className="bg-white border border-stone-200 rounded-2xl p-5">
+    <div className="bg-card border border-card-border rounded-[14px] p-6">
       <div className="flex items-start justify-between mb-4">
-        <h3 className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Income vs spending</h3>
-        <div className="flex items-center gap-4 text-[11px] text-gray-600">
+        <h3 className="text-[11px] font-medium text-ink-muted uppercase tracking-wider">Income vs spending</h3>
+        <div className="flex items-center gap-4 text-[11px] text-ink-muted">
           <span className="flex items-center gap-1.5">
-            <span className="inline-block w-3 h-3 rounded-sm bg-[#97C459]" />
+            <span className="inline-block w-3 h-3 rounded-sm bg-positive-bar" />
             Income
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="inline-block w-3 h-3 rounded-sm bg-[#E24B4A]" />
+            <span className="inline-block w-3 h-3 rounded-sm bg-negative-bar" />
             Spending
           </span>
         </div>
@@ -51,9 +53,9 @@ export default function IncomeSpendingChart({ data }) {
           <g key={i}>
             <line
               x1={ML} y1={bY(tick)} x2={ML + CW} y2={bY(tick)}
-              stroke={i === 0 ? '#e7e5e4' : '#f5f5f4'} strokeWidth={1}
+              className={i === 0 ? 'stroke-ink-faint' : 'stroke-track'} strokeWidth={1}
             />
-            <text x={ML - 8} y={bY(tick) + 4} textAnchor="end" fontSize={10} fill="#a8a29e">
+            <text x={ML - 8} y={bY(tick) + 4} textAnchor="end" fontSize={10} className="fill-ink-faint">
               {fmtY(tick)}
             </text>
           </g>
@@ -64,29 +66,29 @@ export default function IncomeSpendingChart({ data }) {
             {d.income > 0 && (
               <rect
                 x={bX(i, 0)} y={bY(d.income)} width={barW} height={bH(d.income)}
-                fill="#97C459" rx={2}
+                className="fill-positive-bar" rx={2}
               >
-                <title>{d.label} · Income: €{d.income.toFixed(2)}</title>
+                <title>{d.label} · Income: {formatMoney(d.income)}</title>
               </rect>
             )}
             {d.spending > 0 && (
               <rect
                 x={bX(i, 1)} y={bY(d.spending)} width={barW} height={bH(d.spending)}
-                fill="#E24B4A" rx={2}
+                className="fill-negative-bar" rx={2}
               >
-                <title>{d.label} · Spending: €{d.spending.toFixed(2)}</title>
+                <title>{d.label} · Spending: {formatMoney(d.spending)}</title>
               </rect>
             )}
             <text
               x={ML + i * slotW + slotW / 2} y={MT + CH + 18}
-              textAnchor="middle" fontSize={10} fill="#a8a29e"
+              textAnchor="middle" fontSize={10} className="fill-ink-faint"
             >
               {d.label}
             </text>
           </g>
         ))}
 
-        <line x1={ML} y1={MT + CH} x2={ML + CW} y2={MT + CH} stroke="#e7e5e4" strokeWidth={1} />
+        <line x1={ML} y1={MT + CH} x2={ML + CW} y2={MT + CH} className="stroke-ink-faint" strokeWidth={1} />
       </svg>
     </div>
   )

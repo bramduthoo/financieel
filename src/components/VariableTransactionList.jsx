@@ -2,6 +2,7 @@
 import { format, parseISO, startOfMonth, endOfMonth } from 'date-fns'
 import { Edit2, Trash2 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { formatMoney } from '../lib/format'
 
 export default function VariableTransactionList({ walletId, viewMonth, refreshKey, onChanged, onEdit }) {
   const [transactions, setTransactions] = useState([])
@@ -67,7 +68,7 @@ export default function VariableTransactionList({ walletId, viewMonth, refreshKe
             </div>
             <div className="flex items-center gap-3 ml-4 shrink-0">
               <span className={`text-sm font-medium ${t.type === 'debit' ? 'text-[#A32D2D]' : 'text-[#3B6D11]'}`}>
-                {t.type === 'debit' ? '−' : '+'}€{Number(t.amount).toFixed(2)}
+                {t.type === 'debit' ? '−' : '+'}{formatMoney(Number(t.amount))}
               </span>
               <button
                 onClick={() => onEdit(t)}
@@ -93,7 +94,7 @@ export default function VariableTransactionList({ walletId, viewMonth, refreshKe
             <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
               Remove{' '}
               <span className="font-medium text-gray-700 dark:text-gray-200">
-                {deleteTarget.type === 'debit' ? '-' : '+'}€{Number(deleteTarget.amount).toFixed(2)}
+                {deleteTarget.type === 'debit' ? '-' : '+'}{formatMoney(Number(deleteTarget.amount))}
                 {deleteTarget.note ? ` · ${deleteTarget.note}` : ''}
               </span>{' '}
               from {format(parseISO(deleteTarget.date), 'd MMM yyyy')}? The wallet balance will be corrected.

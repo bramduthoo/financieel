@@ -8,6 +8,7 @@ import IncomeConfirmModal from '../components/IncomeConfirmModal'
 import DistributionPopup from '../components/DistributionPopup'
 import { distributeIncome } from '../lib/distributeIncome'
 import { evaluateUnallocatedPlans } from '../lib/unallocatedPlans'
+import { formatMoney } from '../lib/format'
 
 const FREQ_OPTIONS = [
   { value: 'weekly',    label: 'Weekly' },
@@ -24,7 +25,7 @@ const TYPE_BADGE = {
 
 const inputClass = 'w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent'
 
-function fmt(n) { return `€${Number(n).toFixed(2)}` }
+function fmt(n) { return formatMoney(n) }
 function round2(n) { return Number(Number(n).toFixed(2)) }
 function todayStr() { return format(new Date(), 'yyyy-MM-dd') }
 
