@@ -8,7 +8,7 @@ import DistributionPopup from '../components/DistributionPopup'
 import { distributeIncome } from '../lib/distributeIncome'
 import { evaluateUnallocatedPlans } from '../lib/unallocatedPlans'
 import { formatMoney } from '../lib/format'
-import { walletIcon } from '../lib/walletIcons'
+import { WalletIcon } from '../lib/walletIcons'
 
 const FREQ_OPTIONS = [
   { value: 'weekly',    label: 'Weekly' },
@@ -353,11 +353,10 @@ export default function IncomeRecurringDetail() {
           <div className="space-y-2">
             {distributionRules.map(dr => {
               const wallet = allWallets.find(w => w.id === dr.wallet_id)
-              const WIcon = wallet ? walletIcon(wallet) : null
               return (
                 <div key={dr.id} className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
-                    {WIcon && <WIcon size={14} className="text-ink-soft flex-shrink-0" />}
+                    {wallet && <WalletIcon wallet={wallet} size={14} className="text-ink-soft flex-shrink-0" />}
                     <span className="text-ink">{wallet?.name ?? '—'}</span>
                   </div>
                   <span className="font-medium text-ink">

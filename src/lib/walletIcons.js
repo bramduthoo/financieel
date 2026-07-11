@@ -1,3 +1,4 @@
+import { createElement } from 'react'
 import {
   Wallet, Home, Zap, Droplets, Car, Plane, Shirt, Heart, TrendingUp,
   ShoppingCart, PiggyBank, Sparkles,
@@ -39,4 +40,11 @@ export function walletIcon(wallet) {
     ? wallet.icon
     : defaultIconForType(wallet?.type)
   return WALLET_ICONS[key] ?? Wallet
+}
+
+// Render a wallet's icon. Module-level component (stable reference) so consumers
+// don't assign a component to a local during render. `wallet` may be a full
+// wallet or any object with { icon, type }; extra props pass to the lucide icon.
+export function WalletIcon({ wallet, ...props }) {
+  return createElement(walletIcon(wallet), props)
 }

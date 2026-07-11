@@ -11,7 +11,7 @@ import {
   calculateMonthMetrics, calculateMonthlyAverage, getHistoricalSeries, getYearlySeries,
 } from '../lib/dashboardCalcs'
 import { formatMoney } from '../lib/format'
-import { walletIcon } from '../lib/walletIcons'
+import { WalletIcon } from '../lib/walletIcons'
 import IncomeSpendingChart from '../components/IncomeSpendingChart'
 import CashTrendChart from '../components/CashTrendChart'
 import ProjectedBalanceChart from '../components/ProjectedBalanceChart'
@@ -330,11 +330,10 @@ export default function Dashboard() {
                 const budget = Number(w.budget)
                 const pct    = budget > 0 ? (w.spent / budget) * 100 : 0
                 const barColour = pct >= 100 ? 'bg-negative-bar' : pct >= 75 ? 'bg-warning' : 'bg-positive-bar'
-                const WIcon = walletIcon(w)
                 return (
                   <div key={w.id}>
                     <div className="flex items-center gap-2 text-sm mb-1">
-                      <WIcon size={14} className="text-ink-soft flex-shrink-0" />
+                      <WalletIcon wallet={w} size={14} className="text-ink-soft flex-shrink-0" />
                       <span className="text-ink font-medium">{w.name}</span>
                     </div>
                     <div className="h-1.5 bg-track rounded-full overflow-hidden mb-1">

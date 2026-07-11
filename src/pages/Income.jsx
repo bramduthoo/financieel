@@ -9,7 +9,7 @@ import DistributionPopup from '../components/DistributionPopup'
 import { distributeIncome } from '../lib/distributeIncome'
 import { evaluateUnallocatedPlans } from '../lib/unallocatedPlans'
 import { formatMoney } from '../lib/format'
-import { walletIcon } from '../lib/walletIcons'
+import { WalletIcon } from '../lib/walletIcons'
 
 const FREQ_OPTIONS = [
   { value: 'weekly',    label: 'Weekly' },
@@ -955,18 +955,15 @@ export default function Income() {
                 <p className="text-sm text-ink-faint">Distribution details aren't available for this entry.</p>
               ) : (
                 <div className="space-y-2">
-                  {detailDist.rows.map(r => {
-                    const RIcon = walletIcon(r)
-                    return (
+                  {detailDist.rows.map(r => (
                       <div key={r.wallet_id} className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-2 min-w-0">
-                          <RIcon size={14} className="text-ink-soft flex-shrink-0" />
+                          <WalletIcon wallet={r} size={14} className="text-ink-soft flex-shrink-0" />
                           <span className="text-ink truncate">{r.name}</span>
                         </div>
                         <span className="font-medium text-ink dark:text-ink">{fmt(r.amount)}</span>
                       </div>
-                    )
-                  })}
+                  ))}
                   <div className="flex items-center justify-between text-sm pt-2 border-t border-inner-border">
                     <span className="text-ink-muted">Total</span>
                     <span className="font-medium text-ink dark:text-ink">{fmt(detailDist.total)}</span>

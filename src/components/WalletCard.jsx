@@ -1,11 +1,10 @@
 import { Lock, Pencil, Trash2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { formatMoney } from '../lib/format'
-import { walletIcon } from '../lib/walletIcons'
+import { WalletIcon } from '../lib/walletIcons'
 
 export default function WalletCard({ wallet, onEdit, onDelete }) {
   const navigate = useNavigate()
-  const Icon    = walletIcon(wallet)
   const showBudget  = wallet.type !== 'investment' && wallet.type !== 'unallocated'
   const showBalance = wallet.type === 'unallocated'
 
@@ -18,7 +17,7 @@ export default function WalletCard({ wallet, onEdit, onDelete }) {
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-9 h-9 rounded-[9px] bg-accent/10 flex items-center justify-center flex-shrink-0">
-            <Icon size={18} className="text-accent" />
+            <WalletIcon wallet={wallet} size={18} className="text-accent" />
           </div>
           <div className="min-w-0">
             <h3 className="font-medium text-ink text-sm truncate">{wallet.name}</h3>

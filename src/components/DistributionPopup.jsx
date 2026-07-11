@@ -3,7 +3,7 @@ import { X, Check } from 'lucide-react'
 import { supabase, getCurrentUserId } from '../lib/supabase'
 import { resolveDistribution } from '../lib/resolveDistribution'
 import { formatMoney } from '../lib/format'
-import { walletIcon } from '../lib/walletIcons'
+import { WalletIcon } from '../lib/walletIcons'
 
 const round2  = n => Number(Number(n).toFixed(2))
 const fmtEur  = n => formatMoney(n)
@@ -307,11 +307,10 @@ export default function DistributionPopup({ totalAmount, onConfirm, onClose, str
                     {group.list.map(wallet => {
                       const r    = rows[wallet.id] ?? { value: '', mode: globalMode }
                       const hint = budgetHint(wallet)
-                      const WIcon = walletIcon(wallet)
                       return (
                         <div key={wallet.id} className="flex items-center justify-between gap-3 py-1 border-b border-inner-border last:border-0">
                           <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <WIcon size={14} className="text-ink-soft flex-shrink-0" />
+                            <WalletIcon wallet={wallet} size={14} className="text-ink-soft flex-shrink-0" />
                             <div className="min-w-0">
                               <p className="text-sm font-medium text-ink truncate">{wallet.name}</p>
                               {hint && <p className="text-xs text-ink-faint">{hint}</p>}

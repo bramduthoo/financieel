@@ -15,7 +15,7 @@ import DistributionPopup from '../components/DistributionPopup'
 import UnallocatedConflictBanner from '../components/UnallocatedConflictBanner'
 import { evaluateUnallocatedPlans } from '../lib/unallocatedPlans'
 import { formatMoney } from '../lib/format'
-import { walletIcon } from '../lib/walletIcons'
+import { WalletIcon } from '../lib/walletIcons'
 
 const round2 = n => Number(Number(n).toFixed(2))
 
@@ -283,8 +283,6 @@ export default function WalletDetail() {
   if (loading) return <p className="text-ink-faint p-8">Loading...</p>
   if (!wallet)  return <p className="text-ink-faint p-8">Wallet not found.</p>
 
-  const WalletIco = walletIcon(wallet)
-
   // Spending bar for variable wallets — computed from already-fetched transactions
   const now          = new Date()
   const monthFrom    = format(startOfMonth(now), 'yyyy-MM-dd')
@@ -345,7 +343,7 @@ export default function WalletDetail() {
           </button>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-[9px] bg-accent/10 flex items-center justify-center flex-shrink-0">
-              <WalletIco size={16} className="text-accent" />
+              <WalletIcon wallet={wallet} size={16} className="text-accent" />
             </div>
             <div>
               <h1 className="text-2xl font-medium text-ink">{wallet.name}</h1>
