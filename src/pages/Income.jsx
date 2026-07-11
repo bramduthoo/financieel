@@ -19,12 +19,12 @@ const FREQ_OPTIONS = [
 ]
 
 const TYPE_BADGE = {
-  manual:    'bg-stone-100 text-gray-600',
+  manual:    'bg-track text-ink-soft',
   recurring: 'bg-[#FAEEDA] text-[#854F0B]',
-  template:  'bg-[#E1F5EE] text-[#0F6E56]',
+  template:  'bg-positive-tint text-positive',
 }
 
-const inputClass = 'w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent'
+const inputClass = 'w-full px-3 py-2 border border-card-border rounded-[8px] text-sm bg-field text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-accent/30'
 
 function fmt(n) { return formatMoney(n) }
 function round2(n) { return Number(Number(n).toFixed(2)) }
@@ -456,10 +456,10 @@ export default function Income() {
   }
 
   function SortIcon({ field }) {
-    if (histSort.field !== field) return <ChevronUp size={12} className="text-gray-300" />
+    if (histSort.field !== field) return <ChevronUp size={12} className="text-ink-faint" />
     return histSort.dir === 'asc'
-      ? <ChevronUp size={12} className="text-gray-900" />
-      : <ChevronDown size={12} className="text-gray-900" />
+      ? <ChevronUp size={12} className="text-ink" />
+      : <ChevronDown size={12} className="text-ink" />
   }
 
   // ─── Render ────────────────────────────────────────────────────────────────
@@ -469,12 +469,12 @@ export default function Income() {
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Income</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Track income from all sources</p>
+          <h1 className="text-2xl font-medium text-ink">Income</h1>
+          <p className="text-ink-muted text-sm mt-1">Track income from all sources</p>
         </div>
         <button
           onClick={() => openModal('quick')}
-          className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+          className="flex items-center gap-2 bg-ink text-cream px-4 py-2 rounded-lg text-sm font-medium hover:bg-track transition-colors"
         >
           <Plus size={15} />
           Add Income
@@ -483,14 +483,14 @@ export default function Income() {
 
       {/* History table */}
       {loading ? (
-        <p className="text-gray-400 text-sm mb-8">Loading…</p>
+        <p className="text-ink-faint text-sm mb-8">Loading…</p>
       ) : (
         <div className="mb-8">
           <div className="flex flex-wrap gap-3 mb-3 items-center">
             <select
               value={histFilter.sourceType}
               onChange={e => setHistFilter(f => ({ ...f, sourceType: e.target.value }))}
-              className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+              className="px-3 py-1.5 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
             >
               <option value="all">All types</option>
               <option value="manual">Manual</option>
@@ -501,13 +501,13 @@ export default function Income() {
               value={histFilter.search}
               onChange={e => setHistFilter(f => ({ ...f, search: e.target.value }))}
               placeholder="Search source…"
-              className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[160px] dark:bg-gray-800 dark:text-gray-100"
+              className="px-3 py-1.5 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 min-w-[160px] bg-field text-ink"
             />
             <div className="ml-auto">
               <select
                 value={histLimit === 'all' ? 'all' : histLimit}
                 onChange={e => setHistLimit(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-                className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                className="px-3 py-1.5 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
               >
                 <option value={10}>Show 10</option>
                 <option value={25}>Show 25</option>
@@ -517,55 +517,55 @@ export default function Income() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+          <div className="bg-card border border-card-border rounded-[14px] overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800">
+                <tr className="border-b border-inner-border bg-track">
                   <th className="px-4 py-3 text-left">
-                    <button onClick={() => toggleSort('date')} className="flex items-center gap-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide hover:text-gray-700 dark:hover:text-gray-200">
+                    <button onClick={() => toggleSort('date')} className="flex items-center gap-1 text-xs font-medium text-ink-muted uppercase tracking-wide hover:text-ink dark:hover:text-ink">
                       Date <SortIcon field="date" />
                     </button>
                   </th>
                   <th className="px-4 py-3 text-left">
-                    <button onClick={() => toggleSort('source')} className="flex items-center gap-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide hover:text-gray-700 dark:hover:text-gray-200">
+                    <button onClick={() => toggleSort('source')} className="flex items-center gap-1 text-xs font-medium text-ink-muted uppercase tracking-wide hover:text-ink dark:hover:text-ink">
                       Source <SortIcon field="source" />
                     </button>
                   </th>
                   <th className="px-4 py-3 text-right">
-                    <button onClick={() => toggleSort('amount')} className="flex items-center gap-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide hover:text-gray-700 dark:hover:text-gray-200 ml-auto">
+                    <button onClick={() => toggleSort('amount')} className="flex items-center gap-1 text-xs font-medium text-ink-muted uppercase tracking-wide hover:text-ink dark:hover:text-ink ml-auto">
                       Amount <SortIcon field="amount" />
                     </button>
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Type</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Note</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-ink-muted uppercase tracking-wide">Type</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-ink-muted uppercase tracking-wide">Note</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                 {displayedEntries.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-4 py-12 text-center text-gray-400 dark:text-gray-500">No entries found</td>
+                    <td colSpan={5} className="px-4 py-12 text-center text-ink-faint">No entries found</td>
                   </tr>
                 ) : displayedEntries.map(e => (
                   <tr
                     key={e.id}
                     onClick={() => setDetailEntry(e)}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                    className="hover:bg-track transition-colors cursor-pointer"
                   >
-                    <td className="px-4 py-3 text-gray-600 dark:text-gray-300 whitespace-nowrap">{format(parseISO(e.date), 'd MMM yyyy')}</td>
-                    <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">{e.source}</td>
-                    <td className="px-4 py-3 text-right font-semibold text-green-600 whitespace-nowrap">+{fmt(e.amount)}</td>
+                    <td className="px-4 py-3 text-ink-soft whitespace-nowrap">{format(parseISO(e.date), 'd MMM yyyy')}</td>
+                    <td className="px-4 py-3 font-medium text-ink">{e.source}</td>
+                    <td className="px-4 py-3 text-right font-medium text-positive whitespace-nowrap">+{fmt(e.amount)}</td>
                     <td className="px-4 py-3">
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium capitalize ${TYPE_BADGE[e.source_type] ?? 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium capitalize ${TYPE_BADGE[e.source_type] ?? 'bg-track text-ink-muted'}`}>
                         {e.source_type ?? 'manual'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-400 dark:text-gray-500 text-xs">{e.note ?? '—'}</td>
+                    <td className="px-4 py-3 text-ink-faint text-xs">{e.note ?? '—'}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
             {filteredEntries.length > displayedEntries.length && (
-              <p className="px-4 py-2 text-xs text-gray-400 dark:text-gray-500 border-t border-gray-100 dark:border-gray-800">
+              <p className="px-4 py-2 text-xs text-ink-faint border-t border-inner-border">
                 Showing {displayedEntries.length} of {filteredEntries.length} entries
               </p>
             )}
@@ -576,22 +576,22 @@ export default function Income() {
       {/* Two-column grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Left: Recurring incomes */}
-        <div className="bg-white border border-stone-200 rounded-2xl p-5">
+        <div className="bg-card border border-card-border rounded-[14px] p-5">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Recurring income</h2>
+            <h2 className="text-sm font-medium text-ink">Recurring income</h2>
             <button
               onClick={() => openModal('recurring')}
-              className="text-xs text-gray-600 hover:text-gray-900 font-medium"
+              className="text-xs text-ink-soft hover:text-ink font-medium"
             >
               + Add
             </button>
           </div>
 
           {loading ? (
-            <p className="text-gray-400 text-sm">Loading…</p>
+            <p className="text-ink-faint text-sm">Loading…</p>
           ) : recurringRules.length === 0 ? (
-            <div className="text-center py-12 text-gray-400 dark:text-gray-500 border border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
-              <TrendingUp size={28} className="mx-auto mb-2 text-gray-300 dark:text-gray-600" />
+            <div className="text-center py-12 text-ink-faint border border-dashed border-card-border rounded-[14px]">
+              <TrendingUp size={28} className="mx-auto mb-2 text-ink-faint dark:text-ink-soft" />
               <p className="text-sm font-medium">No recurring income</p>
               <p className="text-xs mt-1">Add a salary or regular source</p>
             </div>
@@ -601,32 +601,32 @@ export default function Income() {
                 <div
                   key={rule.id}
                   onClick={() => navigate(`/income/recurring/${rule.id}`)}
-                  className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-4 cursor-pointer hover:border-indigo-200 hover:shadow-sm transition-all"
+                  className="bg-card border border-card-border rounded-[14px] p-4 cursor-pointer hover:border-ink-faint hover:shadow-sm transition-all"
                 >
                   <div className="flex items-start justify-between">
                     <div className="min-w-0">
-                      <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm truncate">{rule.name}</p>
-                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 capitalize">{rule.frequency} · next: {getNextDue(rule)}</p>
+                      <p className="font-medium text-ink text-sm truncate">{rule.name}</p>
+                      <p className="text-xs text-ink-faint mt-0.5 capitalize">{rule.frequency} · next: {getNextDue(rule)}</p>
                     </div>
                     <div className="flex items-center gap-1 ml-2 shrink-0">
                       <button
                         onClick={e => { e.stopPropagation(); openModal('recurring', { editRule: rule }) }}
-                        className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg transition-colors"
+                        className="p-1.5 text-ink-faint hover:text-ink rounded-lg transition-colors"
                       >
                         <Edit2 size={13} />
                       </button>
                       <button
                         onClick={e => { e.stopPropagation(); archiveRecurring(rule) }}
-                        className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg transition-colors"
+                        className="p-1.5 text-ink-faint hover:text-ink rounded-lg transition-colors"
                       >
                         <Trash2 size={13} />
                       </button>
-                      <ChevronRight size={15} className="text-gray-400 ml-1" />
+                      <ChevronRight size={15} className="text-ink-faint ml-1" />
                     </div>
                   </div>
                   <div className="flex items-center justify-between mt-2">
-                    <p className="text-xl font-bold text-gray-900 dark:text-gray-100">{fmt(rule.amount)}</p>
-                    <ChevronRight size={16} className="text-gray-300 dark:text-gray-600" />
+                    <p className="text-xl font-medium text-ink dark:text-ink">{fmt(rule.amount)}</p>
+                    <ChevronRight size={16} className="text-ink-faint dark:text-ink-soft" />
                   </div>
                 </div>
               ))}
@@ -635,22 +635,22 @@ export default function Income() {
         </div>
 
         {/* Right: Templates */}
-        <div className="bg-white border border-stone-200 rounded-2xl p-5">
+        <div className="bg-card border border-card-border rounded-[14px] p-5">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Templates</h2>
+            <h2 className="text-sm font-medium text-ink">Templates</h2>
             <button
               onClick={() => openModal('template')}
-              className="text-xs text-gray-600 hover:text-gray-900 font-medium"
+              className="text-xs text-ink-soft hover:text-ink font-medium"
             >
               + Add
             </button>
           </div>
 
           {loading ? (
-            <p className="text-gray-400 text-sm">Loading…</p>
+            <p className="text-ink-faint text-sm">Loading…</p>
           ) : templates.length === 0 ? (
-            <div className="text-center py-12 text-gray-400 dark:text-gray-500 border border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
-              <FileText size={28} className="mx-auto mb-2 text-gray-300 dark:text-gray-600" />
+            <div className="text-center py-12 text-ink-faint border border-dashed border-card-border rounded-[14px]">
+              <FileText size={28} className="mx-auto mb-2 text-ink-faint dark:text-ink-soft" />
               <p className="text-sm font-medium">No templates</p>
               <p className="text-xs mt-1">Save amounts you log regularly</p>
             </div>
@@ -660,29 +660,29 @@ export default function Income() {
                 <div
                   key={t.id}
                   onClick={() => setLogTemplate({ template: t, amount: String(t.amount), date: todayStr() })}
-                  className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-4 cursor-pointer hover:border-indigo-200 hover:shadow-sm transition-all"
+                  className="bg-card border border-card-border rounded-[14px] p-4 cursor-pointer hover:border-ink-faint hover:shadow-sm transition-all"
                 >
                   <div className="flex items-start justify-between">
                     <div className="min-w-0">
-                      <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm truncate">{t.name}</p>
-                      {t.note && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 truncate">{t.note}</p>}
+                      <p className="font-medium text-ink text-sm truncate">{t.name}</p>
+                      {t.note && <p className="text-xs text-ink-faint mt-0.5 truncate">{t.note}</p>}
                     </div>
                     <div className="flex items-center gap-1 ml-2 shrink-0">
                       <button
                         onClick={e => { e.stopPropagation(); openModal('template', { editTemplate: t }) }}
-                        className="p-1.5 text-gray-300 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors"
+                        className="p-1.5 text-ink-faint hover:text-ink hover:bg-accent/10 rounded-lg transition-colors"
                       >
                         <Edit2 size={13} />
                       </button>
                       <button
                         onClick={e => { e.stopPropagation(); deleteTemplate(t) }}
-                        className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-1.5 text-ink-faint hover:text-negative hover:bg-negative-tint rounded-lg transition-colors"
                       >
                         <Trash2 size={13} />
                       </button>
                     </div>
                   </div>
-                  <p className="text-xl font-bold text-gray-900 dark:text-gray-100 mt-2">{fmt(t.amount)}</p>
+                  <p className="text-xl font-medium text-ink dark:text-ink mt-2">{fmt(t.amount)}</p>
                 </div>
               ))}
             </div>
@@ -693,24 +693,24 @@ export default function Income() {
       {/* ══ Add Income modal ════════════════════════════════════════════════════ */}
       {modal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100 dark:border-gray-800">
-              <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">
+          <div className="bg-card rounded-[14px] shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-inner-border">
+              <h2 className="text-lg font-medium text-ink">
                 {modal.editEntry ? 'Edit income entry' : 'Add Income'}
               </h2>
-              <button onClick={closeModal} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg">
+              <button onClick={closeModal} className="p-1.5 text-ink-faint hover:text-ink-soft dark:hover:text-ink rounded-lg">
                 <X size={16} />
               </button>
             </div>
 
             {!modal.editEntry && (
-              <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 mx-6 mt-4 rounded-xl">
+              <div className="flex gap-1 bg-track p-1 mx-6 mt-4 rounded-[14px]">
                 {[['quick', 'Quick Entry'], ['recurring', 'Recurring'], ['template', 'Template']].map(([id, label]) => (
                   <button
                     key={id}
                     onClick={() => openModal(id, {})}
                     className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                      modal.tab === id ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                      modal.tab === id ? 'bg-card shadow-sm text-ink' : 'text-ink-muted hover:text-ink dark:hover:text-ink'
                     }`}
                   >
                     {label}
@@ -723,47 +723,47 @@ export default function Income() {
               {/* Quick Entry */}
               {modal.tab === 'quick' && (
                 <div>
-                  {quickError && <p className="text-[#A32D2D] text-sm mb-3">{quickError}</p>}
+                  {quickError && <p className="text-negative text-sm mb-3">{quickError}</p>}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Amount (€)</label>
+                      <label className="block text-xs font-medium text-ink-soft mb-1">Amount (€)</label>
                       <input
                         type="number" value={quickForm.amount}
                         onChange={e => setQuickForm(f => ({ ...f, amount: e.target.value }))}
                         placeholder="0.00"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                        className="w-full px-3 py-2 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Source name</label>
+                      <label className="block text-xs font-medium text-ink-soft mb-1">Source name</label>
                       <input
                         value={quickForm.source}
                         onChange={e => setQuickForm(f => ({ ...f, source: e.target.value }))}
                         placeholder="e.g. Bonus"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                        className="w-full px-3 py-2 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Date</label>
+                      <label className="block text-xs font-medium text-ink-soft mb-1">Date</label>
                       <input
                         type="date" value={quickForm.date}
                         onChange={e => setQuickForm(f => ({ ...f, date: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                        className="w-full px-3 py-2 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Note (optional)</label>
+                      <label className="block text-xs font-medium text-ink-soft mb-1">Note (optional)</label>
                       <input
                         value={quickForm.note}
                         onChange={e => setQuickForm(f => ({ ...f, note: e.target.value }))}
                         placeholder="Optional note"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                        className="w-full px-3 py-2 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                       />
                     </div>
                   </div>
                   <div className="flex gap-3 mt-5">
-                    <button onClick={closeModal} className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">Cancel</button>
-                    <button onClick={submitQuick} className="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">
+                    <button onClick={closeModal} className="flex-1 py-2 rounded-lg border border-card-border text-sm text-ink-soft hover:bg-track">Cancel</button>
+                    <button onClick={submitQuick} className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:opacity-90">
                       {modal.editEntry ? 'Update' : 'Add income'}
                     </button>
                   </div>
@@ -773,64 +773,64 @@ export default function Income() {
               {/* Recurring */}
               {modal.tab === 'recurring' && (
                 <div>
-                  {recurringError && <p className="text-[#A32D2D] text-sm mb-3">{recurringError}</p>}
+                  {recurringError && <p className="text-negative text-sm mb-3">{recurringError}</p>}
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Name</label>
+                      <label className="block text-xs font-medium text-ink-soft mb-1">Name</label>
                       <input
                         value={recurringForm.name}
                         onChange={e => setRecurringForm(f => ({ ...f, name: e.target.value }))}
                         placeholder="e.g. Salary"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                        className="w-full px-3 py-2 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Amount (€)</label>
+                      <label className="block text-xs font-medium text-ink-soft mb-1">Amount (€)</label>
                       <input
                         type="number" value={recurringForm.amount}
                         onChange={e => setRecurringForm(f => ({ ...f, amount: e.target.value }))}
                         placeholder="0.00"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                        className="w-full px-3 py-2 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                       />
                       {recurringForm.isEdit && recurringForm.amount && Number(recurringForm.amount) !== Number(recurringForm.originalAmount) && (
                         <p className="text-xs text-[#854F0B] mt-1">Changing the amount will archive the current version.</p>
                       )}
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Frequency</label>
+                      <label className="block text-xs font-medium text-ink-soft mb-1">Frequency</label>
                       <select
                         value={recurringForm.frequency}
                         onChange={e => setRecurringForm(f => ({ ...f, frequency: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                        className="w-full px-3 py-2 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                       >
                         {FREQ_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                       </select>
                     </div>
                     {(recurringForm.frequency === 'weekly' || recurringForm.frequency === 'monthly') && (
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">{dayLabel(recurringForm.frequency)}</label>
+                        <label className="block text-xs font-medium text-ink-soft mb-1">{dayLabel(recurringForm.frequency)}</label>
                         <input
                           type="number" value={recurringForm.day_of_month}
                           onChange={e => setRecurringForm(f => ({ ...f, day_of_month: e.target.value }))}
                           min={1} max={recurringForm.frequency === 'weekly' ? 7 : 31}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                          className="w-full px-3 py-2 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                         />
                       </div>
                     )}
                     {!recurringForm.isEdit && (
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Start date</label>
+                        <label className="block text-xs font-medium text-ink-soft mb-1">Start date</label>
                         <input
                           type="date" value={recurringForm.start_date}
                           onChange={e => setRecurringForm(f => ({ ...f, start_date: e.target.value }))}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                          className="w-full px-3 py-2 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                         />
                       </div>
                     )}
                   </div>
                   <div className="flex gap-3 mt-5">
-                    <button onClick={closeModal} className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">Cancel</button>
-                    <button onClick={submitRecurring} className="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">
+                    <button onClick={closeModal} className="flex-1 py-2 rounded-lg border border-card-border text-sm text-ink-soft hover:bg-track">Cancel</button>
+                    <button onClick={submitRecurring} className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:opacity-90">
                       {recurringForm.isEdit ? 'Save changes' : 'Save'}
                     </button>
                   </div>
@@ -840,40 +840,40 @@ export default function Income() {
               {/* Template */}
               {modal.tab === 'template' && (
                 <div>
-                  {templateError && <p className="text-[#A32D2D] text-sm mb-3">{templateError}</p>}
+                  {templateError && <p className="text-negative text-sm mb-3">{templateError}</p>}
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Name</label>
+                      <label className="block text-xs font-medium text-ink-soft mb-1">Name</label>
                       <input
                         value={templateForm.name}
                         onChange={e => setTemplateForm(f => ({ ...f, name: e.target.value }))}
                         placeholder="e.g. Freelance invoice"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                        className="w-full px-3 py-2 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Default amount (€)</label>
+                      <label className="block text-xs font-medium text-ink-soft mb-1">Default amount (€)</label>
                       <input
                         type="number" value={templateForm.amount}
                         onChange={e => setTemplateForm(f => ({ ...f, amount: e.target.value }))}
                         placeholder="0.00"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                        className="w-full px-3 py-2 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Default note (optional)</label>
+                      <label className="block text-xs font-medium text-ink-soft mb-1">Default note (optional)</label>
                       <input
                         value={templateForm.note}
                         onChange={e => setTemplateForm(f => ({ ...f, note: e.target.value }))}
                         placeholder="Optional"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                        className="w-full px-3 py-2 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                       />
                     </div>
                     {/* Distribution (optional) */}
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Distribution (optional)</label>
-                      <div className="flex items-center justify-between gap-3 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <label className="block text-xs font-medium text-ink-soft mb-1">Distribution (optional)</label>
+                      <div className="flex items-center justify-between gap-3 border border-card-border rounded-lg px-3 py-2">
+                        <p className="text-xs text-ink-muted">
                           {templateDist?.rows?.length
                             ? `${templateDist.rows.length} wallet${templateDist.rows.length > 1 ? 's' : ''}${templateDist.sendRemainder ? ' · remainder → Unallocated' : ''}`
                             : 'No distribution set'}
@@ -884,21 +884,21 @@ export default function Income() {
                           disabled={!(Number(templateForm.amount) > 0)}
                           className={`text-xs font-medium whitespace-nowrap ${
                             Number(templateForm.amount) > 0
-                              ? 'text-indigo-600 hover:text-indigo-700'
-                              : 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                              ? 'text-ink hover:text-accent'
+                              : 'text-ink-faint dark:text-ink-soft cursor-not-allowed'
                           }`}
                         >
                           {templateDist?.rows?.length ? 'Edit distribution' : 'Set up distribution'}
                         </button>
                       </div>
                       {!(Number(templateForm.amount) > 0) && (
-                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Enter an amount first to set up a distribution.</p>
+                        <p className="text-xs text-ink-faint mt-1">Enter an amount first to set up a distribution.</p>
                       )}
                     </div>
                   </div>
                   <div className="flex gap-3 mt-5">
-                    <button onClick={closeModal} className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">Cancel</button>
-                    <button onClick={submitTemplate} className="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">
+                    <button onClick={closeModal} className="flex-1 py-2 rounded-lg border border-card-border text-sm text-ink-soft hover:bg-track">Cancel</button>
+                    <button onClick={submitTemplate} className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:opacity-90">
                       {templateForm.isEdit ? 'Save changes' : 'Save'}
                     </button>
                   </div>
@@ -912,47 +912,47 @@ export default function Income() {
       {/* ══ Detail modal (row click) ════════════════════════════════════════════ */}
       {detailEntry && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
+          <div className="bg-card rounded-[14px] shadow-xl w-full max-w-sm p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">Income entry</h2>
-              <button onClick={() => setDetailEntry(null)} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg">
+              <h2 className="text-lg font-medium text-ink">Income entry</h2>
+              <button onClick={() => setDetailEntry(null)} className="p-1.5 text-ink-faint hover:text-ink-soft dark:hover:text-ink rounded-lg">
                 <X size={16} />
               </button>
             </div>
             <div className="space-y-2.5 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-gray-400">Source</span>
-                <span className="font-medium text-gray-800 dark:text-gray-100">{detailEntry.source}</span>
+                <span className="text-ink-muted">Source</span>
+                <span className="font-medium text-ink">{detailEntry.source}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-gray-400">Amount</span>
-                <span className="font-semibold text-green-600">+{fmt(detailEntry.amount)}</span>
+                <span className="text-ink-muted">Amount</span>
+                <span className="font-medium text-positive">+{fmt(detailEntry.amount)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-gray-400">Date</span>
-                <span className="text-gray-700 dark:text-gray-200">{format(parseISO(detailEntry.date), 'd MMM yyyy')}</span>
+                <span className="text-ink-muted">Date</span>
+                <span className="text-ink">{format(parseISO(detailEntry.date), 'd MMM yyyy')}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-gray-400">Type</span>
-                <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium capitalize ${TYPE_BADGE[detailEntry.source_type] ?? 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>
+                <span className="text-ink-muted">Type</span>
+                <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium capitalize ${TYPE_BADGE[detailEntry.source_type] ?? 'bg-track text-ink-muted'}`}>
                   {detailEntry.source_type ?? 'manual'}
                 </span>
               </div>
               {detailEntry.note && (
                 <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-gray-400">Note</span>
-                  <span className="text-gray-700 dark:text-gray-200 text-right max-w-[60%]">{detailEntry.note}</span>
+                  <span className="text-ink-muted">Note</span>
+                  <span className="text-ink text-right max-w-[60%]">{detailEntry.note}</span>
                 </div>
               )}
             </div>
 
             {/* Distribution — derived from the credit transactions linked to this entry */}
-            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
-              <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Distribution</p>
+            <div className="mt-4 pt-4 border-t border-inner-border">
+              <p className="text-xs font-medium text-ink-faint uppercase tracking-wide mb-2">Distribution</p>
               {detailDist === null ? (
-                <p className="text-sm text-gray-400 dark:text-gray-500">Loading…</p>
+                <p className="text-sm text-ink-faint">Loading…</p>
               ) : !detailDist.available ? (
-                <p className="text-sm text-gray-400 dark:text-gray-500">Distribution details aren't available for this entry.</p>
+                <p className="text-sm text-ink-faint">Distribution details aren't available for this entry.</p>
               ) : (
                 <div className="space-y-2">
                   {detailDist.rows.map(r => {
@@ -961,15 +961,15 @@ export default function Income() {
                       <div key={r.wallet_id} className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-2 min-w-0">
                           <RIcon size={14} className="text-ink-soft flex-shrink-0" />
-                          <span className="text-gray-700 dark:text-gray-200 truncate">{r.name}</span>
+                          <span className="text-ink truncate">{r.name}</span>
                         </div>
-                        <span className="font-medium text-gray-900 dark:text-gray-100">{fmt(r.amount)}</span>
+                        <span className="font-medium text-ink dark:text-ink">{fmt(r.amount)}</span>
                       </div>
                     )
                   })}
-                  <div className="flex items-center justify-between text-sm pt-2 border-t border-gray-100 dark:border-gray-800">
-                    <span className="text-gray-500 dark:text-gray-400">Total</span>
-                    <span className="font-semibold text-gray-900 dark:text-gray-100">{fmt(detailDist.total)}</span>
+                  <div className="flex items-center justify-between text-sm pt-2 border-t border-inner-border">
+                    <span className="text-ink-muted">Total</span>
+                    <span className="font-medium text-ink dark:text-ink">{fmt(detailDist.total)}</span>
                   </div>
                 </div>
               )}
@@ -979,20 +979,20 @@ export default function Income() {
               {detailDist?.available && (
                 <button
                   onClick={openEditDist}
-                  className="w-full py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
+                  className="w-full py-2 rounded-lg border border-card-border text-sm font-medium text-ink hover:bg-track"
                 >
                   Edit distribution
                 </button>
               )}
               <div className="flex gap-3">
-                <button onClick={() => setDetailEntry(null)} className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">Close</button>
+                <button onClick={() => setDetailEntry(null)} className="flex-1 py-2 rounded-lg border border-card-border text-sm text-ink-soft hover:bg-track">Close</button>
                 <button
                   onClick={() => {
                     const e = detailEntry
                     setDetailEntry(null)
                     openModal('quick', { editEntry: e })
                   }}
-                  className="flex-1 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800"
+                  className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:bg-track"
                 >
                   Edit
                 </button>
@@ -1005,37 +1005,37 @@ export default function Income() {
       {/* ══ Log template modal ══════════════════════════════════════════════════ */}
       {logTemplate && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
+          <div className="bg-card rounded-[14px] shadow-xl w-full max-w-sm p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">Log income</h2>
-              <button onClick={() => setLogTemplate(null)} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg">
+              <h2 className="text-lg font-medium text-ink">Log income</h2>
+              <button onClick={() => setLogTemplate(null)} className="p-1.5 text-ink-faint hover:text-ink-soft dark:hover:text-ink rounded-lg">
                 <X size={16} />
               </button>
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-              Template: <span className="font-medium text-gray-700 dark:text-gray-200">{logTemplate.template.name}</span>
+            <p className="text-sm text-ink-muted mb-4">
+              Template: <span className="font-medium text-ink">{logTemplate.template.name}</span>
             </p>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Amount (€)</label>
+                <label className="block text-xs font-medium text-ink-soft mb-1">Amount (€)</label>
                 <input
                   type="number" value={logTemplate.amount}
                   onChange={e => setLogTemplate(m => ({ ...m, amount: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                  className="w-full px-3 py-2 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Date</label>
+                <label className="block text-xs font-medium text-ink-soft mb-1">Date</label>
                 <input
                   type="date" value={logTemplate.date}
                   onChange={e => setLogTemplate(m => ({ ...m, date: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                  className="w-full px-3 py-2 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                 />
               </div>
             </div>
             <div className="flex gap-3 mt-5">
-              <button onClick={() => setLogTemplate(null)} className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">Cancel</button>
-              <button onClick={submitLogTemplate} className="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">Continue</button>
+              <button onClick={() => setLogTemplate(null)} className="flex-1 py-2 rounded-lg border border-card-border text-sm text-ink-soft hover:bg-track">Cancel</button>
+              <button onClick={submitLogTemplate} className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:opacity-90">Continue</button>
             </div>
           </div>
         </div>
@@ -1107,7 +1107,7 @@ export default function Income() {
 
       {/* ══ Edit distribution of a logged income (atomic RPC) ════════════════════ */}
       {editDistError && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] max-w-md bg-[#FCEBEB] dark:bg-red-900/40 text-[#A32D2D] dark:text-red-300 text-sm px-4 py-2 rounded-lg shadow-lg border border-[#A32D2D]/20">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] max-w-md bg-negative-tint text-negative dark:text-negative text-sm px-4 py-2 rounded-lg shadow-lg border border-[#A32D2D]/20">
           {editDistError}
         </div>
       )}

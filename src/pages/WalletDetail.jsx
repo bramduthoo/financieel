@@ -280,8 +280,8 @@ export default function WalletDetail() {
     fetchAll()
   }
 
-  if (loading) return <p className="text-gray-400 p-8">Loading...</p>
-  if (!wallet)  return <p className="text-gray-400 p-8">Wallet not found.</p>
+  if (loading) return <p className="text-ink-faint p-8">Loading...</p>
+  if (!wallet)  return <p className="text-ink-faint p-8">Wallet not found.</p>
 
   const WalletIco = walletIcon(wallet)
 
@@ -296,8 +296,8 @@ export default function WalletDetail() {
     : 0
   const budget       = Number(wallet.budget)
   const pct          = budget > 0 ? (monthDebits / budget) * 100 : 0
-  const barColour    = pct >= 100 ? 'bg-[#A32D2D]' : pct >= 75 ? 'bg-[#854F0B]' : 'bg-[#3B6D11]'
-  const textColour   = pct >= 100 ? 'text-[#A32D2D]' : pct >= 75 ? 'text-[#854F0B]' : 'text-[#3B6D11]'
+  const barColour    = pct >= 100 ? 'bg-negative-bar' : pct >= 75 ? 'bg-[#854F0B]' : 'bg-positive-bar'
+  const textColour   = pct >= 100 ? 'text-negative' : pct >= 75 ? 'text-[#854F0B]' : 'text-positive'
 
   // Unallocated templates with affordability against the current balance (euro floor only;
   // percent items scale, so they add 0 to the floor). Affordable on top, unaffordable below.
@@ -339,7 +339,7 @@ export default function WalletDetail() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate('/wallets')}
-            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            className="p-2 text-ink-faint hover:text-ink-soft dark:hover:text-ink hover:bg-track rounded-lg transition-colors"
           >
             <ArrowLeft size={18} />
           </button>
@@ -348,8 +348,8 @@ export default function WalletDetail() {
               <WalletIco size={16} className="text-accent" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{wallet.name}</h1>
-              <p className="text-gray-400 dark:text-gray-500 text-sm capitalize">
+              <h1 className="text-2xl font-medium text-ink">{wallet.name}</h1>
+              <p className="text-ink-faint text-sm capitalize">
                 {wallet.type === 'unallocated'
                   ? 'System wallet'
                   : `${wallet.type} · ${wallet.budget_type.replace('-', ' ')}${wallet.type !== 'investment' ? ` · ${formatMoney(Number(wallet.budget))}/mo` : ''}`
@@ -364,16 +364,16 @@ export default function WalletDetail() {
           {wallet.type === 'variable' && (
             <div className="flex flex-col gap-1 min-w-[140px]">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-400 dark:text-gray-500">{format(now, 'MMMM')} spending</span>
-                <span className={`text-xs font-semibold ml-2 ${textColour}`}>{pct.toFixed(0)}%</span>
+                <span className="text-xs text-ink-faint">{format(now, 'MMMM')} spending</span>
+                <span className={`text-xs font-medium ml-2 ${textColour}`}>{pct.toFixed(0)}%</span>
               </div>
-              <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5">
+              <div className="w-full bg-track rounded-full h-1.5">
                 <div
                   className={`h-1.5 rounded-full transition-all ${barColour}`}
                   style={{ width: `${Math.min(pct, 100)}%` }}
                 />
               </div>
-              <p className="text-xs text-gray-400 dark:text-gray-500">
+              <p className="text-xs text-ink-faint">
                 {formatMoney(monthDebits)} / {formatMoney(budget)}
               </p>
             </div>
@@ -382,8 +382,8 @@ export default function WalletDetail() {
           {/* Balance pill */}
           <div className={`px-4 py-1.5 rounded-full text-sm font-medium ${
             Number(wallet.balance) >= 0
-              ? 'bg-[#EAF3DE] text-[#3B6D11]'
-              : 'bg-[#FCEBEB] text-[#A32D2D]'
+              ? 'bg-positive-tint text-positive'
+              : 'bg-negative-tint text-negative'
           }`}>
             Balance: {formatMoney(Number(wallet.balance))}
           </div>
@@ -391,7 +391,7 @@ export default function WalletDetail() {
           {!wallet.is_system && (
             <button
               onClick={() => setEditOpen(true)}
-              className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              className="flex items-center gap-2 px-3 py-2 text-sm text-ink-soft hover:bg-track rounded-lg transition-colors"
             >
               <Settings size={15} /> Settings
             </button>
@@ -402,11 +402,11 @@ export default function WalletDetail() {
       {/* ── Fixed wallet ──────────────────────────────────────────────────────── */}
       {wallet.type === 'fixed' && (
         <>
-          <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 w-fit mb-6">
+          <div className="flex gap-1 bg-track rounded-[14px] p-1 w-fit mb-6">
             {['overview', 'history'].map(t => (
               <button key={t} onClick={() => setTab(t)}
                 className={`px-4 py-1.5 rounded-lg text-sm font-medium capitalize transition-colors ${
-                  tab === t ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                  tab === t ? 'bg-card shadow-sm text-ink' : 'text-ink-muted hover:text-ink dark:hover:text-ink'
                 }`}>
                 {t}
               </button>
@@ -415,20 +415,20 @@ export default function WalletDetail() {
 
           {tab === 'overview' && (
             <div className="space-y-6">
-              <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+              <div className="bg-card rounded-[14px] border border-card-border p-6">
                 <TransactionChecklist walletId={id} onBalanceChanged={fetchAll} />
               </div>
-              <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+              <div className="bg-card rounded-[14px] border border-card-border p-6">
                 <UpcomingPayments rules={rules} transactions={transactions} />
               </div>
-              <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+              <div className="bg-card rounded-[14px] border border-card-border p-6">
                 <RecurringRules walletId={id} onRulesChanged={fetchAll} />
               </div>
             </div>
           )}
 
           {tab === 'history' && (
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+            <div className="bg-card rounded-[14px] border border-card-border p-6">
               <PaymentHistory walletId={id} />
             </div>
           )}
@@ -438,11 +438,11 @@ export default function WalletDetail() {
       {/* ── Variable wallet ───────────────────────────────────────────────────── */}
       {wallet.type === 'variable' && (
         <>
-          <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 w-fit mb-6">
+          <div className="flex gap-1 bg-track rounded-[14px] p-1 w-fit mb-6">
             {['overview', 'history', 'trends'].map(t => (
               <button key={t} onClick={() => setTab(t)}
                 className={`px-4 py-1.5 rounded-lg text-sm font-medium capitalize transition-colors ${
-                  tab === t ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                  tab === t ? 'bg-card shadow-sm text-ink' : 'text-ink-muted hover:text-ink dark:hover:text-ink'
                 }`}>
                 {t}
               </button>
@@ -457,7 +457,7 @@ export default function WalletDetail() {
           )}
 
           {tab === 'history' && (
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+            <div className="bg-card rounded-[14px] border border-card-border p-6">
               <VariableHistory walletId={id} />
             </div>
           )}
@@ -470,8 +470,8 @@ export default function WalletDetail() {
 
       {/* ── Investment wallet ─────────────────────────────────────────────────── */}
       {wallet.type === 'investment' && (
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-          <p className="text-gray-400 dark:text-gray-500 text-sm">Investment wallet features coming in Phase 7.</p>
+        <div className="bg-card rounded-[14px] border border-card-border p-6">
+          <p className="text-ink-faint text-sm">Investment wallet features coming in Phase 7.</p>
         </div>
       )}
 
@@ -485,20 +485,20 @@ export default function WalletDetail() {
           />
 
           {/* Header: available to distribute + what the wallet collects */}
-          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-            <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Available to distribute</p>
-            <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">{formatMoney(Number(wallet.balance))}</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mt-2">
+          <div className="bg-card rounded-[14px] border border-card-border p-6">
+            <p className="text-xs font-medium text-ink-faint uppercase tracking-wide mb-1">Available to distribute</p>
+            <p className="text-3xl font-medium text-ink dark:text-ink">{formatMoney(Number(wallet.balance))}</p>
+            <p className="text-sm text-ink-muted leading-relaxed mt-2">
               This wallet automatically collects unassigned income and overflow from capped wallets.
             </p>
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 w-fit">
+          <div className="flex gap-1 bg-track rounded-[14px] p-1 w-fit">
             {['overview', 'history'].map(t => (
               <button key={t} onClick={() => setTab(t)}
                 className={`px-4 py-1.5 rounded-lg text-sm font-medium capitalize transition-colors ${
-                  tab === t ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                  tab === t ? 'bg-card shadow-sm text-ink' : 'text-ink-muted hover:text-ink dark:hover:text-ink'
                 }`}>
                 {t}
               </button>
@@ -514,15 +514,15 @@ export default function WalletDetail() {
                   disabled={Number(wallet.balance) <= 0}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     Number(wallet.balance) > 0
-                      ? 'bg-gray-900 text-white hover:bg-gray-800'
-                      : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                      ? 'bg-ink text-cream hover:bg-track'
+                      : 'bg-track text-ink-faint cursor-not-allowed'
                   }`}
                 >
                   Distribute now
                 </button>
                 <button
                   onClick={openPlan}
-                  className="px-4 py-2 rounded-lg text-sm font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
+                  className="px-4 py-2 rounded-lg text-sm font-medium border border-card-border text-ink hover:bg-track"
                 >
                   New auto-plan
                 </button>
@@ -531,17 +531,17 @@ export default function WalletDetail() {
               {/* Templates */}
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Templates</h2>
+                  <h2 className="text-sm font-medium text-ink">Templates</h2>
                   <button
                     onClick={openCreate}
-                    className="flex items-center gap-1 text-xs font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
+                    className="flex items-center gap-1 text-xs font-medium text-ink-soft hover:text-ink dark:hover:text-ink"
                   >
                     <Plus size={14} /> Create template
                   </button>
                 </div>
 
                 {templatesSorted.length === 0 ? (
-                  <div className="text-center py-10 text-gray-400 dark:text-gray-500 border border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
+                  <div className="text-center py-10 text-ink-faint border border-dashed border-card-border rounded-[14px]">
                     <p className="text-sm font-medium">No templates yet</p>
                     <p className="text-xs mt-1">Save a reusable split to distribute from here</p>
                   </div>
@@ -551,21 +551,21 @@ export default function WalletDetail() {
                       <button
                         key={t.id}
                         onClick={() => applyTemplate(t)}
-                        className={`text-left rounded-xl p-4 transition-all ${
+                        className={`text-left rounded-[14px] p-4 transition-all ${
                           t.affordable
-                            ? 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 hover:border-indigo-200 hover:shadow-sm'
-                            : 'bg-gray-50 dark:bg-gray-800/40 border border-dashed border-gray-300 dark:border-gray-600 opacity-60'
+                            ? 'bg-card border border-card-border hover:border-ink-faint hover:shadow-sm'
+                            : 'bg-track/40 border border-dashed border-card-border opacity-60'
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2">
-                          <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm truncate">{t.name}</p>
+                          <p className="font-medium text-ink text-sm truncate">{t.name}</p>
                           {!t.affordable && (
                             <span className="text-xs font-medium text-[#854F0B] whitespace-nowrap">
                               needs {formatMoney(t.floor - unallocBalance)} more
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5 leading-relaxed">
+                        <p className="text-xs text-ink-muted mt-1.5 leading-relaxed">
                           {t.items.length === 0
                             ? 'No destinations'
                             : t.items
@@ -581,17 +581,17 @@ export default function WalletDetail() {
               {/* Automatic plans */}
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Automatic plans</h2>
+                  <h2 className="text-sm font-medium text-ink">Automatic plans</h2>
                   <button
                     onClick={openPlan}
-                    className="flex items-center gap-1 text-xs font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
+                    className="flex items-center gap-1 text-xs font-medium text-ink-soft hover:text-ink dark:hover:text-ink"
                   >
                     <Plus size={14} /> New auto-plan
                   </button>
                 </div>
 
                 {unallocPlans.length === 0 ? (
-                  <div className="text-center py-10 text-gray-400 dark:text-gray-500 border border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
+                  <div className="text-center py-10 text-ink-faint border border-dashed border-card-border rounded-[14px]">
                     <p className="text-sm font-medium">No automatic plans yet</p>
                     <p className="text-xs mt-1">Auto-distribute when the balance crosses a threshold</p>
                   </div>
@@ -600,21 +600,21 @@ export default function WalletDetail() {
                     {unallocPlans.map(p => (
                       <div
                         key={p.id}
-                        className={`flex items-start justify-between gap-3 rounded-xl p-4 border ${
+                        className={`flex items-start justify-between gap-3 rounded-[14px] p-4 border ${
                           p.is_active
-                            ? 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700'
-                            : 'bg-gray-50 dark:bg-gray-800/40 border-gray-200 dark:border-gray-700 opacity-60'
+                            ? 'bg-card border-card-border'
+                            : 'bg-track/40 border-card-border opacity-60'
                         }`}
                       >
                         <div className="min-w-0">
-                          <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm truncate">{p.name}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">{planTrigger(p)}</p>
+                          <p className="font-medium text-ink text-sm truncate">{p.name}</p>
+                          <p className="text-xs text-ink-muted mt-1 leading-relaxed">{planTrigger(p)}</p>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0 mt-0.5">
                           <button
                             type="button"
                             onClick={() => openPlanEdit(p)}
-                            className="p-1.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 rounded-lg transition-colors"
+                            className="p-1.5 text-ink-faint hover:text-ink dark:hover:text-ink rounded-lg transition-colors"
                             aria-label="Edit plan"
                           >
                             <Edit2 size={14} />
@@ -625,10 +625,10 @@ export default function WalletDetail() {
                             aria-checked={p.is_active}
                             onClick={() => togglePlan(p)}
                             className={`relative w-11 h-6 rounded-full transition-colors ${
-                              p.is_active ? 'bg-accent-solid' : 'bg-gray-200 dark:bg-gray-600'
+                              p.is_active ? 'bg-accent-solid' : 'bg-track '
                             }`}
                           >
-                            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-card rounded-full shadow transition-transform ${
                               p.is_active ? 'translate-x-5' : 'translate-x-0'
                             }`} />
                           </button>
@@ -644,37 +644,37 @@ export default function WalletDetail() {
           {tab === 'history' && (
             <div className="space-y-4">
               {/* Incoming / Outgoing toggle */}
-              <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 w-fit">
+              <div className="flex gap-1 bg-track rounded-[14px] p-1 w-fit">
                 {['incoming', 'outgoing'].map(v => (
                   <button key={v} onClick={() => setHistView(v)}
                     className={`px-4 py-1.5 rounded-lg text-sm font-medium capitalize transition-colors ${
-                      histView === v ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                      histView === v ? 'bg-card shadow-sm text-ink' : 'text-ink-muted hover:text-ink dark:hover:text-ink'
                     }`}>
                     {v}
                   </button>
                 ))}
               </div>
 
-              <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+              <div className="bg-card rounded-[14px] border border-card-border p-6">
                 {histView === 'incoming' ? (
                   unallocIncoming.length === 0 ? (
-                    <p className="text-gray-400 dark:text-gray-500 text-sm">No incoming yet.</p>
+                    <p className="text-ink-faint text-sm">No incoming yet.</p>
                   ) : (
                     <div className="divide-y divide-gray-100 dark:divide-gray-800">
                       {unallocIncoming.map(t => (
                         <div key={t.id} className="flex items-center justify-between gap-3 py-3">
                           <div className="min-w-0">
-                            <p className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">{t.note || 'Credit'}</p>
-                            <p className="text-xs text-gray-400 dark:text-gray-500">{format(new Date(t.date), 'dd MMM yyyy')}</p>
+                            <p className="text-sm font-medium text-ink truncate">{t.note || 'Credit'}</p>
+                            <p className="text-xs text-ink-faint">{format(new Date(t.date), 'dd MMM yyyy')}</p>
                           </div>
-                          <span className="text-sm font-medium text-[#3B6D11] whitespace-nowrap">+{formatMoney(Number(t.amount))}</span>
+                          <span className="text-sm font-medium text-positive whitespace-nowrap">+{formatMoney(Number(t.amount))}</span>
                         </div>
                       ))}
                     </div>
                   )
                 ) : (
                   unallocOutgoing.length === 0 ? (
-                    <p className="text-gray-400 dark:text-gray-500 text-sm">No outgoing yet.</p>
+                    <p className="text-ink-faint text-sm">No outgoing yet.</p>
                   ) : (
                     <div className="divide-y divide-gray-100 dark:divide-gray-800">
                       {unallocOutgoing.map(t => {
@@ -684,19 +684,19 @@ export default function WalletDetail() {
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
                                 {lbl.badge && (
-                                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide ${
+                                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide ${
                                     lbl.badge === 'Auto-plan'
                                       ? 'bg-[#FAEEDA] text-[#854F0B]'
-                                      : 'bg-[#E1F5EE] text-[#0F6E56]'
+                                      : 'bg-positive-tint text-positive'
                                   }`}>
                                     {lbl.badge}
                                   </span>
                                 )}
-                                <p className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">{lbl.text}</p>
+                                <p className="text-sm font-medium text-ink truncate">{lbl.text}</p>
                               </div>
-                              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{format(new Date(t.date), 'dd MMM yyyy')}</p>
+                              <p className="text-xs text-ink-faint mt-0.5">{format(new Date(t.date), 'dd MMM yyyy')}</p>
                             </div>
-                            <span className="text-sm font-medium text-[#A32D2D] whitespace-nowrap">{formatMoney(-Number(t.amount))}</span>
+                            <span className="text-sm font-medium text-negative whitespace-nowrap">{formatMoney(-Number(t.amount))}</span>
                           </div>
                         )
                       })}
@@ -711,7 +711,7 @@ export default function WalletDetail() {
 
       {/* Outbound distribution popup — manual "Distribute now" */}
       {distributeError && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] max-w-md bg-[#FCEBEB] dark:bg-red-900/40 text-[#A32D2D] dark:text-red-300 text-sm px-4 py-2 rounded-lg shadow-lg border border-[#A32D2D]/20">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] max-w-md bg-negative-tint text-negative dark:text-negative text-sm px-4 py-2 rounded-lg shadow-lg border border-[#A32D2D]/20">
           {distributeError}
         </div>
       )}
@@ -752,31 +752,31 @@ export default function WalletDetail() {
       {/* Create unallocated template */}
       {createOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md max-h-[85vh] flex flex-col">
-            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-stone-100 dark:border-gray-800 flex-shrink-0">
-              <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">Create template</h2>
-              <button onClick={() => setCreateOpen(false)} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg">
+          <div className="bg-card rounded-[14px] shadow-xl w-full max-w-md max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-card-border flex-shrink-0">
+              <h2 className="text-lg font-medium text-ink">Create template</h2>
+              <button onClick={() => setCreateOpen(false)} className="p-1.5 text-ink-faint hover:text-ink-soft dark:hover:text-ink rounded-lg">
                 <X size={16} />
               </button>
             </div>
 
             <div className="flex-1 overflow-auto px-6 py-4 space-y-4">
-              {createError && <p className="text-[#A32D2D] text-sm">{createError}</p>}
+              {createError && <p className="text-negative text-sm">{createError}</p>}
 
               <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Name</label>
+                <label className="block text-xs font-medium text-ink-soft mb-1">Name</label>
                 <input
                   value={createForm.name}
                   onChange={e => setCreateForm(f => ({ ...f, name: e.target.value }))}
                   placeholder="e.g. Monthly sweep"
-                  className="w-full px-3 py-2 border border-stone-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                  className="w-full px-3 py-2 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                 />
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-medium text-gray-600 dark:text-gray-300">Destinations</label>
-                  <button onClick={addCreateItem} className="flex items-center gap-1 text-xs font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100">
+                  <label className="text-xs font-medium text-ink-soft">Destinations</label>
+                  <button onClick={addCreateItem} className="flex items-center gap-1 text-xs font-medium text-ink-soft hover:text-ink dark:hover:text-ink">
                     <Plus size={13} /> Add destination
                   </button>
                 </div>
@@ -786,12 +786,12 @@ export default function WalletDetail() {
                       <select
                         value={it.wallet_id}
                         onChange={e => updateCreateItem(idx, { wallet_id: e.target.value })}
-                        className="flex-1 min-w-0 px-2 py-1.5 text-sm border border-stone-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                        className="flex-1 min-w-0 px-2 py-1.5 text-sm border border-card-border dark:border-card-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                       >
                         <option value="">Select wallet…</option>
                         {destWallets.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
                       </select>
-                      <div className="inline-flex bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 flex-shrink-0">
+                      <div className="inline-flex bg-track rounded-lg p-0.5 flex-shrink-0">
                         {['euro', 'percent'].map(m => (
                           <button
                             key={m}
@@ -799,8 +799,8 @@ export default function WalletDetail() {
                             onClick={() => updateCreateItem(idx, { mode: m })}
                             className={`px-2 py-1 text-xs rounded-md font-medium transition-colors ${
                               it.mode === m
-                                ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-gray-100'
-                                : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
+                                ? 'bg-card shadow-sm text-ink dark:text-ink'
+                                : 'text-ink-faint hover:text-ink-soft dark:hover:text-ink-faint'
                             }`}
                           >
                             {m === 'euro' ? '€' : '%'}
@@ -812,12 +812,12 @@ export default function WalletDetail() {
                         value={it.value}
                         onChange={e => updateCreateItem(idx, { value: e.target.value })}
                         placeholder={it.mode === 'euro' ? '0.00' : '0'}
-                        className="w-20 px-2 py-1.5 text-sm text-right border border-stone-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                        className="w-20 px-2 py-1.5 text-sm text-right border border-card-border dark:border-card-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                       />
                       <button
                         onClick={() => removeCreateItem(idx)}
                         disabled={createForm.items.length === 1}
-                        className="p-1.5 text-gray-300 hover:text-red-500 disabled:opacity-30 disabled:hover:text-gray-300 rounded transition-colors"
+                        className="p-1.5 text-ink-faint hover:text-negative disabled:opacity-30 disabled:hover:text-ink-faint rounded transition-colors"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -827,9 +827,9 @@ export default function WalletDetail() {
               </div>
             </div>
 
-            <div className="px-6 pb-5 pt-3 border-t border-stone-100 dark:border-gray-800 flex-shrink-0 flex gap-3">
-              <button onClick={() => setCreateOpen(false)} className="flex-1 py-2 rounded-lg border border-stone-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-stone-50 dark:hover:bg-gray-800">Cancel</button>
-              <button onClick={saveTemplate} className="flex-1 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800">Save template</button>
+            <div className="px-6 pb-5 pt-3 border-t border-card-border flex-shrink-0 flex gap-3">
+              <button onClick={() => setCreateOpen(false)} className="flex-1 py-2 rounded-lg border border-card-border text-sm text-ink-soft hover:bg-track">Cancel</button>
+              <button onClick={saveTemplate} className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:bg-track">Save template</button>
             </div>
           </div>
         </div>
@@ -838,44 +838,44 @@ export default function WalletDetail() {
       {/* Create automatic plan */}
       {planOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md max-h-[85vh] flex flex-col">
-            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-stone-100 dark:border-gray-800 flex-shrink-0">
-              <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">{planForm.isEdit ? 'Edit auto-plan' : 'New auto-plan'}</h2>
-              <button onClick={() => setPlanOpen(false)} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg">
+          <div className="bg-card rounded-[14px] shadow-xl w-full max-w-md max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-card-border flex-shrink-0">
+              <h2 className="text-lg font-medium text-ink">{planForm.isEdit ? 'Edit auto-plan' : 'New auto-plan'}</h2>
+              <button onClick={() => setPlanOpen(false)} className="p-1.5 text-ink-faint hover:text-ink-soft dark:hover:text-ink rounded-lg">
                 <X size={16} />
               </button>
             </div>
 
             <div className="flex-1 overflow-auto px-6 py-4 space-y-4">
-              {planError && <p className="text-[#A32D2D] text-sm">{planError}</p>}
+              {planError && <p className="text-negative text-sm">{planError}</p>}
 
               <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Name</label>
+                <label className="block text-xs font-medium text-ink-soft mb-1">Name</label>
                 <input
                   value={planForm.name}
                   onChange={e => setPlanForm(f => ({ ...f, name: e.target.value }))}
                   placeholder="e.g. Auto-sweep to savings"
-                  className="w-full px-3 py-2 border border-stone-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                  className="w-full px-3 py-2 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Threshold (€)</label>
+                  <label className="block text-xs font-medium text-ink-soft mb-1">Threshold (€)</label>
                   <input
                     type="number" min="0" step="0.01"
                     value={planForm.threshold}
                     onChange={e => setPlanForm(f => ({ ...f, threshold: e.target.value }))}
                     placeholder="0.00"
-                    className="w-full px-3 py-2 border border-stone-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                    className="w-full px-3 py-2 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Distribute</label>
+                  <label className="block text-xs font-medium text-ink-soft mb-1">Distribute</label>
                   <select
                     value={planForm.distribute_mode}
                     onChange={e => setPlanMode(e.target.value)}
-                    className="w-full px-3 py-2 border border-stone-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                    className="w-full px-3 py-2 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                   >
                     {PLAN_MODES.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
                   </select>
@@ -884,26 +884,26 @@ export default function WalletDetail() {
 
               {planForm.distribute_mode === 'fixed_amount' && (
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Fixed amount (€)</label>
+                  <label className="block text-xs font-medium text-ink-soft mb-1">Fixed amount (€)</label>
                   <input
                     type="number" min="0" step="0.01"
                     value={planForm.distribute_amount}
                     onChange={e => setPlanForm(f => ({ ...f, distribute_amount: e.target.value }))}
                     placeholder="0.00"
-                    className="w-full px-3 py-2 border border-stone-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                    className="w-full px-3 py-2 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                   />
                 </div>
               )}
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-medium text-gray-600 dark:text-gray-300">Destinations</label>
-                  <button onClick={addPlanItem} className="flex items-center gap-1 text-xs font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100">
+                  <label className="text-xs font-medium text-ink-soft">Destinations</label>
+                  <button onClick={addPlanItem} className="flex items-center gap-1 text-xs font-medium text-ink-soft hover:text-ink dark:hover:text-ink">
                     <Plus size={13} /> Add destination
                   </button>
                 </div>
                 {!planIsFixed && (
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mb-2">This mode distributes a variable amount, so destinations are percentages that must total 100%.</p>
+                  <p className="text-xs text-ink-faint mb-2">This mode distributes a variable amount, so destinations are percentages that must total 100%.</p>
                 )}
                 <div className="space-y-2">
                   {planForm.items.map((it, idx) => (
@@ -911,13 +911,13 @@ export default function WalletDetail() {
                       <select
                         value={it.wallet_id}
                         onChange={e => updatePlanItem(idx, { wallet_id: e.target.value })}
-                        className="flex-1 min-w-0 px-2 py-1.5 text-sm border border-stone-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                        className="flex-1 min-w-0 px-2 py-1.5 text-sm border border-card-border dark:border-card-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                       >
                         <option value="">Select wallet…</option>
                         {destWallets.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
                       </select>
                       {planIsFixed ? (
-                        <div className="inline-flex bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 flex-shrink-0">
+                        <div className="inline-flex bg-track rounded-lg p-0.5 flex-shrink-0">
                           {['euro', 'percent'].map(m => (
                             <button
                               key={m}
@@ -925,8 +925,8 @@ export default function WalletDetail() {
                               onClick={() => updatePlanItem(idx, { mode: m, value: clampPlanValue(it.value, m) })}
                               className={`px-2 py-1 text-xs rounded-md font-medium transition-colors ${
                                 it.mode === m
-                                  ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-gray-100'
-                                  : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
+                                  ? 'bg-card shadow-sm text-ink dark:text-ink'
+                                  : 'text-ink-faint hover:text-ink-soft dark:hover:text-ink-faint'
                               }`}
                             >
                               {m === 'euro' ? '€' : '%'}
@@ -934,7 +934,7 @@ export default function WalletDetail() {
                           ))}
                         </div>
                       ) : (
-                        <span className="px-2 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 flex-shrink-0">%</span>
+                        <span className="px-2 py-1 text-xs font-medium text-ink-muted flex-shrink-0">%</span>
                       )}
                       <input
                         type="number" min="0" step="0.01"
@@ -942,12 +942,12 @@ export default function WalletDetail() {
                         value={it.value}
                         onChange={e => updatePlanItem(idx, { value: clampPlanValue(e.target.value, it.mode) })}
                         placeholder={it.mode === 'euro' ? '0.00' : '0'}
-                        className="w-20 px-2 py-1.5 text-sm text-right border border-stone-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                        className="w-20 px-2 py-1.5 text-sm text-right border border-card-border dark:border-card-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                       />
                       <button
                         onClick={() => removePlanItem(idx)}
                         disabled={planForm.items.length === 1}
-                        className="p-1.5 text-gray-300 hover:text-red-500 disabled:opacity-30 disabled:hover:text-gray-300 rounded transition-colors"
+                        className="p-1.5 text-ink-faint hover:text-negative disabled:opacity-30 disabled:hover:text-ink-faint rounded transition-colors"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -957,32 +957,32 @@ export default function WalletDetail() {
               </div>
             </div>
 
-            <div className="px-6 pb-5 pt-3 border-t border-stone-100 dark:border-gray-800 flex-shrink-0 space-y-3">
+            <div className="px-6 pb-5 pt-3 border-t border-card-border flex-shrink-0 space-y-3">
               {/* Live split readout */}
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500 dark:text-gray-400">{planIsFixed ? 'Allocated' : 'Total'}</span>
+                <span className="text-ink-muted">{planIsFixed ? 'Allocated' : 'Total'}</span>
                 {planIsFixed ? (
-                  <span className={`font-semibold ${planSplitValid ? 'text-[#3B6D11]' : planRemaining < 0 ? 'text-[#A32D2D]' : 'text-[#854F0B]'}`}>
+                  <span className={`font-medium ${planSplitValid ? 'text-positive' : planRemaining < 0 ? 'text-negative' : 'text-[#854F0B]'}`}>
                     {formatMoney(planEuroSum)} of {formatMoney(planTargetAmount)}
                     {!planSplitValid && planTargetAmount > 0 && (planRemaining >= 0
                       ? ` · ${formatMoney(planRemaining)} remaining`
                       : ` · over by ${formatMoney(Math.abs(planRemaining))}`)}
                   </span>
                 ) : (
-                  <span className={`font-semibold ${planSplitValid ? 'text-[#3B6D11]' : 'text-[#854F0B]'}`}>
+                  <span className={`font-medium ${planSplitValid ? 'text-positive' : 'text-[#854F0B]'}`}>
                     {planPctSum}% of 100%
                   </span>
                 )}
               </div>
               <div className="flex gap-3">
-                <button onClick={() => setPlanOpen(false)} className="flex-1 py-2 rounded-lg border border-stone-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-stone-50 dark:hover:bg-gray-800">Cancel</button>
+                <button onClick={() => setPlanOpen(false)} className="flex-1 py-2 rounded-lg border border-card-border text-sm text-ink-soft hover:bg-track">Cancel</button>
                 <button
                   onClick={savePlan}
                   disabled={!planSplitValid}
                   className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
                     planSplitValid
-                      ? 'bg-gray-900 text-white hover:bg-gray-800'
-                      : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                      ? 'bg-ink text-cream hover:bg-track'
+                      : 'bg-track text-ink-faint cursor-not-allowed'
                   }`}
                 >
                   {planForm.isEdit ? 'Save changes' : 'Save plan'}
