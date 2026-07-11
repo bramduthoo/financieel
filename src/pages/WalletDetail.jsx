@@ -512,7 +512,7 @@ export default function WalletDetail() {
                   disabled={Number(wallet.balance) <= 0}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     Number(wallet.balance) > 0
-                      ? 'bg-ink text-cream hover:bg-track'
+                      ? 'bg-ink text-cream hover:opacity-90'
                       : 'bg-track text-ink-faint cursor-not-allowed'
                   }`}
                 >
@@ -658,7 +658,7 @@ export default function WalletDetail() {
                   unallocIncoming.length === 0 ? (
                     <p className="text-ink-faint text-sm">No incoming yet.</p>
                   ) : (
-                    <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                    <div className="divide-y divide-inner-border">
                       {unallocIncoming.map(t => (
                         <div key={t.id} className="flex items-center justify-between gap-3 py-3">
                           <div className="min-w-0">
@@ -674,7 +674,7 @@ export default function WalletDetail() {
                   unallocOutgoing.length === 0 ? (
                     <p className="text-ink-faint text-sm">No outgoing yet.</p>
                   ) : (
-                    <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                    <div className="divide-y divide-inner-border">
                       {unallocOutgoing.map(t => {
                         const lbl = outgoingLabel(t.note)
                         return (
@@ -827,7 +827,7 @@ export default function WalletDetail() {
 
             <div className="px-6 pb-5 pt-3 border-t border-card-border flex-shrink-0 flex gap-3">
               <button onClick={() => setCreateOpen(false)} className="flex-1 py-2 rounded-lg border border-card-border text-sm text-ink-soft hover:bg-track">Cancel</button>
-              <button onClick={saveTemplate} className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:bg-track">Save template</button>
+              <button onClick={saveTemplate} className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:opacity-90">Save template</button>
             </div>
           </div>
         </div>
@@ -979,7 +979,7 @@ export default function WalletDetail() {
                   disabled={!planSplitValid}
                   className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
                     planSplitValid
-                      ? 'bg-ink text-cream hover:bg-track'
+                      ? 'bg-ink text-cream hover:opacity-90'
                       : 'bg-track text-ink-faint cursor-not-allowed'
                   }`}
                 >

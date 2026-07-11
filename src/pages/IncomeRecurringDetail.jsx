@@ -303,7 +303,7 @@ export default function IncomeRecurringDetail() {
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-ink-muted uppercase tracking-wide">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            <tbody className="divide-y divide-inner-border">
               {chain.map(r => (
                 <tr key={r.id} className={r.id === rule.id ? 'bg-accent/5' : ''}>
                   <td className="px-4 py-2.5 text-ink-soft whitespace-nowrap text-xs">
@@ -333,7 +333,7 @@ export default function IncomeRecurringDetail() {
           {distributionRules.length > 0 && (
             <button
               onClick={() => setDistPopupOpen(true)}
-              className="bg-ink text-cream text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-track transition-colors"
+              className="bg-ink text-cream text-xs font-medium px-3 py-1.5 rounded-lg hover:opacity-90 transition-colors"
             >
               Edit distribution
             </button>
@@ -344,7 +344,7 @@ export default function IncomeRecurringDetail() {
             <p className="text-sm mb-3">No distribution set up</p>
             <button
               onClick={() => setDistPopupOpen(true)}
-              className="bg-ink text-cream text-sm font-medium px-4 py-2 rounded-lg hover:bg-track transition-colors"
+              className="bg-ink text-cream text-sm font-medium px-4 py-2 rounded-lg hover:opacity-90 transition-colors"
             >
               Set up distribution
             </button>
@@ -375,7 +375,7 @@ export default function IncomeRecurringDetail() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => setLogModal({ amount: String(rule.amount), date: todayStr() })}
-          className="flex items-center gap-2 bg-ink text-cream px-4 py-2 rounded-lg text-sm font-medium hover:bg-track transition-colors"
+          className="flex items-center gap-2 bg-ink text-cream px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-colors"
         >
           Log income
         </button>
@@ -415,7 +415,7 @@ export default function IncomeRecurringDetail() {
             </div>
             <div className="flex gap-3 mt-5">
               <button onClick={() => setLogModal(null)} className="flex-1 py-2 rounded-lg border border-card-border text-sm text-ink-soft hover:bg-track">Cancel</button>
-              <button onClick={submitLog} className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:bg-track">Continue</button>
+              <button onClick={submitLog} className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:opacity-90">Continue</button>
             </div>
           </div>
         </div>
@@ -476,7 +476,7 @@ export default function IncomeRecurringDetail() {
             </div>
             <div className="flex gap-3 mt-5">
               <button onClick={() => setEditModal(null)} className="flex-1 py-2 rounded-lg border border-card-border text-sm text-ink-soft hover:bg-track">Cancel</button>
-              <button onClick={submitEdit} className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:bg-track">Save changes</button>
+              <button onClick={submitEdit} className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:opacity-90">Save changes</button>
             </div>
           </div>
         </div>

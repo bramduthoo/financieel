@@ -300,7 +300,7 @@ export default function RecurringRules({ walletId, onRulesChanged }) {
               Cancel
             </button>
             <button onClick={handleSave} disabled={saving}
-              className="px-3 py-1.5 rounded-lg bg-ink text-cream text-xs font-medium hover:bg-track disabled:opacity-50">
+              className="px-3 py-1.5 rounded-lg bg-ink text-cream text-xs font-medium hover:opacity-90 disabled:opacity-50">
               {saving ? 'Saving...' : editingId ? 'Save changes' : 'Add payment'}
             </button>
           </div>
@@ -432,7 +432,7 @@ function CustomDatePicker({ form, setField, toggleCustomDate }) {
                   return (
                     <button key={day} type="button" onClick={() => toggleCustomDate(mmdd)}
                       className={`text-xs rounded py-0.5 transition-colors ${
-                        sel ? 'bg-ink text-cream' : 'text-ink-soft hover:bg-track'
+                        sel ? 'bg-ink text-cream' : 'text-ink-soft hover:opacity-90'
                       }`}>
                       {day}
                     </button>

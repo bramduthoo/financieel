@@ -83,7 +83,7 @@ export default function VariableOverview({ walletId, onBalanceChanged }) {
       {!showingForm ? (
         <button
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 bg-ink text-cream px-4 py-2 rounded-lg text-sm font-medium hover:bg-track transition-colors"
+          className="flex items-center gap-2 bg-ink text-cream px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-colors"
         >
           <Plus size={15} /> Add transaction
         </button>
@@ -210,7 +210,7 @@ export default function VariableOverview({ walletId, onBalanceChanged }) {
               </button>
               <button
                 onClick={() => handleEdit(detail)}
-                className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:bg-track"
+                className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:opacity-90"
               >
                 Edit
               </button>

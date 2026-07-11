@@ -474,7 +474,7 @@ export default function Income() {
         </div>
         <button
           onClick={() => openModal('quick')}
-          className="flex items-center gap-2 bg-ink text-cream px-4 py-2 rounded-lg text-sm font-medium hover:bg-track transition-colors"
+          className="flex items-center gap-2 bg-ink text-cream px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-colors"
         >
           <Plus size={15} />
           Add Income
@@ -540,7 +540,7 @@ export default function Income() {
                   <th className="px-4 py-3 text-left text-xs font-medium text-ink-muted uppercase tracking-wide">Note</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+              <tbody className="divide-y divide-inner-border">
                 {displayedEntries.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-4 py-12 text-center text-ink-faint">No entries found</td>
@@ -989,7 +989,7 @@ export default function Income() {
                     setDetailEntry(null)
                     openModal('quick', { editEntry: e })
                   }}
-                  className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:bg-track"
+                  className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:opacity-90"
                 >
                   Edit
                 </button>

@@ -120,7 +120,7 @@ export default function VariableTransactionForm({ walletId, onSaved, onCancel, e
           </button>
           <button
             onClick={handleSubmit}
-            className="px-4 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:bg-track transition-colors"
+            className="px-4 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:opacity-90 transition-colors"
           >
             {isEdit ? 'Save changes' : 'Add transaction'}
           </button>
@@ -163,7 +163,7 @@ export default function VariableTransactionForm({ walletId, onSaved, onCancel, e
               <button
                 onClick={handleConfirm}
                 disabled={saving}
-                className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:bg-track disabled:opacity-50"
+                className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:opacity-90 disabled:opacity-50"
               >
                 {saving ? 'Saving…' : isEdit ? 'Save changes' : 'Confirm'}
               </button>

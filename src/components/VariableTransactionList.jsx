@@ -59,7 +59,7 @@ export default function VariableTransactionList({ walletId, viewMonth, refreshKe
 
   return (
     <>
-      <div className="bg-card rounded-[14px] border border-card-border divide-y divide-gray-100 dark:divide-gray-800">
+      <div className="bg-card rounded-[14px] border border-card-border divide-y divide-inner-border">
         {transactions.map(t => (
           <div key={t.id} className="flex items-center justify-between px-4 py-3">
             <div className="flex-1 min-w-0">

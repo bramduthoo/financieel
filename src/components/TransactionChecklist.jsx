@@ -168,7 +168,7 @@ export default function TransactionChecklist({ walletId, onBalanceChanged }) {
                 Cancel
               </button>
               <button onClick={handleConfirm} disabled={saving}
-                className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:bg-track disabled:opacity-50">
+                className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:opacity-90 disabled:opacity-50">
                 {saving ? 'Confirming...' : 'Confirm paid'}
               </button>
             </div>

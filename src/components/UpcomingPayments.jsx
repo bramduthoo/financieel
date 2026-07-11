@@ -91,7 +91,7 @@ export default function UpcomingPayments({ rules, transactions = [] }) {
                     <th className="px-4 py-2 text-right">Amount</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                <tbody className="divide-y divide-inner-border">
                   {tableEvents.map((item, i) => (
                     <tr key={i} className="bg-card">
                       <td className="px-4 py-2.5 font-medium text-ink">

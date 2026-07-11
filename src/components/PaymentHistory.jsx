@@ -180,7 +180,7 @@ export default function PaymentHistory({ walletId }) {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            <tbody className="divide-y divide-inner-border">
               {visible.map(t => (
                 <tr
                   key={t.id}
@@ -278,7 +278,7 @@ export default function PaymentHistory({ walletId }) {
               </button>
               <button
                 onClick={() => openEdit(detail)}
-                className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:bg-track"
+                className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:opacity-90"
               >
                 Edit
               </button>
@@ -343,7 +343,7 @@ export default function PaymentHistory({ walletId }) {
               </button>
               <button
                 onClick={submitEdit}
-                className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:bg-track"
+                className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:opacity-90"
               >
                 Save changes
               </button>
@@ -373,7 +373,7 @@ export default function PaymentHistory({ walletId }) {
               <button
                 onClick={confirm.onConfirm}
                 disabled={saving}
-                className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:bg-track disabled:opacity-50"
+                className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:opacity-90 disabled:opacity-50"
               >
                 {saving ? 'Saving…' : 'Save'}
               </button>

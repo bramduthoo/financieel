@@ -229,7 +229,7 @@ export default function VariableHistory({ walletId }) {
             </div>
             <div className="flex gap-3 mt-6">
               <button onClick={() => setDetail(null)} className="flex-1 py-2 rounded-lg border border-card-border text-sm text-ink-soft hover:bg-track">Close</button>
-              <button onClick={() => openEdit(detail)} className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:bg-track">Edit</button>
+              <button onClick={() => openEdit(detail)} className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:opacity-90">Edit</button>
             </div>
           </div>
         </div>
@@ -284,7 +284,7 @@ export default function VariableHistory({ walletId }) {
             </div>
             <div className="flex gap-3 mt-5">
               <button onClick={() => setEditForm(null)} className="flex-1 py-2 rounded-lg border border-card-border text-sm text-ink-soft hover:bg-track">Cancel</button>
-              <button onClick={submitEdit} className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:bg-track">Save changes</button>
+              <button onClick={submitEdit} className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:opacity-90">Save changes</button>
             </div>
           </div>
         </div>
@@ -306,7 +306,7 @@ export default function VariableHistory({ walletId }) {
               <button
                 onClick={confirm.onConfirm}
                 disabled={saving}
-                className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:bg-track disabled:opacity-50"
+                className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:opacity-90 disabled:opacity-50"
               >
                 {saving ? 'Saving…' : 'Save'}
               </button>
