@@ -85,16 +85,16 @@ export default function UnallocatedConflictBanner({ refreshSignal, onChange }) {
   return (
     <>
       {/* Banner */}
-      <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-[#854F0B]/25 bg-[#FAEEDA] dark:bg-[#854F0B]/15 px-4 py-3">
+      <div className="mb-4 flex items-center justify-between gap-3 rounded-[14px] border border-warning/25 bg-[#FAEEDA] dark:bg-warning/15 px-4 py-3">
         <div className="flex items-center gap-2.5 min-w-0">
-          <AlertTriangle size={18} className="text-[#854F0B] flex-shrink-0" />
-          <p className="text-sm font-medium text-[#854F0B] truncate">
+          <AlertTriangle size={18} className="text-[#854F0B] dark:text-warning flex-shrink-0" />
+          <p className="text-sm font-medium text-[#854F0B] dark:text-warning truncate">
             {n} plans triggered at once. Choose which to apply.
           </p>
         </div>
         <button
           onClick={() => setReviewOpen(true)}
-          className="flex-shrink-0 px-3 py-1.5 rounded-lg bg-[#854F0B] text-white text-sm font-medium hover:bg-[#6d4009] transition-colors"
+          className="flex-shrink-0 px-3 py-1.5 rounded-[9px] bg-[#854F0B] text-white text-sm font-medium hover:opacity-90 transition-opacity"
         >
           Review
         </button>
@@ -103,30 +103,30 @@ export default function UnallocatedConflictBanner({ refreshSignal, onChange }) {
       {/* Review modal */}
       {reviewOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md max-h-[85vh] flex flex-col">
-            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-stone-100 dark:border-gray-800 flex-shrink-0">
-              <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">Resolve plan conflict</h2>
-              <button onClick={() => setReviewOpen(false)} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg">
+          <div className="bg-card border border-card-border rounded-[14px] shadow-xl w-full max-w-md max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-card-border flex-shrink-0">
+              <h2 className="text-lg font-medium text-ink">Resolve plan conflict</h2>
+              <button onClick={() => setReviewOpen(false)} className="p-1.5 text-ink-faint hover:text-ink rounded-lg transition-colors">
                 <X size={16} />
               </button>
             </div>
 
             <div className="flex-1 overflow-auto px-6 py-4 space-y-3">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-ink-muted">
                 Multiple plans were eligible at the same time. Pick one to apply now, or dismiss them all.
               </p>
               {plans.length === 0 ? (
-                <p className="text-sm text-gray-400 dark:text-gray-500">None of the conflicting plans still exist.</p>
+                <p className="text-sm text-ink-muted">None of the conflicting plans still exist.</p>
               ) : plans.map(p => (
-                <div key={p.id} className="flex items-start justify-between gap-3 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                <div key={p.id} className="flex items-start justify-between gap-3 rounded-[11px] border border-card-border p-4">
                   <div className="min-w-0">
-                    <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm truncate">{p.name}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">{describe(p)}</p>
+                    <p className="font-medium text-ink text-sm truncate">{p.name}</p>
+                    <p className="text-xs text-ink-muted mt-1 leading-relaxed">{describe(p)}</p>
                   </div>
                   <button
                     onClick={() => applyPlan(p)}
                     disabled={busy}
-                    className="flex-shrink-0 px-3 py-1.5 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 disabled:opacity-50"
+                    className="flex-shrink-0 px-3 py-1.5 rounded-[9px] bg-ink text-cream text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
                   >
                     Apply
                   </button>
@@ -134,11 +134,11 @@ export default function UnallocatedConflictBanner({ refreshSignal, onChange }) {
               ))}
             </div>
 
-            <div className="px-6 pb-5 pt-3 border-t border-stone-100 dark:border-gray-800 flex-shrink-0 flex gap-3">
+            <div className="px-6 pb-5 pt-3 border-t border-card-border flex-shrink-0 flex gap-3">
               <button
                 onClick={dismiss}
                 disabled={busy}
-                className="flex-1 py-2 rounded-lg border border-stone-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-stone-50 dark:hover:bg-gray-800 disabled:opacity-50"
+                className="flex-1 py-2 rounded-[9px] border border-card-border text-sm text-ink-soft hover:bg-track disabled:opacity-50 transition-colors"
               >
                 Dismiss all
               </button>

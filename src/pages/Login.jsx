@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { CheckCircle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
-const inputClass = 'w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent'
+const inputClass = 'w-full px-3 py-2 border border-card-border rounded-[8px] text-sm bg-field text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-accent/30'
 
 export default function Login() {
   const [tab,  setTab]  = useState('login')
@@ -87,22 +87,22 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
-      <div className="bg-white dark:bg-gray-900 p-8 rounded-xl shadow-sm w-full max-w-md">
+    <div className="min-h-screen bg-cream flex items-center justify-center">
+      <div className="bg-card p-8 rounded-[14px] shadow-sm w-full max-w-md">
 
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">Financieel</h1>
+        <h1 className="text-2xl font-medium text-ink mb-2">Financieel</h1>
 
         {/* ── Signup success ───────────────────────────────────── */}
         {view === 'signupSuccess' && (
           <div className="text-center py-4">
-            <CheckCircle size={40} className="mx-auto mb-4 text-green-500" />
-            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">Almost there</h2>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
+            <CheckCircle size={40} className="mx-auto mb-4 text-positive" />
+            <h2 className="text-lg font-medium text-ink mb-2">Almost there</h2>
+            <p className="text-ink-muted text-sm mb-6">
               If this email isn't already registered, you'll receive a verification link shortly. If you already have an account, please log in instead.
             </p>
             <button
               onClick={() => switchTab('login')}
-              className="text-indigo-600 dark:text-indigo-400 text-sm font-medium hover:text-indigo-800 dark:hover:text-indigo-300"
+              className="text-ink  text-sm font-medium hover:text-ink "
             >
               Back to login
             </button>
@@ -112,14 +112,14 @@ export default function Login() {
         {/* ── Forgot password success ──────────────────────────── */}
         {view === 'forgotSuccess' && (
           <div className="text-center py-4">
-            <CheckCircle size={40} className="mx-auto mb-4 text-green-500" />
-            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">Check your email</h2>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
+            <CheckCircle size={40} className="mx-auto mb-4 text-positive" />
+            <h2 className="text-lg font-medium text-ink mb-2">Check your email</h2>
+            <p className="text-ink-muted text-sm mb-6">
               We've sent you a password reset link.
             </p>
             <button
               onClick={() => switchTab('login')}
-              className="text-indigo-600 dark:text-indigo-400 text-sm font-medium hover:text-indigo-800 dark:hover:text-indigo-300"
+              className="text-ink  text-sm font-medium hover:text-ink "
             >
               Back to login
             </button>
@@ -129,30 +129,30 @@ export default function Login() {
         {/* ── Forgot password form ─────────────────────────────── */}
         {view === 'forgotPassword' && (
           <div>
-            <p className="text-gray-500 dark:text-gray-400 mb-6">Enter your email to receive a reset link.</p>
+            <p className="text-ink-muted mb-6">Enter your email to receive a reset link.</p>
 
             {resetError && (
-              <div className="bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-sm px-4 py-3 rounded-lg mb-4">
+              <div className="bg-negative-tint text-negative dark:text-negative text-sm px-4 py-3 rounded-lg mb-4">
                 {resetError}
               </div>
             )}
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Email</label>
+                <label className="block text-sm font-medium text-ink mb-1">Email</label>
                 <input
                   type="email"
                   value={resetEmail}
                   onChange={e => setResetEmail(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleResetPassword()}
                   placeholder="you@example.com"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                  className="w-full px-3 py-2 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                 />
               </div>
               <button
                 onClick={handleResetPassword}
                 disabled={resetLoading}
-                className="w-full bg-indigo-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                className="w-full bg-ink text-cream py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-colors disabled:opacity-50"
               >
                 {resetLoading ? 'Sending…' : 'Send reset link'}
               </button>
@@ -161,7 +161,7 @@ export default function Login() {
             <div className="mt-4 text-center">
               <button
                 onClick={() => switchTab('login')}
-                className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium"
+                className="text-sm text-ink  hover:text-ink  font-medium"
               >
                 Back to login
               </button>
@@ -172,18 +172,18 @@ export default function Login() {
         {/* ── Main form (login / signup tabs) ─────────────────── */}
         {view === 'form' && (
           <>
-            <p className="text-gray-500 dark:text-gray-400 mb-6">Sign in to your dashboard</p>
+            <p className="text-ink-muted mb-6">Sign in to your dashboard</p>
 
             {/* Tabs */}
-            <div className="bg-stone-100 dark:bg-gray-800 rounded-xl p-1 flex gap-1 mb-6">
+            <div className="bg-track  rounded-[14px] p-1 flex gap-1 mb-6">
               {[['login', 'Log in'], ['signup', 'Sign up']].map(([id, label]) => (
                 <button
                   key={id}
                   onClick={() => switchTab(id)}
                   className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                     tab === id
-                      ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-gray-100 font-medium'
-                      : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100'
+                      ? 'bg-card shadow-sm text-ink dark:text-ink font-medium'
+                      : 'text-ink-soft hover:text-ink dark:hover:text-ink'
                   }`}
                 >
                   {label}
@@ -195,38 +195,38 @@ export default function Login() {
             {tab === 'login' && (
               <div>
                 {error && (
-                  <div className="bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-sm px-4 py-3 rounded-lg mb-4">
+                  <div className="bg-negative-tint text-negative dark:text-negative text-sm px-4 py-3 rounded-lg mb-4">
                     {error}
                   </div>
                 )}
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Email</label>
+                    <label className="block text-sm font-medium text-ink mb-1">Email</label>
                     <input
                       type="email"
                       value={email}
                       onChange={e => setEmail(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && handleLogin()}
                       placeholder="you@example.com"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                      className="w-full px-3 py-2 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Password</label>
+                    <label className="block text-sm font-medium text-ink mb-1">Password</label>
                     <input
                       type="password"
                       value={password}
                       onChange={e => setPassword(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && handleLogin()}
                       placeholder="••••••••"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                      className="w-full px-3 py-2 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                     />
                   </div>
                   <button
                     onClick={handleLogin}
                     disabled={loading}
-                    className="w-full bg-indigo-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                    className="w-full bg-ink text-cream py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-colors disabled:opacity-50"
                   >
                     {loading ? 'Signing in…' : 'Sign in'}
                   </button>
@@ -235,7 +235,7 @@ export default function Login() {
                 <div className="mt-4 text-center">
                   <button
                     onClick={() => setView('forgotPassword')}
-                    className="text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+                    className="text-sm text-ink-faint hover:text-ink-soft dark:hover:text-ink-faint"
                   >
                     Forgot password?
                   </button>
@@ -247,47 +247,47 @@ export default function Login() {
             {tab === 'signup' && (
               <div>
                 {signupError && (
-                  <div className="bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-sm px-4 py-3 rounded-lg mb-4">
+                  <div className="bg-negative-tint text-negative dark:text-negative text-sm px-4 py-3 rounded-lg mb-4">
                     {signupError}
                   </div>
                 )}
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Email</label>
+                    <label className="block text-sm font-medium text-ink mb-1">Email</label>
                     <input
                       type="email"
                       value={signupEmail}
                       onChange={e => setSignupEmail(e.target.value)}
                       placeholder="you@example.com"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                      className="w-full px-3 py-2 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Password</label>
+                    <label className="block text-sm font-medium text-ink mb-1">Password</label>
                     <input
                       type="password"
                       value={signupPassword}
                       onChange={e => setSignupPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                      className="w-full px-3 py-2 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Confirm password</label>
+                    <label className="block text-sm font-medium text-ink mb-1">Confirm password</label>
                     <input
                       type="password"
                       value={signupConfirm}
                       onChange={e => setSignupConfirm(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && handleSignup()}
                       placeholder="••••••••"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                      className="w-full px-3 py-2 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
                     />
                   </div>
                   <button
                     onClick={handleSignup}
                     disabled={signupLoading}
-                    className="w-full bg-indigo-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                    className="w-full bg-ink text-cream py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-colors disabled:opacity-50"
                   >
                     {signupLoading ? 'Creating account…' : 'Create account'}
                   </button>

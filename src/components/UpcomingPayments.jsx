@@ -30,14 +30,14 @@ export default function UpcomingPayments({ rules, transactions = [] }) {
     <div>
       {/* Header with view toggle */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Payments overview</h2>
-        <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+        <h2 className="text-sm font-medium text-ink">Payments overview</h2>
+        <div className="flex gap-1 bg-track rounded-lg p-1">
           <button
             onClick={() => setView('table')}
             className={`p-1.5 rounded-md transition-colors ${
               view === 'table'
-                ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600'
-                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
+                ? 'bg-card shadow-sm text-ink'
+                : 'text-ink-faint hover:text-ink-soft dark:hover:text-ink'
             }`}
           >
             <Table size={14} />
@@ -46,8 +46,8 @@ export default function UpcomingPayments({ rules, transactions = [] }) {
             onClick={() => setView('calendar')}
             className={`p-1.5 rounded-md transition-colors ${
               view === 'calendar'
-                ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600'
-                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
+                ? 'bg-card shadow-sm text-ink'
+                : 'text-ink-faint hover:text-ink-soft dark:hover:text-ink'
             }`}
           >
             <Calendar size={14} />
@@ -60,15 +60,15 @@ export default function UpcomingPayments({ rules, transactions = [] }) {
         <div>
           {/* Timeframe toggle */}
           <div className="flex items-center justify-end mb-2">
-            <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+            <div className="flex gap-1 bg-track rounded-lg p-1">
               {[['week', 'This week'], ['month', 'This month']].map(([id, label]) => (
                 <button
                   key={id}
                   onClick={() => setTimeframe(id)}
                   className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
                     timeframe === id
-                      ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                      ? 'bg-card shadow-sm text-ink'
+                      : 'text-ink-muted hover:text-ink dark:hover:text-ink'
                   }`}
                 >
                   {label}
@@ -78,29 +78,29 @@ export default function UpcomingPayments({ rules, transactions = [] }) {
           </div>
 
           {tableEvents.length === 0 ? (
-            <p className="text-xs text-gray-400 dark:text-gray-500">
+            <p className="text-xs text-ink-faint">
               No upcoming payments {timeframe === 'week' ? 'this week' : 'this month'}.
             </p>
           ) : (
-            <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="rounded-[14px] border border-card-border overflow-hidden">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                <thead className="bg-track text-xs text-ink-muted uppercase tracking-wide">
                   <tr>
                     <th className="px-4 py-2 text-left">Payment</th>
                     <th className="px-4 py-2 text-left">Date</th>
                     <th className="px-4 py-2 text-right">Amount</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                <tbody className="divide-y divide-inner-border">
                   {tableEvents.map((item, i) => (
-                    <tr key={i} className="bg-white dark:bg-gray-900">
-                      <td className="px-4 py-2.5 font-medium text-gray-800 dark:text-gray-100">
+                    <tr key={i} className="bg-card">
+                      <td className="px-4 py-2.5 font-medium text-ink">
                         {item.rule.name}
                       </td>
-                      <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400">
+                      <td className="px-4 py-2.5 text-ink-muted">
                         {format(item.date, 'd MMM yyyy')}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-semibold text-gray-700 dark:text-gray-200">
+                      <td className="px-4 py-2.5 text-right font-medium text-ink">
                         {formatMoney(Number(item.rule.amount))}
                       </td>
                     </tr>
@@ -173,23 +173,23 @@ function CalendarView({ rules, transactions, today }) {
       <div className="flex items-center justify-between mb-3">
         <button
           onClick={() => setOffset(o => o - 1)}
-          className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
+          className="text-xs text-ink-muted hover:text-ink dark:hover:text-ink px-2 py-1 rounded hover:bg-track"
         >
           ← Prev
         </button>
-        <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+        <span className="text-sm font-medium text-ink">
           {format(viewDate, 'MMMM yyyy')}
         </span>
         <button
           onClick={() => setOffset(o => o + 1)}
-          className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
+          className="text-xs text-ink-muted hover:text-ink dark:hover:text-ink px-2 py-1 rounded hover:bg-track"
         >
           Next →
         </button>
       </div>
 
       {/* Day headers */}
-      <div className="grid grid-cols-7 text-center text-xs text-gray-400 dark:text-gray-500 mb-1">
+      <div className="grid grid-cols-7 text-center text-xs text-ink-faint mb-1">
         {['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map(d => (
           <div key={d} className="py-1">{d}</div>
         ))}
@@ -212,12 +212,12 @@ function CalendarView({ rules, transactions, today }) {
               key={i}
               className={`min-h-16 p-1 rounded-lg border text-xs ${
                 isToday
-                  ? 'border-indigo-300 bg-indigo-50'
-                  : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900'
+                  ? 'border-ink-faint bg-accent/10'
+                  : 'border-inner-border bg-card'
               }`}
             >
               <p className={`text-center font-medium mb-1 ${
-                isToday ? 'text-indigo-600' : 'text-gray-600 dark:text-gray-300'
+                isToday ? 'text-ink' : 'text-ink-soft'
               }`}>
                 {day}
               </p>
@@ -226,10 +226,10 @@ function CalendarView({ rules, transactions, today }) {
                   key={j}
                   className={`flex items-center gap-0.5 text-xs rounded px-1 py-0.5 mb-0.5 ${
                     item.isFuture
-                      ? 'bg-stone-100 text-gray-600'
+                      ? 'bg-track text-ink-soft'
                       : item.confirmed
-                        ? 'bg-[#EAF3DE] text-[#3B6D11]'
-                        : 'bg-[#FCEBEB] text-[#A32D2D]'
+                        ? 'bg-positive-tint text-positive'
+                        : 'bg-negative-tint text-negative'
                   }`}
                   title={`${item.rule.name} — ${formatMoney(Number(item.rule.amount))}`}
                 >

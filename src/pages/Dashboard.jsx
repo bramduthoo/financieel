@@ -11,6 +11,7 @@ import {
   calculateMonthMetrics, calculateMonthlyAverage, getHistoricalSeries, getYearlySeries,
 } from '../lib/dashboardCalcs'
 import { formatMoney } from '../lib/format'
+import { WalletIcon } from '../lib/walletIcons'
 import IncomeSpendingChart from '../components/IncomeSpendingChart'
 import CashTrendChart from '../components/CashTrendChart'
 import ProjectedBalanceChart from '../components/ProjectedBalanceChart'
@@ -332,7 +333,7 @@ export default function Dashboard() {
                 return (
                   <div key={w.id}>
                     <div className="flex items-center gap-2 text-sm mb-1">
-                      <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: w.colour }} />
+                      <WalletIcon wallet={w} size={14} className="text-ink-soft flex-shrink-0" />
                       <span className="text-ink font-medium">{w.name}</span>
                     </div>
                     <div className="h-1.5 bg-track rounded-full overflow-hidden mb-1">

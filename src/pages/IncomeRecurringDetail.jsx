@@ -8,6 +8,7 @@ import DistributionPopup from '../components/DistributionPopup'
 import { distributeIncome } from '../lib/distributeIncome'
 import { evaluateUnallocatedPlans } from '../lib/unallocatedPlans'
 import { formatMoney } from '../lib/format'
+import { WalletIcon } from '../lib/walletIcons'
 
 const FREQ_OPTIONS = [
   { value: 'weekly',    label: 'Weekly' },
@@ -22,7 +23,7 @@ function fmtK(n) {
   return `€${Math.round(n)}`
 }
 
-const inputClass = 'w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent'
+const inputClass = 'w-full px-3 py-2 border border-card-border rounded-[8px] text-sm bg-field text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-accent/30'
 
 function fmt(n) { return formatMoney(n) }
 function todayStr() { return format(new Date(), 'yyyy-MM-dd') }
@@ -64,24 +65,23 @@ function SalaryBarChart({ chain }) {
     <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} width="100%">
       {chain.map((r, i) => {
         const isActive = !r.end_date
-        const fill     = isActive ? '#444441' : '#C0DD97'
         const x        = bX(i)
         const h        = bH(r.amount)
         const y        = bY(r.amount)
         return (
           <g key={r.id}>
-            <rect x={x} y={y} width={barW} height={h} fill={fill} rx={3} />
+            <rect x={x} y={y} width={barW} height={h} className={isActive ? 'fill-ink' : 'fill-positive-bar'} rx={3} />
             <text
               x={x + barW / 2} y={y - 6}
               textAnchor="middle" fontSize={10}
-              fill={isActive ? '#444441' : '#97C459'}
-              fontWeight={isActive ? '600' : '400'}
+              className={isActive ? 'fill-ink' : 'fill-positive'}
+              fontWeight={isActive ? '500' : '400'}
             >
               {fmtK(r.amount)}
             </text>
             <text
               x={x + barW / 2} y={MT + CH + 18}
-              textAnchor="middle" fontSize={9} fill="#9ca3af"
+              textAnchor="middle" fontSize={9} className="fill-ink-faint"
             >
               {format(parseISO(r.start_date), 'MMM yy')}
             </text>
@@ -235,8 +235,8 @@ export default function IncomeRecurringDetail() {
     })
   }
 
-  if (loading) return <p className="text-gray-400 p-8">Loading…</p>
-  if (!rule)   return <p className="text-gray-400 p-8">Not found.</p>
+  if (loading) return <p className="text-ink-faint p-8">Loading…</p>
+  if (!rule)   return <p className="text-ink-faint p-8">Not found.</p>
 
   const showDay = rule.frequency === 'weekly' || rule.frequency === 'monthly'
 
@@ -246,41 +246,41 @@ export default function IncomeRecurringDetail() {
       <div className="flex items-center gap-4 mb-6">
         <button
           onClick={() => navigate('/income')}
-          className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+          className="p-2 text-ink-faint hover:text-ink-soft dark:hover:text-ink hover:bg-track rounded-lg transition-colors"
         >
           <ArrowLeft size={18} />
         </button>
         <div className="flex-1 min-w-0">
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 truncate">{rule.name}</h1>
-          <p className="text-gray-400 dark:text-gray-500 text-sm capitalize mt-0.5">
+          <h1 className="text-2xl font-medium text-ink truncate">{rule.name}</h1>
+          <p className="text-ink-faint text-sm capitalize mt-0.5">
             {rule.frequency}{showDay && rule.day_of_month ? ` · day ${rule.day_of_month}` : ''}
           </p>
         </div>
         <button
           onClick={openEdit}
-          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+          className="flex items-center gap-2 px-3 py-2 text-sm text-ink-soft hover:bg-track rounded-lg transition-colors"
         >
           <Edit2 size={15} /> Edit
         </button>
       </div>
 
       {/* Current amount */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5 mb-6">
-        <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">Current amount</p>
-        <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">{fmt(rule.amount)}</p>
-        <p className="text-sm text-gray-400 dark:text-gray-500 mt-1 capitalize">
+      <div className="bg-card rounded-[14px] border border-card-border p-5 mb-6">
+        <p className="text-xs text-ink-faint mb-1">Current amount</p>
+        <p className="text-3xl font-medium text-ink dark:text-ink">{fmt(rule.amount)}</p>
+        <p className="text-sm text-ink-faint mt-1 capitalize">
           {rule.frequency} · since {format(parseISO(rule.start_date), 'd MMM yyyy')}
         </p>
       </div>
 
       {/* Salary growth chart */}
       {chain.length > 0 && (
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5 mb-6">
+        <div className="bg-card rounded-[14px] border border-card-border p-5 mb-6">
           <div className="flex items-center justify-between mb-1">
-            <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Salary growth</h2>
-            <div className="flex items-center gap-4 text-xs text-gray-400 dark:text-gray-500">
+            <h2 className="text-sm font-medium text-ink">Salary growth</h2>
+            <div className="flex items-center gap-4 text-xs text-ink-faint">
               <span className="flex items-center gap-1.5">
-                <span className="inline-block w-3 h-3 rounded-sm bg-[#C0DD97]" /> Archived
+                <span className="inline-block w-3 h-3 rounded-sm bg-positive-bar" /> Archived
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="inline-block w-3 h-3 rounded-sm bg-[#444441]" /> Current
@@ -293,30 +293,30 @@ export default function IncomeRecurringDetail() {
 
       {/* Version history table */}
       {chain.length > 1 && (
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
+        <div className="bg-card rounded-[14px] border border-card-border overflow-hidden mb-6">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+            <thead className="bg-track border-b border-card-border">
               <tr>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Period</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Frequency</th>
-                <th className="px-4 py-2.5 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Amount</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Status</th>
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-ink-muted uppercase tracking-wide">Period</th>
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-ink-muted uppercase tracking-wide">Frequency</th>
+                <th className="px-4 py-2.5 text-right text-xs font-medium text-ink-muted uppercase tracking-wide">Amount</th>
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-ink-muted uppercase tracking-wide">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            <tbody className="divide-y divide-inner-border">
               {chain.map(r => (
-                <tr key={r.id} className={r.id === rule.id ? 'bg-indigo-50/40 dark:bg-indigo-900/20' : ''}>
-                  <td className="px-4 py-2.5 text-gray-600 dark:text-gray-300 whitespace-nowrap text-xs">
+                <tr key={r.id} className={r.id === rule.id ? 'bg-accent/5' : ''}>
+                  <td className="px-4 py-2.5 text-ink-soft whitespace-nowrap text-xs">
                     {format(parseISO(r.start_date), 'd MMM yyyy')}
                     {r.end_date ? ` – ${format(parseISO(r.end_date), 'd MMM yyyy')}` : ' – present'}
                   </td>
-                  <td className="px-4 py-2.5 text-gray-600 dark:text-gray-300 capitalize text-xs">{r.frequency}</td>
-                  <td className="px-4 py-2.5 text-right font-semibold text-gray-800 dark:text-gray-100">{fmt(r.amount)}</td>
+                  <td className="px-4 py-2.5 text-ink-soft capitalize text-xs">{r.frequency}</td>
+                  <td className="px-4 py-2.5 text-right font-medium text-ink">{fmt(r.amount)}</td>
                   <td className="px-4 py-2.5">
                     {r.end_date ? (
-                      <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-400">Archived</span>
+                      <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-track text-ink-faint dark:text-ink-faint">Archived</span>
                     ) : (
-                      <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 font-medium">Active</span>
+                      <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-accent/10 text-accent font-medium">Active</span>
                     )}
                   </td>
                 </tr>
@@ -327,24 +327,24 @@ export default function IncomeRecurringDetail() {
       )}
 
       {/* Distribution setup */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5 mb-6">
+      <div className="bg-card rounded-[14px] border border-card-border p-5 mb-6">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Distribution setup</h2>
+          <h2 className="text-sm font-medium text-ink">Distribution setup</h2>
           {distributionRules.length > 0 && (
             <button
               onClick={() => setDistPopupOpen(true)}
-              className="bg-gray-900 text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-gray-800 transition-colors"
+              className="bg-ink text-cream text-xs font-medium px-3 py-1.5 rounded-lg hover:opacity-90 transition-colors"
             >
               Edit distribution
             </button>
           )}
         </div>
         {distributionRules.length === 0 ? (
-          <div className="text-center py-4 text-gray-400">
+          <div className="text-center py-4 text-ink-faint">
             <p className="text-sm mb-3">No distribution set up</p>
             <button
               onClick={() => setDistPopupOpen(true)}
-              className="bg-gray-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+              className="bg-ink text-cream text-sm font-medium px-4 py-2 rounded-lg hover:opacity-90 transition-colors"
             >
               Set up distribution
             </button>
@@ -356,12 +356,10 @@ export default function IncomeRecurringDetail() {
               return (
                 <div key={dr.id} className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
-                    {wallet && (
-                      <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: wallet.colour }} />
-                    )}
-                    <span className="text-gray-700">{wallet?.name ?? '—'}</span>
+                    {wallet && <WalletIcon wallet={wallet} size={14} className="text-ink-soft flex-shrink-0" />}
+                    <span className="text-ink">{wallet?.name ?? '—'}</span>
                   </div>
-                  <span className="font-medium text-gray-900">
+                  <span className="font-medium text-ink">
                     {dr.mode === 'percent'
                       ? `${Number(dr.value)}% · ${formatMoney(Number(dr.amount))}`
                       : formatMoney(Number(dr.amount))}
@@ -377,29 +375,29 @@ export default function IncomeRecurringDetail() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => setLogModal({ amount: String(rule.amount), date: todayStr() })}
-          className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+          className="flex items-center gap-2 bg-ink text-cream px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-colors"
         >
           Log income
         </button>
         {distSuccess && (
-          <span className="text-sm text-[#3B6D11] font-medium">Income distributed.</span>
+          <span className="text-sm text-positive font-medium">Income distributed.</span>
         )}
       </div>
 
       {/* Log modal */}
       {logModal && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+          <div className="bg-card rounded-[14px] shadow-xl w-full max-w-sm p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-medium text-gray-900">Log income</h2>
-              <button onClick={() => setLogModal(null)} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg">
+              <h2 className="text-lg font-medium text-ink">Log income</h2>
+              <button onClick={() => setLogModal(null)} className="p-1.5 text-ink-faint hover:text-ink-soft rounded-lg">
                 <X size={16} />
               </button>
             </div>
-            <p className="text-sm text-gray-500 mb-4">Source: <span className="font-medium text-gray-700">{rule.name}</span></p>
+            <p className="text-sm text-ink-muted mb-4">Source: <span className="font-medium text-ink">{rule.name}</span></p>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Amount (€)</label>
+                <label className="block text-xs font-medium text-ink-soft mb-1">Amount (€)</label>
                 <input
                   type="number" value={logModal.amount}
                   onChange={e => setLogModal(m => ({ ...m, amount: e.target.value }))}
@@ -407,7 +405,7 @@ export default function IncomeRecurringDetail() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
+                <label className="block text-xs font-medium text-ink-soft mb-1">Date</label>
                 <input
                   type="date" value={logModal.date}
                   onChange={e => setLogModal(m => ({ ...m, date: e.target.value }))}
@@ -416,8 +414,8 @@ export default function IncomeRecurringDetail() {
               </div>
             </div>
             <div className="flex gap-3 mt-5">
-              <button onClick={() => setLogModal(null)} className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50">Cancel</button>
-              <button onClick={submitLog} className="flex-1 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800">Continue</button>
+              <button onClick={() => setLogModal(null)} className="flex-1 py-2 rounded-lg border border-card-border text-sm text-ink-soft hover:bg-track">Cancel</button>
+              <button onClick={submitLog} className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:opacity-90">Continue</button>
             </div>
           </div>
         </div>
@@ -426,17 +424,17 @@ export default function IncomeRecurringDetail() {
       {/* Edit modal */}
       {editModal && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+          <div className="bg-card rounded-[14px] shadow-xl w-full max-w-sm p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-medium text-gray-900">Edit recurring income</h2>
-              <button onClick={() => setEditModal(null)} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg">
+              <h2 className="text-lg font-medium text-ink">Edit recurring income</h2>
+              <button onClick={() => setEditModal(null)} className="p-1.5 text-ink-faint hover:text-ink-soft rounded-lg">
                 <X size={16} />
               </button>
             </div>
-            {editError && <p className="text-[#A32D2D] text-sm mb-3">{editError}</p>}
+            {editError && <p className="text-negative text-sm mb-3">{editError}</p>}
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Name</label>
+                <label className="block text-xs font-medium text-ink-soft mb-1">Name</label>
                 <input
                   value={editModal.name}
                   onChange={e => setEditModal(f => ({ ...f, name: e.target.value }))}
@@ -444,7 +442,7 @@ export default function IncomeRecurringDetail() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Amount (€)</label>
+                <label className="block text-xs font-medium text-ink-soft mb-1">Amount (€)</label>
                 <input
                   type="number" value={editModal.amount}
                   onChange={e => setEditModal(f => ({ ...f, amount: e.target.value }))}
@@ -455,7 +453,7 @@ export default function IncomeRecurringDetail() {
                 )}
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Frequency</label>
+                <label className="block text-xs font-medium text-ink-soft mb-1">Frequency</label>
                 <select
                   value={editModal.frequency}
                   onChange={e => setEditModal(f => ({ ...f, frequency: e.target.value }))}
@@ -466,7 +464,7 @@ export default function IncomeRecurringDetail() {
               </div>
               {(editModal.frequency === 'weekly' || editModal.frequency === 'monthly') && (
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">{dayLabel(editModal.frequency)}</label>
+                  <label className="block text-xs font-medium text-ink-soft mb-1">{dayLabel(editModal.frequency)}</label>
                   <input
                     type="number" value={editModal.day_of_month}
                     onChange={e => setEditModal(f => ({ ...f, day_of_month: e.target.value }))}
@@ -477,8 +475,8 @@ export default function IncomeRecurringDetail() {
               )}
             </div>
             <div className="flex gap-3 mt-5">
-              <button onClick={() => setEditModal(null)} className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50">Cancel</button>
-              <button onClick={submitEdit} className="flex-1 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800">Save changes</button>
+              <button onClick={() => setEditModal(null)} className="flex-1 py-2 rounded-lg border border-card-border text-sm text-ink-soft hover:bg-track">Cancel</button>
+              <button onClick={submitEdit} className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:opacity-90">Save changes</button>
             </div>
           </div>
         </div>

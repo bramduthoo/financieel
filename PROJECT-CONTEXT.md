@@ -420,12 +420,20 @@ screenshots Dashboard/Wallets/Settings light+dark + an in-browser scroll proof.
   wanted.
 
 **Then — new feature list (agreed direction):**
-3. **Full layout redesign** — **R1 (foundation) DONE** (PR #7): tokens, `formatMoney`, Layout+Dashboard
-   +Settings reskin, charts, scroll-shell fix. **R2 = IMMEDIATE NEXT:** roll the reskin across the
-   remaining pages (Wallets, WalletDetail, Income, IncomeRecurringDetail, Login/ResetPassword) using the
-   DESIGN-SPEC + the now-live tokens; purge the remaining `indigo` on those pages; and update CLAUDE.md's
-   "Design system" section (still lists the old `bg-stone-50`/`rounded-2xl` tokens). Run `design-check`
-   (now with the purple grep) per page.
+3. **Full layout redesign — DONE** (R1 PR #7 + R2 PR #8). R1 = foundation (tokens, `formatMoney`,
+   Layout+Dashboard+Settings, charts, scroll shell). **R2 = full rollout** (branch `b/redesign-rollout`):
+   every remaining page/component reskinned to the blend tokens, both themes, zero logic changes —
+   Wallets, WalletDetail (incl. Unallocated branch), Income (+ inline modals), IncomeRecurringDetail,
+   Login/ResetPassword, and all shared modals (DistributionPopup restyled, TWO total bars kept;
+   WalletModal redesigned; IncomeConfirmModal; UnallocatedConflictBanner; WalletCard icon-tile redesign).
+   **Wallet identity is now the ICON, not colour:** `src/lib/walletIcons.js` registry + `<WalletIcon>`;
+   icon picker in WalletModal persists `wallets.icon` (column already existed — no migration); colour
+   picker removed, all colour dots replaced by icons. Verified: `npm test` 67 green, build clean,
+   design-check clean (0 indigo), code-reviewer, both-theme screenshot sweep in
+   `docs/redesign-screenshots/`. Tokenization used deterministic find/replace scripts + per-file fixes.
+   **Small follow-up now unblocked:** privacy mode = a toggle inside `formatMoney` (all euro display
+   already routes through it). **Loose end:** delete a stray `Test salary` €1000 income entry on the
+   test account (created while screenshotting DistributionPopup; income row exists with no distribution).
 4. **New dashboard** (content redesign — explicitly separate from the reskin).
 5. **PDF transaction import.**
 
@@ -552,6 +560,21 @@ Deferred / smaller:
   `indigo-*` (Tailwind default accent). The redesign's only accent is coral (`accent-solid`, fixed both
   themes so a white knob stays visible on toggles). `indigo|purple|violet` is now an explicit
   `design-check` grep. Un-reskinned pages still carry indigo — that's later-rollout scope, not a bug.
+- **The design system is now `DESIGN-SPEC.md` + the `src/index.css` tokens, applied everywhere** (R2):
+  the whole app is one system; CLAUDE.md's old token prose (`bg-stone-50`, `rounded-2xl`) is retired.
+  New UI uses the token utilities and passes `design-check`.
+- **Wallet identity is the ICON, not the colour** (R2): the owner disliked the colour picker; wallets
+  are now told apart by a chosen lucide icon (`wallets.icon`, a column that already existed unused).
+  `src/lib/walletIcons.js` is the single registry + a stable `<WalletIcon>` component (never assign a
+  component to a local during render — that trips react-hooks and risks remounts). `colour` is still
+  stored (defaulted) for legacy rows but no longer drives any visualization.
+- **Large mechanical reskins go via reviewed find/replace scripts, then per-file fixes** (R2): tokenizing
+  ~20 files by hand is error-prone and context-expensive. The safe recipe: deterministic exact-pair
+  className swaps (gray/stone/indigo/white→tokens, font-bold/semibold→font-medium since the design has
+  only weights 400/500, rounded-xl/2xl→`rounded-[14px]`, strip now-redundant `dark:` variants because the
+  base tokens auto-theme), then hand-fix the bespoke bits (tab bars, page backgrounds, inline-SVG chart
+  colours, badges). Gate with `npm run build` (catches broken JSX/undefined refs), `design-check` greps,
+  and a both-theme screenshot sweep — a green build alone doesn't prove the pixels.
 
 ---
 

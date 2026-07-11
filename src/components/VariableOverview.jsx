@@ -83,7 +83,7 @@ export default function VariableOverview({ walletId, onBalanceChanged }) {
       {!showingForm ? (
         <button
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+          className="flex items-center gap-2 bg-ink text-cream px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-colors"
         >
           <Plus size={15} /> Add transaction
         </button>
@@ -99,16 +99,16 @@ export default function VariableOverview({ walletId, onBalanceChanged }) {
       {/* Transaction overview */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-medium text-gray-900">Transactions</h2>
-          <div className="flex gap-1 bg-stone-100 rounded-lg p-1">
+          <h2 className="text-sm font-medium text-ink">Transactions</h2>
+          <div className="flex gap-1 bg-track rounded-lg p-1">
             {[['week', 'This week'], ['month', 'This month']].map(([id, label]) => (
               <button
                 key={id}
                 onClick={() => setTimeframe(id)}
                 className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
                   timeframe === id
-                    ? 'bg-white shadow-sm text-gray-900'
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'bg-card shadow-sm text-ink'
+                    : 'text-ink-muted hover:text-ink'
                 }`}
               >
                 {label}
@@ -118,15 +118,15 @@ export default function VariableOverview({ walletId, onBalanceChanged }) {
         </div>
 
         {loading ? (
-          <p className="text-sm text-gray-400">Loading…</p>
+          <p className="text-sm text-ink-faint">Loading…</p>
         ) : transactions.length === 0 ? (
-          <div className="text-center py-10 text-gray-400 border border-dashed border-stone-200 rounded-xl">
+          <div className="text-center py-10 text-ink-faint border border-dashed border-card-border rounded-[14px]">
             <p className="text-sm">No transactions {timeframe === 'week' ? 'this week' : 'this month'}</p>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
+          <div className="bg-card rounded-[14px] border border-card-border overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-stone-50 text-xs text-gray-500 uppercase tracking-wide border-b border-stone-200">
+              <thead className="bg-track text-xs text-ink-muted uppercase tracking-wide border-b border-card-border">
                 <tr>
                   <th className="px-4 py-2.5 text-left">Name</th>
                   <th className="px-4 py-2.5 text-left">Date</th>
@@ -138,24 +138,24 @@ export default function VariableOverview({ walletId, onBalanceChanged }) {
                   <tr
                     key={t.id}
                     onClick={() => setDetail(t)}
-                    className="hover:bg-stone-50 cursor-pointer"
+                    className="hover:bg-track cursor-pointer"
                   >
-                    <td className="px-4 py-2.5 font-medium text-gray-900">{t.note ?? '—'}</td>
-                    <td className="px-4 py-2.5 text-gray-500 whitespace-nowrap">
+                    <td className="px-4 py-2.5 font-medium text-ink">{t.note ?? '—'}</td>
+                    <td className="px-4 py-2.5 text-ink-muted whitespace-nowrap">
                       {format(parseISO(t.date), 'd MMM yyyy')}
                     </td>
-                    <td className="px-4 py-2.5 text-right font-medium text-[#A32D2D]">
+                    <td className="px-4 py-2.5 text-right font-medium text-negative">
                       {formatMoney(-Number(t.amount))}
                     </td>
                   </tr>
                 ))}
               </tbody>
-              <tfoot className="bg-stone-50 border-t border-stone-200 text-xs">
+              <tfoot className="bg-track border-t border-card-border text-xs">
                 <tr>
-                  <td colSpan={2} className="px-4 py-2 text-gray-500">
+                  <td colSpan={2} className="px-4 py-2 text-ink-muted">
                     {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
                   </td>
-                  <td className="px-4 py-2 text-right font-medium text-[#A32D2D]">
+                  <td className="px-4 py-2 text-right font-medium text-negative">
                     {formatMoney(-total)}
                   </td>
                 </tr>
@@ -168,49 +168,49 @@ export default function VariableOverview({ walletId, onBalanceChanged }) {
       {/* ── Detail modal ──────────────────────────────────────────────────────── */}
       {detail && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+          <div className="bg-card rounded-[14px] shadow-xl w-full max-w-sm p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-medium text-gray-900">Transaction detail</h2>
-              <button onClick={() => setDetail(null)} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg">
+              <h2 className="text-lg font-medium text-ink">Transaction detail</h2>
+              <button onClick={() => setDetail(null)} className="p-1.5 text-ink-faint hover:text-ink-soft rounded-lg">
                 <X size={16} />
               </button>
             </div>
             <div className="space-y-2.5 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-500">Name</span>
-                <span className="font-medium text-gray-900">{detail.note ?? '—'}</span>
+                <span className="text-ink-muted">Name</span>
+                <span className="font-medium text-ink">{detail.note ?? '—'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">Amount</span>
-                <span className="font-medium text-[#A32D2D]">{formatMoney(-Number(detail.amount))}</span>
+                <span className="text-ink-muted">Amount</span>
+                <span className="font-medium text-negative">{formatMoney(-Number(detail.amount))}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">Date</span>
-                <span className="text-gray-700">{format(parseISO(detail.date), 'd MMM yyyy')}</span>
+                <span className="text-ink-muted">Date</span>
+                <span className="text-ink">{format(parseISO(detail.date), 'd MMM yyyy')}</span>
               </div>
               {detail.remark && (
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Note</span>
-                  <span className="text-gray-700 text-right max-w-[60%]">{detail.remark}</span>
+                  <span className="text-ink-muted">Note</span>
+                  <span className="text-ink text-right max-w-[60%]">{detail.remark}</span>
                 </div>
               )}
             </div>
             <div className="flex gap-2 mt-6">
               <button
                 onClick={() => { setDeleteTarget(detail); setDetail(null) }}
-                className="px-3 py-2 rounded-lg border border-[#F7C1C1] text-sm text-[#A32D2D] hover:bg-[#FCEBEB] transition-colors"
+                className="px-3 py-2 rounded-lg border border-negative-bar/25 text-sm text-negative hover:bg-negative-tint transition-colors"
               >
                 Delete
               </button>
               <button
                 onClick={() => setDetail(null)}
-                className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50"
+                className="flex-1 py-2 rounded-lg border border-card-border text-sm text-ink-soft hover:bg-track"
               >
                 Close
               </button>
               <button
                 onClick={() => handleEdit(detail)}
-                className="flex-1 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800"
+                className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:opacity-90"
               >
                 Edit
               </button>
@@ -222,11 +222,11 @@ export default function VariableOverview({ walletId, onBalanceChanged }) {
       {/* ── Delete confirmation ───────────────────────────────────────────────── */}
       {deleteTarget && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[60] p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-2">Delete transaction?</h2>
-            <p className="text-gray-500 text-sm mb-6">
+          <div className="bg-card rounded-[14px] shadow-xl w-full max-w-sm p-6">
+            <h2 className="text-lg font-medium text-ink mb-2">Delete transaction?</h2>
+            <p className="text-ink-muted text-sm mb-6">
               Remove{' '}
-              <span className="font-medium text-gray-700">
+              <span className="font-medium text-ink">
                 {deleteTarget.note ?? '—'} · {formatMoney(-Number(deleteTarget.amount))}
               </span>{' '}
               from {format(parseISO(deleteTarget.date), 'd MMM yyyy')}? The wallet balance will be corrected.
@@ -234,14 +234,14 @@ export default function VariableOverview({ walletId, onBalanceChanged }) {
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteTarget(null)}
-                className="flex-1 py-2 rounded-lg border border-stone-300 text-sm text-gray-600 hover:bg-stone-50"
+                className="flex-1 py-2 rounded-lg border border-card-border text-sm text-ink-soft hover:bg-track"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
                 disabled={deleting}
-                className="flex-1 py-2 rounded-lg bg-[#A32D2D] text-white text-sm font-medium hover:bg-[#8a2626] disabled:opacity-50"
+                className="flex-1 py-2 rounded-lg bg-negative-bar text-white text-sm font-medium hover:opacity-90 disabled:opacity-50"
               >
                 {deleting ? 'Deleting…' : 'Delete'}
               </button>

@@ -57,8 +57,9 @@ remove it).
 ## Design system (locked — do not deviate without explicit approval)
 
 Live system is **"the blend"** — authority is `DESIGN-SPEC.md`; tokens are defined in `src/index.css`
-(`@theme` + `.dark` overrides). **Reskin rollout in progress:** Layout, Dashboard, Settings are done
-(R1); other pages are still old-style pending R2. Prefer the token utilities over raw hex.
+(`@theme` + `.dark` overrides). **Reskin rollout is complete** (R1 + R2): the whole app uses the tokens.
+Prefer the token utilities over raw hex; wallets are identified by their icon (`src/lib/walletIcons.js`
+`<WalletIcon>`), not colour.
 
 - Page bg `bg-cream`; cards `bg-card border border-card-border rounded-[14px]` (dark: fill-separated)
 - Numbers `font-medium tracking-tight` — **never bold/semibold**

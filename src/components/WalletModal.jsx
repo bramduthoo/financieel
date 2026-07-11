@@ -1,12 +1,10 @@
-﻿import { useState, useEffect } from 'react'
-import { X } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { X, Minus, Plus } from 'lucide-react'
+import { WALLET_ICONS, ICON_CHOICES, defaultIconForType } from '../lib/walletIcons'
 
-const COLOURS = [
-  '#6366f1', '#8b5cf6', '#ec4899', '#ef4444',
-  '#f97316', '#eab308', '#22c55e', '#14b8a6', '#3b82f6'
-]
-
-const ICONS = ['wallet', 'home', 'zap', 'droplets', 'car', 'plane', 'shirt', 'heart', 'trending-up']
+// Wallets keep a stored `colour` (defaulted) for legacy data, but the UI now
+// identifies wallets by their chosen icon, not colour.
+const DEFAULT_COLOUR = '#639922'
 
 const BUDGET_TYPES = {
   fixed:      [{ value: 'fixed-recurring', label: 'Fixed recurring',  desc: 'Same amount out every month (e.g. rent)'         }],
@@ -15,17 +13,20 @@ const BUDGET_TYPES = {
   investment: [{ value: 'none',            label: 'No budget',        desc: 'Tracks value over time, no monthly budget'       }],
 }
 
-const inputClass = 'w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent'
+const inputClass =
+  'w-full px-3 py-2 bg-field border border-card-border rounded-[8px] text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-accent/30'
 
 export default function WalletModal({ wallet, onClose, onSave }) {
   const [name,       setName]       = useState(wallet?.name        ?? '')
   const [type,       setType]       = useState(wallet?.type        ?? 'fixed')
   const [budgetType, setBudgetType] = useState(wallet?.budget_type ?? 'fixed-recurring')
   const [budget,     setBudget]     = useState(wallet?.budget      ?? '')
-  const [colour,     setColour]     = useState(wallet?.colour      ?? COLOURS[0])
   const [sortOrder,  setSortOrder]  = useState(wallet?.sort_order  ?? 0)
   const [saving,     setSaving]     = useState(false)
   const [error,      setError]      = useState(null)
+
+  const colour = wallet?.colour ?? DEFAULT_COLOUR
+  const [icon, setIcon] = useState(wallet?.icon || defaultIconForType(wallet?.type ?? 'fixed'))
 
   const [capReductionEnabled, setCapReductionEnabled] = useState(wallet?.cap_reduction_enabled ?? false)
   const [capReductionRate,    setCapReductionRate]    = useState(
@@ -44,7 +45,7 @@ export default function WalletModal({ wallet, onClose, onSave }) {
     if (!name.trim()) { setError('Please enter a wallet name.'); return }
     setSaving(true)
     setError(null)
-    const payload = { name: name.trim(), type, budget_type: budgetType, budget: Number(budget) || 0, colour, sort_order: Number(sortOrder) || 0 }
+    const payload = { name: name.trim(), type, budget_type: budgetType, budget: Number(budget) || 0, colour, icon, sort_order: Number(sortOrder) || 0 }
     if (type === 'variable' && budgetType === 'capped') {
       payload.cap_reduction_enabled = capReductionEnabled
       payload.cap_reduction_rate    = capReductionEnabled ? Number(capReductionRate) / 100 : 1.0
@@ -53,43 +54,45 @@ export default function WalletModal({ wallet, onClose, onSave }) {
     setSaving(false)
   }
 
-  return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md p-6 relative">
+  const order = Number(sortOrder) || 0
 
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
-          <X size={20} />
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div className="bg-card border border-card-border rounded-[14px] shadow-xl w-full max-w-sm p-5 relative max-h-[90vh] overflow-y-auto">
+
+        <button onClick={onClose} className="absolute top-4 right-4 text-ink-faint hover:text-ink transition-colors">
+          <X size={18} />
         </button>
 
-        <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-6">
+        <h2 className="text-base font-medium text-ink mb-4">
           {wallet ? 'Edit wallet' : 'New wallet'}
         </h2>
 
-        {error && <p className="text-[#A32D2D] text-sm mb-4">{error}</p>}
+        {error && <p className="text-negative text-sm mb-4">{error}</p>}
 
         {/* Name */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Name</label>
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-ink-soft mb-1">Name</label>
           <input
             value={name}
             onChange={e => setName(e.target.value)}
             placeholder="e.g. Rent, Holidays, Groceries"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+            className={inputClass}
           />
         </div>
 
-        {/* Type */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Type</label>
+        {/* Type — segmented */}
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-ink-soft mb-1">Type</label>
           <div className="grid grid-cols-3 gap-2">
             {['fixed', 'variable', 'investment'].map(t => (
               <button
                 key={t}
                 onClick={() => setType(t)}
-                className={`py-2 rounded-lg text-sm font-medium border transition-colors capitalize ${
+                className={`py-2 rounded-[9px] text-sm font-medium border transition-colors capitalize ${
                   type === t
-                    ? 'bg-indigo-600 text-white border-indigo-600'
-                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-indigo-400'
+                    ? 'bg-ink text-cream border-ink'
+                    : 'bg-field text-ink-soft border-card-border hover:border-ink-faint'
                 }`}
               >
                 {t}
@@ -98,22 +101,22 @@ export default function WalletModal({ wallet, onClose, onSave }) {
           </div>
         </div>
 
-        {/* Budget type */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Budget behaviour</label>
+        {/* Budget behaviour — selectable cards */}
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-ink-soft mb-1">Budget behaviour</label>
           <div className="space-y-2">
             {BUDGET_TYPES[type].map(opt => (
               <button
                 key={opt.value}
                 onClick={() => setBudgetType(opt.value)}
-                className={`w-full text-left px-3 py-2 rounded-lg border text-sm transition-colors ${
+                className={`w-full text-left px-3 py-2 rounded-[11px] border text-sm transition-colors ${
                   budgetType === opt.value
-                    ? 'bg-indigo-50 border-indigo-400 text-indigo-700'
-                    : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-indigo-300'
+                    ? 'border-accent ring-1 ring-accent bg-accent/5 text-ink'
+                    : 'bg-card border-card-border text-ink-soft hover:border-ink-faint'
                 }`}
               >
                 <span className="font-medium">{opt.label}</span>
-                <span className="block text-xs text-gray-500 dark:text-gray-400 mt-0.5">{opt.desc}</span>
+                <span className="block text-xs text-ink-muted mt-0.5">{opt.desc}</span>
               </button>
             ))}
           </div>
@@ -121,8 +124,8 @@ export default function WalletModal({ wallet, onClose, onSave }) {
 
         {/* Budget amount — hide for investment */}
         {type !== 'investment' && (
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+          <div className="mb-3">
+            <label className="block text-sm font-medium text-ink-soft mb-1">
               Monthly budget (€)
             </label>
             <input
@@ -130,53 +133,73 @@ export default function WalletModal({ wallet, onClose, onSave }) {
               value={budget}
               onChange={e => setBudget(e.target.value)}
               placeholder="0.00"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+              className={`${inputClass} text-right`}
             />
           </div>
         )}
 
-        {/* Colour */}
+        {/* Icon */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Colour</label>
+          <label className="block text-sm font-medium text-ink-soft mb-1">Icon</label>
           <div className="flex gap-2 flex-wrap">
-            {COLOURS.map(c => (
-              <button
-                key={c}
-                onClick={() => setColour(c)}
-                style={{ backgroundColor: c }}
-                className={`w-7 h-7 rounded-full transition-transform ${
-                  colour === c ? 'scale-125 ring-2 ring-offset-1 ring-gray-400' : 'hover:scale-110'
-                }`}
-              />
-            ))}
+            {ICON_CHOICES.map(name => {
+              const IconOption = WALLET_ICONS[name]
+              const active = icon === name
+              return (
+                <button
+                  key={name}
+                  type="button"
+                  onClick={() => setIcon(name)}
+                  className={`w-9 h-9 rounded-[9px] flex items-center justify-center border transition-colors ${
+                    active
+                      ? 'border-accent ring-1 ring-accent bg-accent/10 text-accent'
+                      : 'border-card-border text-ink-soft hover:border-ink-faint'
+                  }`}
+                >
+                  <IconOption size={16} />
+                </button>
+              )
+            })}
           </div>
         </div>
 
-        {/* Sort order */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-            Display order <span className="text-gray-400 dark:text-gray-500 font-normal">(lower = appears first)</span>
+        {/* Display order — stepper */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-ink-soft mb-1">
+            Display order <span className="text-ink-faint font-normal">(lower = appears first)</span>
           </label>
-          <input
-            type="number"
-            value={sortOrder}
-            onChange={e => setSortOrder(e.target.value)}
-            placeholder="0"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
-          />
+          <div className="inline-flex items-center rounded-[8px] border border-card-border bg-field overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setSortOrder(Math.max(0, order - 1))}
+              className="px-3 py-2 text-ink-soft hover:text-ink hover:bg-track transition-colors"
+              aria-label="Decrease display order"
+            >
+              <Minus size={14} />
+            </button>
+            <span className="w-12 text-center text-sm text-ink tabular-nums">{order}</span>
+            <button
+              type="button"
+              onClick={() => setSortOrder(order + 1)}
+              className="px-3 py-2 text-ink-soft hover:text-ink hover:bg-track transition-colors"
+              aria-label="Increase display order"
+            >
+              <Plus size={14} />
+            </button>
+          </div>
         </div>
 
         {/* Cap reduction settings — capped variable wallets only */}
         {type === 'variable' && budgetType === 'capped' && (
-          <div className="mb-6 border border-gray-200 dark:border-gray-700 rounded-xl p-4 space-y-3">
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-200">Cap reduction settings</p>
+          <div className="mb-6 border border-card-border rounded-[11px] p-4 space-y-3">
+            <p className="text-sm font-medium text-ink-soft">Cap reduction settings</p>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600 dark:text-gray-300">Enable reduction when cap is reached</span>
+              <span className="text-sm text-ink-soft">Enable reduction when cap is reached</span>
               <button
                 type="button"
                 onClick={() => setCapReductionEnabled(v => !v)}
-                className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none ${
-                  capReductionEnabled ? 'bg-accent-solid' : 'bg-gray-200 dark:bg-gray-600'
+                className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-accent/30 ${
+                  capReductionEnabled ? 'bg-accent-solid' : 'bg-ink-faint'
                 }`}
               >
                 <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
@@ -187,7 +210,7 @@ export default function WalletModal({ wallet, onClose, onSave }) {
             {capReductionEnabled && (
               <>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
+                  <label className="block text-xs font-medium text-ink-muted mb-1">
                     Receive % of normal distribution after cap
                   </label>
                   <div className="flex items-center gap-2">
@@ -197,12 +220,12 @@ export default function WalletModal({ wallet, onClose, onSave }) {
                       max={100}
                       value={capReductionRate}
                       onChange={e => setCapReductionRate(e.target.value)}
-                      className="w-20 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-right focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                      className={`${inputClass} w-20 text-right`}
                     />
-                    <span className="text-sm text-gray-500 dark:text-gray-400">%</span>
+                    <span className="text-sm text-ink-muted">%</span>
                   </div>
                 </div>
-                <p className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
+                <p className="text-xs text-ink-faint leading-relaxed">
                   When your balance reaches the cap, automated income will be reduced to {capReductionRate || '?'}% of its normal amount. The rest goes to Unallocated.
                 </p>
               </>
@@ -214,14 +237,14 @@ export default function WalletModal({ wallet, onClose, onSave }) {
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+            className="flex-1 py-2 rounded-[9px] border border-card-border text-sm text-ink-soft hover:bg-track transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex-1 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 disabled:opacity-50"
+            className="flex-1 py-2 rounded-[9px] bg-ink text-cream text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
           >
             {saving ? 'Saving...' : wallet ? 'Save changes' : 'Create wallet'}
           </button>
