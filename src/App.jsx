@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { supabase } from './lib/supabase'
 import { ThemeContext } from './lib/ThemeContext'
+import { PrivacyContext } from './lib/PrivacyContext'
+import { setPrivacy as setPrivacyModule } from './lib/format'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
 import Wallets from './pages/Wallets'
@@ -16,6 +18,15 @@ export default function App() {
   const [session,           setSession]           = useState(undefined)
   const [showWelcomeBanner, setShowWelcomeBanner] = useState(false)
   const [theme,             setTheme]             = useState('light')
+  const [privacy,           setPrivacyState]      = useState(false)
+
+  // Privacy mode is session-only (no persistence): flip the module flag (read by
+  // formatMoney) and the React state so every amount re-renders masked. Resets to
+  // visible on reload by design.
+  function setPrivacy(on) {
+    setPrivacyModule(on)
+    setPrivacyState(on)
+  }
 
   useEffect(() => {
     // Detect email-confirmation redirect (Supabase includes type=signup in the hash)
@@ -50,15 +61,18 @@ export default function App() {
   if (session === undefined) {
     return (
       <ThemeContext.Provider value={{ theme, setTheme }}>
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
-          <p className="text-gray-400">Loading...</p>
-        </div>
+        <PrivacyContext.Provider value={{ privacy, setPrivacy }}>
+          <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+            <p className="text-gray-400">Loading...</p>
+          </div>
+        </PrivacyContext.Provider>
       </ThemeContext.Provider>
     )
   }
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>
+      <PrivacyContext.Provider value={{ privacy, setPrivacy }}>
       <BrowserRouter>
         {session && showWelcomeBanner && (
           <div className="fixed top-0 inset-x-0 z-50 bg-green-500 text-white text-sm text-center py-3 font-medium">
@@ -86,6 +100,7 @@ export default function App() {
           } />
         </Routes>
       </BrowserRouter>
+      </PrivacyContext.Provider>
     </ThemeContext.Provider>
   )
 }
