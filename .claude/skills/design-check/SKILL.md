@@ -32,6 +32,18 @@ utilities (`bg-cream`, `text-ink`, `text-positive`, `border-card-border`, …) o
 | Budget hints | grey hint only for fixed/capped wallets with non-zero budget; never render "€ 0" |
 | Interactive controls | toggles/switches, active states, focus rings use **ink or coral** — `indigo`/`purple`/`violet` anywhere is a violation (not a spec color) |
 
+### Density & completeness (DESIGN-SPEC §8 — the density pass)
+
+| Element | Required |
+|---|---|
+| Content cards | hero 22px `font-medium tracking-tight` + `MetricBar` (5–6px) + 11px caption + `CardFooterMeta` (11px muted). **No empty bottom half.** Bar needs an honest denominator; investment / Unallocated cards omit the bar (no fabricated ratio) |
+| Summary strip | every reworked page (except Settings) has a `SummaryStrip` under the header: 3–4 cells, 1px `inner-border` gaps, 11px uppercase label + 18px value, computed from that page's own data |
+| Tables | 11px uppercase headers, amount hard-right in last column, zebra via `even:bg-field`, `Showing X of Y` footer, merged source+note cell, no dead-width column |
+| Repeated items | `CompactRow` inside ONE card (28px chip + name + 11px meta + right value + `divide-y divide-inner-border`) — never individual large cards. Due recurring rows: amber "Log now" pill surfacing the existing flow (no new logic) |
+| Settings | `max-w-[640px]`, three grouped section cards (Account / Preferences / Danger zone) as divider rows; danger zone `border-negative/40` + `text-negative` label. One-control-per-full-width-card is a violation |
+| Grid remainders | `GhostAddCard` (`border-dashed border-card-border`) instead of empty space |
+| Shared primitives | must import from `src/components/ui/` (`SummaryStrip`/`StatCell`, `CompactRow`, `GhostAddCard`, `CardFooterMeta`, `MetricBar`) — re-implementing one inline per page is a violation |
+
 ## Procedure
 
 1. `git diff --name-only` (or session file list) → filter to `.jsx` files under `src/`.
@@ -45,6 +57,12 @@ utilities (`bg-cream`, `text-ink`, `text-positive`, `border-card-border`, …) o
    - `grep -nE "rounded-(lg|xl|2xl)"` on cards (should be `rounded-[14px]`).
    - hardcoded hex outside the DESIGN-SPEC palette; chart-library imports; containers missing a
      dark treatment (token utilities auto-theme; raw `bg-*`/`text-*` grays usually don't).
+   - **Density (§8):** on reworked pages, confirm the shared primitives are imported from
+     `src/components/ui/` (not re-implemented inline); every content card has hero+bar+caption+footer
+     (no card ending in blank space); the page has a `SummaryStrip`; tables use `even:bg-field` zebra
+     + `Showing X of Y`; repeated items are `CompactRow`s not big cards; grid remainders use
+     `GhostAddCard`. Settings: `max-w-[640px]` + grouped section cards + `border-negative/40` danger
+     zone. Investment/Unallocated cards must NOT render a progress bar (no honest denominator).
 3. If a browser tool is available, screenshot the affected pages in **both** light and dark
    mode and eyeball against the rules — including every interactive control in each state.
 4. Report violations with file:line and the fix; apply fixes if in scope, otherwise list them.

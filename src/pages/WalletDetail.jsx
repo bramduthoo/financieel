@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Settings, Plus, Trash2, X, Edit2 } from 'lucide-react'
+import { ArrowLeft, Settings, Plus, Trash2, X, Edit2, FileText, Zap } from 'lucide-react'
 import { supabase, getCurrentUserId } from '../lib/supabase'
 import { format, startOfMonth, endOfMonth } from 'date-fns'
 import RecurringRules from '../components/RecurringRules'
@@ -16,6 +16,8 @@ import UnallocatedConflictBanner from '../components/UnallocatedConflictBanner'
 import { evaluateUnallocatedPlans } from '../lib/unallocatedPlans'
 import { formatMoney } from '../lib/format'
 import { WalletIcon } from '../lib/walletIcons'
+import MetricBar from '../components/ui/MetricBar'
+import CompactRow from '../components/ui/CompactRow'
 
 const round2 = n => Number(Number(n).toFixed(2))
 
@@ -365,12 +367,7 @@ export default function WalletDetail() {
                 <span className="text-xs text-ink-faint">{format(now, 'MMMM')} spending</span>
                 <span className={`text-xs font-medium ml-2 ${textColour}`}>{pct.toFixed(0)}%</span>
               </div>
-              <div className="w-full bg-track rounded-full h-1.5">
-                <div
-                  className={`h-1.5 rounded-full transition-all ${barColour}`}
-                  style={{ width: `${Math.min(pct, 100)}%` }}
-                />
-              </div>
+              <MetricBar value={monthDebits} max={budget} fillClass={barColour} />
               <p className="text-xs text-ink-faint">
                 {formatMoney(monthDebits)} / {formatMoney(budget)}
               </p>
@@ -544,33 +541,26 @@ export default function WalletDetail() {
                     <p className="text-xs mt-1">Save a reusable split to distribute from here</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="bg-card border border-card-border rounded-[14px] px-4 divide-y divide-inner-border">
                     {templatesSorted.map(t => (
-                      <button
+                      <CompactRow
                         key={t.id}
+                        icon={<FileText size={14} />}
+                        chipClass="bg-positive-tint text-positive"
+                        name={t.name}
+                        meta={t.items.length === 0
+                          ? 'No destinations'
+                          : t.items
+                              .map(i => `${walletName(i.wallet_id)} ${i.mode === 'percent' ? `${Number(i.value)}%` : formatMoney(Number(i.value))}`)
+                              .join(' · ')}
                         onClick={() => applyTemplate(t)}
-                        className={`text-left rounded-[14px] p-4 transition-all ${
-                          t.affordable
-                            ? 'bg-card border border-card-border hover:border-ink-faint hover:shadow-sm'
-                            : 'bg-track/40 border border-dashed border-card-border opacity-60'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="font-medium text-ink text-sm truncate">{t.name}</p>
-                          {!t.affordable && (
-                            <span className="text-xs font-medium text-[#854F0B] whitespace-nowrap">
-                              needs {formatMoney(t.floor - unallocBalance)} more
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-ink-muted mt-1.5 leading-relaxed">
-                          {t.items.length === 0
-                            ? 'No destinations'
-                            : t.items
-                                .map(i => `${walletName(i.wallet_id)} ${i.mode === 'percent' ? `${Number(i.value)}%` : formatMoney(Number(i.value))}`)
-                                .join(' · ')}
-                        </p>
-                      </button>
+                        className={t.affordable ? '' : 'opacity-60'}
+                        trailing={!t.affordable && (
+                          <span className="ml-2 text-[11px] font-medium text-[#854F0B] whitespace-nowrap flex-shrink-0">
+                            needs {formatMoney(t.floor - unallocBalance)} more
+                          </span>
+                        )}
+                      />
                     ))}
                   </div>
                 )}
@@ -594,44 +584,41 @@ export default function WalletDetail() {
                     <p className="text-xs mt-1">Auto-distribute when the balance crosses a threshold</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="bg-card border border-card-border rounded-[14px] px-4 divide-y divide-inner-border">
                     {unallocPlans.map(p => (
-                      <div
+                      <CompactRow
                         key={p.id}
-                        className={`flex items-start justify-between gap-3 rounded-[14px] p-4 border ${
-                          p.is_active
-                            ? 'bg-card border-card-border'
-                            : 'bg-track/40 border-card-border opacity-60'
-                        }`}
-                      >
-                        <div className="min-w-0">
-                          <p className="font-medium text-ink text-sm truncate">{p.name}</p>
-                          <p className="text-xs text-ink-muted mt-1 leading-relaxed">{planTrigger(p)}</p>
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0 mt-0.5">
-                          <button
-                            type="button"
-                            onClick={() => openPlanEdit(p)}
-                            className="p-1.5 text-ink-faint hover:text-ink dark:hover:text-ink rounded-lg transition-colors"
-                            aria-label="Edit plan"
-                          >
-                            <Edit2 size={14} />
-                          </button>
-                          <button
-                            type="button"
-                            role="switch"
-                            aria-checked={p.is_active}
-                            onClick={() => togglePlan(p)}
-                            className={`relative w-11 h-6 rounded-full transition-colors ${
-                              p.is_active ? 'bg-accent-solid' : 'bg-track '
-                            }`}
-                          >
-                            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-card rounded-full shadow transition-transform ${
-                              p.is_active ? 'translate-x-5' : 'translate-x-0'
-                            }`} />
-                          </button>
-                        </div>
-                      </div>
+                        icon={<Zap size={14} />}
+                        chipClass="bg-[#FAEEDA] text-[#854F0B]"
+                        name={p.name}
+                        meta={planTrigger(p)}
+                        className={p.is_active ? '' : 'opacity-60'}
+                        trailing={
+                          <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                            <button
+                              type="button"
+                              onClick={() => openPlanEdit(p)}
+                              className="p-1.5 text-ink-faint hover:text-ink dark:hover:text-ink rounded-lg transition-colors"
+                              aria-label="Edit plan"
+                            >
+                              <Edit2 size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              role="switch"
+                              aria-checked={p.is_active}
+                              onClick={() => togglePlan(p)}
+                              className={`relative w-11 h-6 rounded-full transition-colors ${
+                                p.is_active ? 'bg-accent-solid' : 'bg-track '
+                              }`}
+                            >
+                              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-card rounded-full shadow transition-transform ${
+                                p.is_active ? 'translate-x-5' : 'translate-x-0'
+                              }`} />
+                            </button>
+                          </div>
+                        }
+                      />
                     ))}
                   </div>
                 )}
@@ -700,6 +687,11 @@ export default function WalletDetail() {
                       })}
                     </div>
                   )
+                )}
+                {(histView === 'incoming' ? unallocIncoming.length : unallocOutgoing.length) > 0 && (
+                  <p className="text-[11px] text-ink-muted mt-3 pt-3 border-t border-inner-border">
+                    Showing {histView === 'incoming' ? unallocIncoming.length : unallocOutgoing.length} {histView}
+                  </p>
                 )}
               </div>
             </div>

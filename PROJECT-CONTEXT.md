@@ -305,6 +305,32 @@ comparisons. The DB chapter is now outdated vs the live schema.
 
 ## 6. Current standing (update this when a phase ends)
 
+**Density & completeness pass: DONE (branch `b/density-pass`, 2026-07-14; PR open).**
+Implemented + `vite build` clean + **95 tests green** + code-reviewer (no Criticals; touch-reachability,
+delta-zero-tone, ghost-card type-preset fixes applied) + both-theme Playwright screenshots seeded via the
+**test account** in `docs/density-screenshots/`. **db-verifier invariants 1/2/5 NOT yet run** — the Supabase
+MCP needed re-auth at session end; owner to authorize, then run against the test account's `user_id`.
+- **DESIGN-SPEC.md gained §8 "Density & completeness patterns"** (six locked rules) and the `design-check`
+  skill's checklist + grep procedure were extended to enforce them — spec-first so the pattern can't drift.
+- **Shared primitives built once** in `src/components/ui/`: `SummaryStrip`(+`StatCell`), `CompactRow`,
+  `GhostAddCard`, `CardFooterMeta`, `MetricBar`.
+- **New pure lib calcs + behaviour tests** (injectable `now`): `src/lib/walletMetrics.js` (`walletsSummary`,
+  `walletActivityThisMonth`, `nextPaymentDue`) and `src/lib/incomeMetrics.js` (`incomeSummary`,
+  `recurringDueState`) — 21 new tests.
+- **Pages reworked to the owner-approved mockups** (`docs/*.png`): Wallets (+WalletCard — hero/bar/caption/
+  footer per wallet type, summary strip, ghost add cards, coral Unallocated card), Income (summary strip;
+  dense merged/`even:bg-field`-zebra/right-aligned table with "Showing X of Y"; CompactRow recurring+template
+  lists; amber **"Log now"** pill that surfaces the EXISTING recurring-log flow — navigates to
+  IncomeRecurringDetail and opens its log modal, no new logic), Settings (640px, grouped Account/Preferences/
+  Danger-zone section cards with divider rows; password change moved inline-form→modal), WalletDetail
+  (variable spending `MetricBar`; Unallocated templates/plans as CompactRows; table zebra + count footers).
+- **Zero business-logic / RPC / schema changes.** Every number comes from queried data or the tested calcs.
+- **Bug caught & fixed during Playwright:** Wallets header "+ New wallet" passed the click event into the
+  new `openCreate(type)` → WalletModal crash; fixed to `onClick={() => openCreate()}`.
+- The stale `Test salary` €1000 test-account entry (old loose end from R2) is now part of a richer density
+  **seed set** on the test account (Rent/Groceries/Clothing wallets of varied types, a recurring "Salary"
+  income + distribution, 3 income entries, a "Side gig payout" template).
+
 **Income-distribution & Unallocated-wallet redesign phase: DONE.**
 (Verified 2026-07-07 by Claude Code against the live source files and the live DB, read-only.)
 
@@ -575,6 +601,20 @@ Deferred / smaller:
   base tokens auto-theme), then hand-fix the bespoke bits (tab bars, page backgrounds, inline-SVG chart
   colours, badges). Gate with `npm run build` (catches broken JSX/undefined refs), `design-check` greps,
   and a both-theme screenshot sweep — a green build alone doesn't prove the pixels.
+- **Density is spec-first (DESIGN-SPEC §8), enforced via shared primitives** (density pass): six locked
+  rules — hero 22px + metric bar + caption + a real footer line (no empty card bottoms); a summary strip
+  under each page header; dense tables (merged source+note, right-aligned amount, `even:bg-field` zebra,
+  "Showing X of Y"); repeated items as `CompactRow`s in one card, not big cards; Settings inverts to a
+  640px grouped-section layout; ghost dashed "add" cards fill grid remainders. Codified in the spec +
+  `design-check` BEFORE touching any page so it can't drift per page; primitives live once in
+  `src/components/ui/` and are reused. **Captions must be honest:** wallet cards map to real columns
+  (fixed = `balance/budget` "funded" + next `recurring_rules` due date; capped = `% of cap`;
+  accumulating = `+€ netInflow this month`); investment & the Unallocated card **omit the bar** (no
+  honest denominator) rather than fabricate a ratio.
+- **Wallet chips/bars stay one coral identity + green metric bars, not the mockup's per-wallet rainbow**
+  (density pass): wallet `colour` is no longer user-editable (defaults green, R2 decision above), so the
+  mockup's rainbow chips/bars aren't reproducible for real data — consistent coral icon chips +
+  `positive-bar` green metric bars is the honest, on-token choice.
 
 ---
 
