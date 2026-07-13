@@ -99,7 +99,7 @@ export default function Income() {
 
   const [histSort,   setHistSort]   = useState({ field: 'date', dir: 'desc' })
   const [histFilter, setHistFilter] = useState({ sourceType: 'all', search: '' })
-  const [histLimit,  setHistLimit]  = useState(10)
+  const [histLimit,  setHistLimit]  = useState(5)
 
   const [allWallets,         setAllWallets]         = useState([])
   const [strictMode,         setStrictMode]         = useState(true)
@@ -489,10 +489,10 @@ export default function Income() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-2xl font-medium tracking-tight text-ink">Income</h1>
-          <p className="text-ink-muted text-sm mt-1">Track income from all sources</p>
+          <h1 className="text-xl font-medium tracking-tight text-ink">Income</h1>
+          <p className="text-ink-muted text-[13px] mt-0.5">Track income from all sources</p>
         </div>
         <button
           onClick={() => openModal('quick')}
@@ -520,7 +520,7 @@ export default function Income() {
           {/* History table */}
           <div className="bg-card border border-card-border rounded-[14px] overflow-hidden mb-8">
             {/* Filter header row */}
-            <div className="flex flex-wrap gap-3 items-center px-4 py-3 border-b border-inner-border">
+            <div className="flex flex-wrap gap-3 items-center px-4 py-2 border-b border-inner-border">
               <select
                 value={histFilter.sourceType}
                 onChange={e => setHistFilter(f => ({ ...f, sourceType: e.target.value }))}
@@ -542,6 +542,7 @@ export default function Income() {
                 onChange={e => setHistLimit(e.target.value === 'all' ? 'all' : Number(e.target.value))}
                 className="px-3 py-1.5 border border-card-border rounded-[8px] text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink ml-auto"
               >
+                <option value={5}>Show 5</option>
                 <option value={10}>Show 10</option>
                 <option value={25}>Show 25</option>
                 <option value={50}>Show 50</option>
@@ -552,18 +553,18 @@ export default function Income() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-inner-border">
-                  <th className="px-4 py-2.5 text-left">
+                  <th className="px-4 py-2 text-left">
                     <button onClick={() => toggleSort('date')} className="flex items-center gap-1 text-[11px] font-medium text-ink-muted uppercase tracking-wider hover:text-ink">
                       Date <SortIcon field="date" />
                     </button>
                   </th>
-                  <th className="px-4 py-2.5 text-left">
+                  <th className="px-4 py-2 text-left">
                     <button onClick={() => toggleSort('source')} className="flex items-center gap-1 text-[11px] font-medium text-ink-muted uppercase tracking-wider hover:text-ink">
                       Source <SortIcon field="source" />
                     </button>
                   </th>
-                  <th className="px-4 py-2.5 text-left text-[11px] font-medium text-ink-muted uppercase tracking-wider">Type</th>
-                  <th className="px-4 py-2.5 text-right">
+                  <th className="px-4 py-2 text-left text-[11px] font-medium text-ink-muted uppercase tracking-wider">Type</th>
+                  <th className="px-4 py-2 text-right">
                     <button onClick={() => toggleSort('amount')} className="flex items-center gap-1 text-[11px] font-medium text-ink-muted uppercase tracking-wider hover:text-ink ml-auto">
                       Amount <SortIcon field="amount" />
                     </button>
@@ -581,23 +582,23 @@ export default function Income() {
                     onClick={() => setDetailEntry(e)}
                     className="even:bg-field hover:bg-track transition-colors cursor-pointer"
                   >
-                    <td className="px-4 py-3 text-ink-soft whitespace-nowrap">{format(parseISO(e.date), 'd MMM')}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-2 text-ink-soft whitespace-nowrap">{format(parseISO(e.date), 'd MMM')}</td>
+                    <td className="px-4 py-2">
                       <span className="font-medium text-ink">{e.source}</span>
                       {e.note && <span className="text-ink-muted"> · {e.note}</span>}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-2">
                       <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium capitalize ${TYPE_BADGE[e.source_type] ?? 'bg-track text-ink-muted'}`}>
                         {e.source_type ?? 'manual'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right font-medium text-positive whitespace-nowrap">+{fmt(e.amount)}</td>
+                    <td className="px-4 py-2 text-right font-medium text-positive whitespace-nowrap">+{fmt(e.amount)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
             {filteredEntries.length > 0 && (
-              <p className="px-4 py-2.5 text-[11px] text-ink-muted border-t border-inner-border">
+              <p className="px-4 py-2 text-[11px] text-ink-muted border-t border-inner-border">
                 Showing {displayedEntries.length} of {filteredEntries.length} entries
               </p>
             )}

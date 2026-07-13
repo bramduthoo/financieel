@@ -409,14 +409,14 @@ export default function WalletDetail() {
           </div>
 
           {tab === 'overview' && (
-            <div className="space-y-6">
-              <div className="bg-card rounded-[14px] border border-card-border p-6">
+            <div className="space-y-4">
+              <div className="bg-card rounded-[14px] border border-card-border p-5">
                 <TransactionChecklist walletId={id} onBalanceChanged={fetchAll} />
               </div>
-              <div className="bg-card rounded-[14px] border border-card-border p-6">
+              <div className="bg-card rounded-[14px] border border-card-border p-5">
                 <UpcomingPayments rules={rules} transactions={transactions} />
               </div>
-              <div className="bg-card rounded-[14px] border border-card-border p-6">
+              <div className="bg-card rounded-[14px] border border-card-border p-5">
                 <RecurringRules walletId={id} onRulesChanged={fetchAll} />
               </div>
             </div>

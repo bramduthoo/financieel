@@ -87,10 +87,10 @@ export default function Wallets() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-2xl font-medium tracking-tight text-ink">Wallets</h1>
-          <p className="text-ink-soft text-sm mt-1">Manage your spending and saving categories</p>
+          <h1 className="text-xl font-medium tracking-tight text-ink">Wallets</h1>
+          <p className="text-ink-soft text-[13px] mt-0.5">Manage your spending and saving categories</p>
         </div>
         <button
           onClick={() => openCreate()}
@@ -122,23 +122,31 @@ export default function Wallets() {
             </div>
           ) : (
             <div className="space-y-8">
-              {groups.map(({ key, label, addLabel, list }) => {
-                const isVariable = key === 'variable'
-                // Nothing to show for a group with no wallets (Unallocated rides along with Variable).
-                if (list.length === 0 && !(isVariable && unallocated)) return null
-                return (
+              {groups.map(({ key, label, addLabel, list }) =>
+                list.length === 0 ? null : (
                   <div key={key}>
                     <h2 className="text-[11px] font-medium text-ink-muted uppercase tracking-wider mb-3">
                       {label}
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       {list.map(renderCard)}
-                      {isVariable && unallocated && renderCard(unallocated)}
                       <GhostAddCard label={addLabel} onClick={() => openCreate(key)} />
                     </div>
                   </div>
                 )
-              })}
+              )}
+
+              {/* System — the Unallocated wallet lives in its own group. */}
+              {unallocated && (
+                <div>
+                  <h2 className="text-[11px] font-medium text-ink-muted uppercase tracking-wider mb-3">
+                    System
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {renderCard(unallocated)}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </>
