@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { formatMoney, setActiveCurrency } from './format'
+import { formatMoney, formatMoneyCompact, setActiveCurrency, setPrivacy } from './format'
 
 const MINUS = '−' // U+2212, the sign formatMoney emits for negatives
 
@@ -93,5 +93,47 @@ describe('formatMoney — currency (display only, European grouping everywhere)'
   it('unknown active currency code falls back to EUR', () => {
     setActiveCurrency('NOPE')
     expect(formatMoney(5)).toBe('€ 5,00')
+  })
+})
+
+describe('formatMoney — privacy mode (mask amounts)', () => {
+  // Reset both singletons so masking can't leak into other suites.
+  afterEach(() => { setPrivacy(false); setActiveCurrency('EUR') })
+
+  it('masks the amount with the symbol via explicit override', () => {
+    expect(formatMoney(1234.56, { privacy: true })).toBe('€ ••••')
+    expect(formatMoney(-999, { privacy: true })).toBe('€ ••••') // no sign leaks
+    expect(formatMoney(0, { privacy: true })).toBe('€ ••••')
+  })
+
+  it('honours the after-symbol position when masked', () => {
+    expect(formatMoney(1234.56, { currency: 'SEK', privacy: true })).toBe('•••• kr')
+    expect(formatMoney(1234.56, { currency: 'USD', privacy: true })).toBe('$ ••••')
+  })
+
+  it('masks via the module flag (no override) for every call', () => {
+    setPrivacy(true)
+    expect(formatMoney(5)).toBe('€ ••••')
+    setActiveCurrency('SEK')
+    expect(formatMoney(5)).toBe('•••• kr')
+  })
+
+  it('an explicit privacy:false override beats the module flag', () => {
+    setPrivacy(true)
+    expect(formatMoney(5, { privacy: false })).toBe('€ 5,00')
+  })
+
+  it('masks compact chart-axis output too', () => {
+    expect(formatMoneyCompact(1500, { privacy: true })).toBe('€••')
+    setPrivacy(true)
+    expect(formatMoneyCompact(1500)).toBe('€••')
+    setActiveCurrency('SEK')
+    expect(formatMoneyCompact(1500)).toBe('•• kr')
+  })
+
+  it('leaves output unchanged when privacy is off', () => {
+    setPrivacy(false)
+    expect(formatMoney(1234.56)).toBe('€ 1.234,56')
+    expect(formatMoneyCompact(1500)).toBe('€1.5k') // compact uses toFixed → period, unchanged from before
   })
 })

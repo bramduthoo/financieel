@@ -9,6 +9,8 @@
 // in the pure lib modules.
 
 const MINUS = '−' // U+2212 minus sign, matches the app's prior `−€` convention
+const MASK = '••••'        // privacy-mode replacement for a full amount (`€ ••••`)
+const MASK_COMPACT = '••'  // shorter mask for chart axis ticks (`€••`)
 
 // Supported display currencies. `position` is where the symbol sits relative to the
 // number: 'before' → `€ 1.234,56`, 'after' → `1.234,56 kr`. No amount conversion.
@@ -34,6 +36,24 @@ export function setActiveCurrency(code) {
   _active = CURRENCIES[code] ?? CURRENCIES.EUR
 }
 
+// Privacy mode ("hide amounts"). Session-only: a PrivacyProvider flips this and
+// re-renders the tree (no React.memo), so every formatMoney/formatMoneyCompact call
+// re-runs and masks live — no call-site changes. When on, amounts render as the
+// currency symbol + a fixed mask (no sign, no digits, digit-count not revealed).
+let _privacy = false
+
+export function setPrivacy(on) {
+  _privacy = !!on
+}
+
+// Assemble a symbol + body string honouring the active (or overridden) currency's
+// position. `sign` is dropped for masks (always '').
+function withSymbol(cur, sign, body) {
+  return cur.position === 'after'
+    ? `${sign}${body} ${cur.symbol}`
+    : `${sign}${cur.symbol} ${body}`
+}
+
 // The active currency's symbol — for static adornments (input `(€)` labels, the
 // euro/percent mode toggles) that show the symbol but don't format an amount.
 // Reads the singleton at call time, so it re-evaluates on the render triggered by
@@ -45,7 +65,13 @@ export function activeCurrencySymbol() {
 // Compact money for chart axis ticks: `€500`, `€1,2k`, `500 kr`, `−$1,2k`. Uses the
 // active currency symbol/position; abbreviates thousands with `k`. Display only —
 // centralises the per-chart formatters that previously hard-coded `€`.
-export function formatMoneyCompact(value) {
+export function formatMoneyCompact(value, { privacy } = {}) {
+  const hidden = privacy ?? _privacy
+  // Compact keeps a no-space leading symbol (`€500`); a trailing symbol reads
+  // better spaced (`500 kr`). Masked amounts follow the same spacing.
+  const compact = body =>
+    _active.position === 'after' ? `${body} ${_active.symbol}` : `${_active.symbol}${body}`
+  if (hidden) return compact(MASK_COMPACT)
   const n = Number(value)
   const safe = Number.isFinite(n) ? n : 0
   const sign = safe < 0 ? MINUS : ''
@@ -53,15 +79,14 @@ export function formatMoneyCompact(value) {
   const body = abs >= 1000
     ? `${(abs / 1000).toFixed(abs % 1000 === 0 ? 0 : 1)}k`
     : `${Math.round(abs)}`
-  // Keep the historical no-space look for a leading symbol (`€500`); a trailing
-  // symbol reads better with a space (`500 kr`).
   return _active.position === 'after'
     ? `${sign}${body} ${_active.symbol}`
     : `${sign}${_active.symbol}${body}`
 }
 
-export function formatMoney(amount, { decimals = 2, currency } = {}) {
+export function formatMoney(amount, { decimals = 2, currency, privacy } = {}) {
   const cur = currency ? (CURRENCIES[currency] ?? CURRENCIES.EUR) : _active
+  if (privacy ?? _privacy) return withSymbol(cur, '', MASK) // `€ ••••` / `•••• kr`
   const n = Number(amount)
   const safe = Number.isFinite(n) ? n : 0
   const fixed = Math.abs(safe).toFixed(decimals)
@@ -70,7 +95,5 @@ export function formatMoney(amount, { decimals = 2, currency } = {}) {
   const grouped = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.') // thousands: 1.234.567
   const body = decPart ? `${grouped},${decPart}` : grouped
   const sign = showNeg ? MINUS : ''
-  return cur.position === 'after'
-    ? `${sign}${body} ${cur.symbol}`
-    : `${sign}${cur.symbol} ${body}`
+  return withSymbol(cur, sign, body)
 }

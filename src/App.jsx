@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react'
 import { supabase } from './lib/supabase'
 import { ThemeContext } from './lib/ThemeContext'
 import { CurrencyContext } from './lib/CurrencyContext'
-import { setActiveCurrency } from './lib/format'
+import { PrivacyContext } from './lib/PrivacyContext'
+import { setActiveCurrency, setPrivacy as setPrivacyModule } from './lib/format'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
 import Wallets from './pages/Wallets'
@@ -19,12 +20,21 @@ export default function App() {
   const [showWelcomeBanner, setShowWelcomeBanner] = useState(false)
   const [theme,             setTheme]             = useState('light')
   const [currency,          setCurrencyState]     = useState('EUR')
+  const [privacy,           setPrivacyState]      = useState(false)
 
   // Keep the module-level active currency (read by formatMoney) in sync with the
   // React state so a switch both updates the symbol and re-renders the tree.
   function setCurrency(code) {
     setActiveCurrency(code)
     setCurrencyState(code)
+  }
+
+  // Privacy mode is session-only (no persistence): flip the module flag (read by
+  // formatMoney) and the React state so every amount re-renders masked. Resets to
+  // visible on reload by design.
+  function setPrivacy(on) {
+    setPrivacyModule(on)
+    setPrivacyState(on)
   }
 
   useEffect(() => {
@@ -63,9 +73,11 @@ export default function App() {
     return (
       <ThemeContext.Provider value={{ theme, setTheme }}>
         <CurrencyContext.Provider value={{ currency, setCurrency }}>
-          <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
-            <p className="text-gray-400">Loading...</p>
-          </div>
+          <PrivacyContext.Provider value={{ privacy, setPrivacy }}>
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+              <p className="text-gray-400">Loading...</p>
+            </div>
+          </PrivacyContext.Provider>
         </CurrencyContext.Provider>
       </ThemeContext.Provider>
     )
@@ -74,6 +86,7 @@ export default function App() {
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>
       <CurrencyContext.Provider value={{ currency, setCurrency }}>
+      <PrivacyContext.Provider value={{ privacy, setPrivacy }}>
       <BrowserRouter>
         {session && showWelcomeBanner && (
           <div className="fixed top-0 inset-x-0 z-50 bg-green-500 text-white text-sm text-center py-3 font-medium">
@@ -101,6 +114,7 @@ export default function App() {
           } />
         </Routes>
       </BrowserRouter>
+      </PrivacyContext.Provider>
       </CurrencyContext.Provider>
     </ThemeContext.Provider>
   )

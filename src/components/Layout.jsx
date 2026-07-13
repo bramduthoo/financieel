@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Wallet, ArrowDownCircle, Settings, LogOut } from 'lucide-react'
+import { LayoutDashboard, Wallet, ArrowDownCircle, Settings, LogOut, Eye, EyeOff } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { usePrivacy } from '../lib/PrivacyContext'
 
 const navItems = [
   { path: '/',         label: 'Dashboard', icon: LayoutDashboard },
@@ -19,6 +20,7 @@ const linkClass = ({ isActive }) =>
 
 export default function Layout({ children }) {
   const navigate = useNavigate()
+  const { privacy, setPrivacy } = usePrivacy()
 
   async function handleSignOut() {
     await supabase.auth.signOut()
@@ -64,6 +66,14 @@ export default function Layout({ children }) {
         </nav>
 
         <div className="p-3">
+          <button
+            onClick={() => setPrivacy(!privacy)}
+            aria-pressed={privacy}
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] rounded-[9px] text-ink-muted hover:bg-track transition-colors text-left"
+          >
+            {privacy ? <EyeOff size={16} /> : <Eye size={16} />}
+            {privacy ? 'Show amounts' : 'Hide amounts'}
+          </button>
           <button
             onClick={handleSignOut}
             className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] rounded-[9px] text-ink-muted hover:text-negative hover:bg-negative-tint transition-colors text-left"
