@@ -14,7 +14,7 @@ import WalletTrendsChart from '../components/WalletTrendsChart'
 import DistributionPopup from '../components/DistributionPopup'
 import UnallocatedConflictBanner from '../components/UnallocatedConflictBanner'
 import { evaluateUnallocatedPlans } from '../lib/unallocatedPlans'
-import { formatMoney } from '../lib/format'
+import { formatMoney, activeCurrencySymbol } from '../lib/format'
 import { WalletIcon } from '../lib/walletIcons'
 
 const round2 = n => Number(Number(n).toFixed(2))
@@ -801,7 +801,7 @@ export default function WalletDetail() {
                                 : 'text-ink-faint hover:text-ink-soft dark:hover:text-ink-faint'
                             }`}
                           >
-                            {m === 'euro' ? '€' : '%'}
+                            {m === 'euro' ? activeCurrencySymbol() : '%'}
                           </button>
                         ))}
                       </div>
@@ -859,7 +859,7 @@ export default function WalletDetail() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-ink-soft mb-1">Threshold (€)</label>
+                  <label className="block text-xs font-medium text-ink-soft mb-1">Threshold ({activeCurrencySymbol()})</label>
                   <input
                     type="number" min="0" step="0.01"
                     value={planForm.threshold}
@@ -882,7 +882,7 @@ export default function WalletDetail() {
 
               {planForm.distribute_mode === 'fixed_amount' && (
                 <div>
-                  <label className="block text-xs font-medium text-ink-soft mb-1">Fixed amount (€)</label>
+                  <label className="block text-xs font-medium text-ink-soft mb-1">Fixed amount ({activeCurrencySymbol()})</label>
                   <input
                     type="number" min="0" step="0.01"
                     value={planForm.distribute_amount}
@@ -927,7 +927,7 @@ export default function WalletDetail() {
                                   : 'text-ink-faint hover:text-ink-soft dark:hover:text-ink-faint'
                               }`}
                             >
-                              {m === 'euro' ? '€' : '%'}
+                              {m === 'euro' ? activeCurrencySymbol() : '%'}
                             </button>
                           ))}
                         </div>

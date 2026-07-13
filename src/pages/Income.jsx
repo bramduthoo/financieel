@@ -8,7 +8,7 @@ import IncomeConfirmModal from '../components/IncomeConfirmModal'
 import DistributionPopup from '../components/DistributionPopup'
 import { distributeIncome } from '../lib/distributeIncome'
 import { evaluateUnallocatedPlans } from '../lib/unallocatedPlans'
-import { formatMoney } from '../lib/format'
+import { formatMoney, activeCurrencySymbol } from '../lib/format'
 import { WalletIcon } from '../lib/walletIcons'
 
 const FREQ_OPTIONS = [
@@ -726,7 +726,7 @@ export default function Income() {
                   {quickError && <p className="text-negative text-sm mb-3">{quickError}</p>}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-ink-soft mb-1">Amount (€)</label>
+                      <label className="block text-xs font-medium text-ink-soft mb-1">Amount ({activeCurrencySymbol()})</label>
                       <input
                         type="number" value={quickForm.amount}
                         onChange={e => setQuickForm(f => ({ ...f, amount: e.target.value }))}
@@ -785,7 +785,7 @@ export default function Income() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-ink-soft mb-1">Amount (€)</label>
+                      <label className="block text-xs font-medium text-ink-soft mb-1">Amount ({activeCurrencySymbol()})</label>
                       <input
                         type="number" value={recurringForm.amount}
                         onChange={e => setRecurringForm(f => ({ ...f, amount: e.target.value }))}
@@ -852,7 +852,7 @@ export default function Income() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-ink-soft mb-1">Default amount (€)</label>
+                      <label className="block text-xs font-medium text-ink-soft mb-1">Default amount ({activeCurrencySymbol()})</label>
                       <input
                         type="number" value={templateForm.amount}
                         onChange={e => setTemplateForm(f => ({ ...f, amount: e.target.value }))}
@@ -1014,7 +1014,7 @@ export default function Income() {
             </p>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-ink-soft mb-1">Amount (€)</label>
+                <label className="block text-xs font-medium text-ink-soft mb-1">Amount ({activeCurrencySymbol()})</label>
                 <input
                   type="number" value={logTemplate.amount}
                   onChange={e => setLogTemplate(m => ({ ...m, amount: e.target.value }))}

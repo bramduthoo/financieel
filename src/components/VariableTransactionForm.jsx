@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect } from 'react'
 import { format, parseISO } from 'date-fns'
 import { supabase, getCurrentUserId } from '../lib/supabase'
-import { formatMoney } from '../lib/format'
+import { formatMoney, activeCurrencySymbol } from '../lib/format'
 
 function todayStr() { return format(new Date(), 'yyyy-MM-dd') }
 
@@ -85,7 +85,7 @@ export default function VariableTransactionForm({ walletId, onSaved, onCancel, e
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-ink-soft mb-1">Amount (€)</label>
+            <label className="block text-xs font-medium text-ink-soft mb-1">Amount ({activeCurrencySymbol()})</label>
             <input
               type="number" value={amount}
               onChange={e => setAmount(e.target.value)}

@@ -7,7 +7,7 @@ import IncomeConfirmModal from '../components/IncomeConfirmModal'
 import DistributionPopup from '../components/DistributionPopup'
 import { distributeIncome } from '../lib/distributeIncome'
 import { evaluateUnallocatedPlans } from '../lib/unallocatedPlans'
-import { formatMoney } from '../lib/format'
+import { formatMoney, formatMoneyCompact, activeCurrencySymbol } from '../lib/format'
 import { WalletIcon } from '../lib/walletIcons'
 
 const FREQ_OPTIONS = [
@@ -17,11 +17,7 @@ const FREQ_OPTIONS = [
   { value: 'yearly',    label: 'Yearly' },
 ]
 
-function fmtK(n) {
-  n = Number(n)
-  if (n >= 1000) return `€${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k`
-  return `€${Math.round(n)}`
-}
+const fmtK = formatMoneyCompact
 
 const inputClass = 'w-full px-3 py-2 border border-card-border rounded-[8px] text-sm bg-field text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-accent/30'
 
@@ -397,7 +393,7 @@ export default function IncomeRecurringDetail() {
             <p className="text-sm text-ink-muted mb-4">Source: <span className="font-medium text-ink">{rule.name}</span></p>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-ink-soft mb-1">Amount (€)</label>
+                <label className="block text-xs font-medium text-ink-soft mb-1">Amount ({activeCurrencySymbol()})</label>
                 <input
                   type="number" value={logModal.amount}
                   onChange={e => setLogModal(m => ({ ...m, amount: e.target.value }))}
@@ -442,7 +438,7 @@ export default function IncomeRecurringDetail() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-ink-soft mb-1">Amount (€)</label>
+                <label className="block text-xs font-medium text-ink-soft mb-1">Amount ({activeCurrencySymbol()})</label>
                 <input
                   type="number" value={editModal.amount}
                   onChange={e => setEditModal(f => ({ ...f, amount: e.target.value }))}

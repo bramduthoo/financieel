@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { formatMoney } from './format'
+import { describe, it, expect, afterEach } from 'vitest'
+import { formatMoney, setActiveCurrency } from './format'
 
 const MINUS = '−' // U+2212, the sign formatMoney emits for negatives
 
@@ -49,5 +49,49 @@ describe('formatMoney', () => {
     expect(formatMoney(undefined)).toBe('€ 0,00')
     expect(formatMoney(null)).toBe('€ 0,00')
     expect(formatMoney(Infinity)).toBe('€ 0,00')
+  })
+})
+
+describe('formatMoney — currency (display only, European grouping everywhere)', () => {
+  // Reset the module singleton so the ambient-currency tests below can't leak.
+  afterEach(() => setActiveCurrency('EUR'))
+
+  it('places a "before" symbol ahead of the number with a normal space', () => {
+    expect(formatMoney(1234.56, { currency: 'USD' })).toBe('$ 1.234,56')
+    expect(formatMoney(1234.56, { currency: 'GBP' })).toBe('£ 1.234,56')
+    expect(formatMoney(1234.56, { currency: 'CHF' })).toBe('CHF 1.234,56')
+    expect(formatMoney(1234.56, { currency: 'CAD' })).toBe('CA$ 1.234,56')
+  })
+
+  it('places an "after" symbol behind the number with a normal space', () => {
+    expect(formatMoney(1234.56, { currency: 'SEK' })).toBe('1.234,56 kr')
+    expect(formatMoney(1234.56, { currency: 'PLN' })).toBe('1.234,56 zł')
+  })
+
+  it('keeps the minus sign leftmost for both positions', () => {
+    expect(formatMoney(-1234.56, { currency: 'USD' })).toBe(`${MINUS}$ 1.234,56`)
+    expect(formatMoney(-1234.56, { currency: 'SEK' })).toBe(`${MINUS}1.234,56 kr`)
+  })
+
+  it('falls back to EUR for an unknown currency code', () => {
+    expect(formatMoney(1234.56, { currency: 'XYZ' })).toBe('€ 1.234,56')
+  })
+
+  it('reads the module active currency when no override is passed', () => {
+    setActiveCurrency('USD')
+    expect(formatMoney(5)).toBe('$ 5,00')
+    expect(formatMoney(-1234.56)).toBe(`${MINUS}$ 1.234,56`)
+    setActiveCurrency('SEK')
+    expect(formatMoney(5)).toBe('5,00 kr')
+  })
+
+  it('an explicit override wins over the module active currency', () => {
+    setActiveCurrency('USD')
+    expect(formatMoney(5, { currency: 'GBP' })).toBe('£ 5,00')
+  })
+
+  it('unknown active currency code falls back to EUR', () => {
+    setActiveCurrency('NOPE')
+    expect(formatMoney(5)).toBe('€ 5,00')
   })
 })

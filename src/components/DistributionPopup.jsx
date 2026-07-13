@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { X, Check } from 'lucide-react'
 import { supabase, getCurrentUserId } from '../lib/supabase'
 import { resolveDistribution } from '../lib/resolveDistribution'
-import { formatMoney } from '../lib/format'
+import { formatMoney, activeCurrencySymbol } from '../lib/format'
 import { WalletIcon } from '../lib/walletIcons'
 
 const round2  = n => Number(Number(n).toFixed(2))
@@ -210,7 +210,7 @@ export default function DistributionPopup({ totalAmount, onConfirm, onClose, str
                 : 'text-ink-muted hover:text-ink'
             }`}
           >
-            {m === 'euro' ? '€' : '%'}
+            {m === 'euro' ? activeCurrencySymbol() : '%'}
           </button>
         ))}
       </div>

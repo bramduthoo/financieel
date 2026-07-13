@@ -3,7 +3,7 @@ import { Plus, Pencil, Trash2, X } from 'lucide-react'
 import { supabase, getCurrentUserId } from '../lib/supabase'
 import { format, addMonths } from 'date-fns'
 import { formatFrequency } from '../lib/recurringUtils'
-import { formatMoney } from '../lib/format'
+import { formatMoney, activeCurrencySymbol } from '../lib/format'
 
 const FREQUENCIES = ['daily', 'weekly', 'monthly', 'quarterly', 'yearly', 'custom']
 const WEEKDAYS    = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
@@ -186,7 +186,7 @@ export default function RecurringRules({ walletId, onRulesChanged }) {
             {/* Amount + Start date */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-ink-soft mb-1">Amount (€)</label>
+                <label className="block text-xs font-medium text-ink-soft mb-1">Amount ({activeCurrencySymbol()})</label>
                 <input type="number" value={form.amount} onChange={e => setField('amount', e.target.value)}
                   placeholder="0.00"
                   className="w-full px-3 py-2 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink" />

@@ -1,5 +1,5 @@
 import { format } from 'date-fns'
-import { formatMoney } from '../lib/format'
+import { formatMoney, formatMoneyCompact } from '../lib/format'
 
 const W = 460, H = 200
 const X0 = 35, X1 = 455
@@ -12,12 +12,7 @@ function niceStep(range) {
   return 1000
 }
 
-function fmtY(val) {
-  if (val === 0) return '€0'
-  const sign = val < 0 ? '−' : ''
-  const abs = Math.abs(val)
-  return abs >= 1000 ? `${sign}€${(abs / 1000).toFixed(abs % 1000 === 0 ? 0 : 1)}k` : `${sign}€${abs}`
-}
+const fmtY = formatMoneyCompact
 
 function fmtAmount(amount, type) {
   return type === 'income' ? `+${formatMoney(amount)}` : `−${formatMoney(amount)}`

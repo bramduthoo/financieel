@@ -437,6 +437,37 @@ screenshots Dashboard/Wallets/Settings light+dark + an in-browser scroll proof.
 4. **New dashboard** (content redesign — explicitly separate from the reskin).
 5. **PDF transaction import.**
 
+**Display currency setting: DONE.** (Branch `b/currency-setting`, 2026-07-13, cut from
+`b/redesign-rollout` since it depends on R2 tokens — base R2 first, or rebase onto `main` after R2
+merges.) Revived the previously-dead `settings.currency` + `settings.currency_symbol` columns — **no
+migration** (both already existed). **Display only: swaps the symbol, never converts amounts** (Settings
+card copy says so). Number grouping stays European (`1.234,56`) for every currency in v1; only symbol +
+position vary.
+- **`src/lib/format.js`:** `CURRENCIES` map (EUR/USD/GBP/CHF/CAD/AUD before-symbol; SEK/NOK/PLN
+  after-symbol); a module-level `_active` singleton + `setActiveCurrency()`; `formatMoney(amount,
+  {decimals, currency})` resolves symbol/position from an explicit `currency` override or `_active`
+  (default EUR path byte-identical to before). New `activeCurrencySymbol()` (static `(€)` input labels +
+  euro/% toggles) and `formatMoneyCompact()` (chart axis ticks — de-duped the 5 charts that hard-coded `€`).
+- **Live everywhere via re-render cascade, not a hook:** `src/lib/CurrencyContext.jsx` (mirrors
+  ThemeContext) + `App.jsx` load `settings.currency` and keep `_active` in sync through `setCurrency`.
+  Because **no component uses `React.memo`**, a switch re-renders the whole tree and every `formatMoney`
+  call re-runs against the new symbol — so the ~130 plain `formatMoney(x)` call sites needed **zero
+  changes**. `Settings.jsx`: static card → styled `<select>`; `updateSetting` generalised to a patch
+  object writing both currency columns.
+- **Scope beyond the plan (owner-approved mid-build):** also made the 5 chart axis formatters + ~13
+  static `Amount (€)`/budget/threshold input labels + the euro/% mode toggles currency-aware. Only the
+  danger-zone "reset to €0" copy (3 strings) intentionally left as `€`.
+- **`currency_symbol` is write-only from the frontend** — persisted per the request, but the symbol is
+  always derived from the `CURRENCIES` map by code (single source of truth). A future reader shouldn't
+  treat the column as authoritative.
+- **Verified by Claude Code:** 74 tests green (15 new/updated formatter cases: per-currency, position,
+  minus placement, unknown-code fallback, ambient singleton), build clean, `design-check` clean,
+  `code-reviewer` clean pass (reactivity + `formatMoneyCompact` equivalence confirmed), Playwright (test
+  account) EUR→USD→EUR round-trip with Dashboard/Wallets/Settings screenshots; test account left on EUR.
+- **Owner still to do:** review/merge the PR (base it on `b/redesign-rollout`/R2, or rebase after R2 merges).
+- **Future (out of scope, v1):** actual amount conversion; per-currency separators/decimals (JPY-style
+  0-decimal); still-unbuilt privacy mode (a toggle inside `formatMoney`).
+
 **Later phases (plans already written, unchanged):**
 - **Backup/restore (export/import)** — `backup-restore-feature-plan.md`; prerequisite for encryption.
 - **Client-side encryption** — after testing + backup; two open discussions first (atomicity;
@@ -575,6 +606,22 @@ Deferred / smaller:
   base tokens auto-theme), then hand-fix the bespoke bits (tab bars, page backgrounds, inline-SVG chart
   colours, badges). Gate with `npm run build` (catches broken JSX/undefined refs), `design-check` greps,
   and a both-theme screenshot sweep — a green build alone doesn't prove the pixels.
+- **Display currency is a symbol swap, not conversion** (currency phase): the owner wanted a currency
+  picker but the app stores plain euro-numeric balances, so converting would mean FX rates + rewriting
+  every stored amount. Decision: v1 changes only the rendered symbol (and its before/after position);
+  amounts and European grouping are untouched, and the Settings card says so honestly. Real conversion
+  is explicitly deferred.
+- **Currency propagates via a module singleton + tree re-render, not a `formatMoney` hook** (currency
+  phase): `formatMoney` is called plainly in ~130 places, so a hook would have meant editing all of
+  them. Instead `format.js` holds an `_active` currency the formatter reads by default, and a
+  root-level `CurrencyContext`/state keeps it in sync — since nothing uses `React.memo`, a switch
+  re-renders the whole tree and every call re-runs against the new symbol. Zero call-site changes.
+  Tests stay deterministic by passing an explicit `{ currency }` override (the singleton is only the
+  default). Caveat for the future: if a `React.memo` boundary is ever added around a money-displaying
+  component, it must consume `CurrencyContext` or it will show a stale symbol.
+- **`currency_symbol` column is persisted but never read** (currency phase): the request said persist
+  both columns, so we do, but the symbol is always derived from the `CURRENCIES` map by currency code
+  (one source of truth). Don't let a future reader treat the stored `currency_symbol` as authoritative.
 
 ---
 

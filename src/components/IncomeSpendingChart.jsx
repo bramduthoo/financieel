@@ -1,4 +1,4 @@
-import { formatMoney } from '../lib/format'
+import { formatMoney, formatMoneyCompact } from '../lib/format'
 
 // SVG layout
 const W = 720, H = 240
@@ -12,10 +12,7 @@ function niceMax(val) {
   return Math.ceil(val / mag) * mag
 }
 
-function fmtY(val) {
-  if (val >= 1000) return `€${(val / 1000).toFixed(val % 1000 === 0 ? 0 : 1)}k`
-  return `€${Math.round(val)}`
-}
+const fmtY = formatMoneyCompact
 
 export default function IncomeSpendingChart({ data }) {
   const maxVal = niceMax(Math.max(...data.flatMap(d => [d.income, d.spending]), 0))

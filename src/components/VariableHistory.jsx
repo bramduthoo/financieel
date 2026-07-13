@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { format, parseISO } from 'date-fns'
 import { ChevronUp, ChevronDown, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import { formatMoney } from '../lib/format'
+import { formatMoney, activeCurrencySymbol } from '../lib/format'
 
 export default function VariableHistory({ walletId }) {
   const [transactions, setTransactions] = useState([])
@@ -255,7 +255,7 @@ export default function VariableHistory({ walletId }) {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-ink-soft mb-1">Amount (€)</label>
+                <label className="block text-xs font-medium text-ink-soft mb-1">Amount ({activeCurrencySymbol()})</label>
                 <input
                   type="number" value={editForm.amount}
                   onChange={e => setEditForm(f => ({ ...f, amount: e.target.value }))}

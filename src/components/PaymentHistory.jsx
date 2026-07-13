@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { formatMoney } from '../lib/format'
+import { formatMoney, activeCurrencySymbol } from '../lib/format'
 import { format, parseISO } from 'date-fns'
 import { ChevronUp, ChevronDown, X } from 'lucide-react'
 
@@ -302,7 +302,7 @@ export default function PaymentHistory({ walletId }) {
             </div>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-ink-soft mb-1">Amount (€)</label>
+                <label className="block text-xs font-medium text-ink-soft mb-1">Amount ({activeCurrencySymbol()})</label>
                 <input
                   type="number"
                   value={editForm.amount}

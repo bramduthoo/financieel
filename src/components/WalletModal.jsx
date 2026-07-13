@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { X, Minus, Plus } from 'lucide-react'
 import { WALLET_ICONS, ICON_CHOICES, defaultIconForType } from '../lib/walletIcons'
+import { activeCurrencySymbol } from '../lib/format'
 
 // Wallets keep a stored `colour` (defaulted) for legacy data, but the UI now
 // identifies wallets by their chosen icon, not colour.
@@ -126,7 +127,7 @@ export default function WalletModal({ wallet, onClose, onSave }) {
         {type !== 'investment' && (
           <div className="mb-3">
             <label className="block text-sm font-medium text-ink-soft mb-1">
-              Monthly budget (€)
+              Monthly budget ({activeCurrencySymbol()})
             </label>
             <input
               type="number"

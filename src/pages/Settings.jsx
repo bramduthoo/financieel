@@ -4,6 +4,8 @@ import { AlertTriangle, LogOut } from 'lucide-react'
 import { format } from 'date-fns'
 import { supabase } from '../lib/supabase'
 import { useTheme } from '../lib/ThemeContext'
+import { useCurrency } from '../lib/CurrencyContext'
+import { CURRENCIES } from '../lib/format'
 import IncomeConfirmModal from '../components/IncomeConfirmModal'
 
 const authInputClass =
@@ -76,6 +78,7 @@ function SettingCard({ label, description, children }) {
 export default function Settings() {
   const navigate = useNavigate()
   const { setTheme } = useTheme()
+  const { setCurrency } = useCurrency()
 
   const [settings, setSettings] = useState(null)
   const [loading,  setLoading]  = useState(true)
@@ -175,9 +178,15 @@ export default function Settings() {
 
   async function updateSetting(field, value) {
     if (!settings?.id) return
-    await supabase.from('settings').update({ [field]: value }).eq('id', settings.id)
-    setSettings(prev => ({ ...prev, [field]: value }))
+    // Currency writes two columns at once (code + symbol) and drives the live
+    // re-render via context; theme flips the ThemeContext. Everything else is a
+    // plain single-column patch.
+    const patch = { [field]: value }
+    if (field === 'currency') patch.currency_symbol = (CURRENCIES[value] ?? CURRENCIES.EUR).symbol
+    await supabase.from('settings').update(patch).eq('id', settings.id)
+    setSettings(prev => ({ ...prev, ...patch }))
     if (field === 'theme') setTheme(value)
+    if (field === 'currency') setCurrency(value)
     if (timerRef.current) clearTimeout(timerRef.current)
     setSaved(true)
     timerRef.current = setTimeout(() => setSaved(false), 2000)
@@ -279,11 +288,19 @@ export default function Settings() {
 
         <SettingCard
           label="Currency"
-          description="The currency used throughout the app."
+          description="Changes the currency symbol shown throughout the app. Amounts are not converted."
         >
-          <span className="text-sm font-medium text-ink-soft bg-field px-3 py-1.5 rounded-[8px]">
-            EUR €
-          </span>
+          <select
+            value={settings.currency ?? 'EUR'}
+            onChange={e => updateSetting('currency', e.target.value)}
+            className="text-sm font-medium text-ink bg-field border border-card-border rounded-[8px] px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-accent/30 cursor-pointer"
+          >
+            {Object.values(CURRENCIES).map(({ code, symbol }) => (
+              <option key={code} value={code}>
+                {code} — {symbol}
+              </option>
+            ))}
+          </select>
         </SettingCard>
 
         <SettingCard
