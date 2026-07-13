@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns'
 import { supabase } from '../lib/supabase'
-import { formatMoney } from '../lib/format'
+import { formatMoney, formatMoneyCompact } from '../lib/format'
 
 // SVG layout
 const W = 560, H = 210
@@ -15,10 +15,7 @@ function niceMax(val) {
   return Math.ceil(val / mag) * mag
 }
 
-function fmtY(val) {
-  if (val >= 1000) return `€${(val / 1000).toFixed(val % 1000 === 0 ? 0 : 1)}k`
-  return `€${Math.round(val)}`
-}
+const fmtY = formatMoneyCompact
 
 export default function WalletTrendsChart({ walletId }) {
   const [transactions, setTransactions] = useState([])
