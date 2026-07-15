@@ -73,6 +73,19 @@ Prefer the token utilities over raw hex; wallets are identified by their icon (`
 
 ## Workflow conventions
 
+- **First-time machine setup (per clone, not carried by the repo).** Cloning gives you `CLAUDE.md`,
+  the project skills (`.claude/skills/`), hooks, and the plugin *enablement* + marketplace in
+  `.claude/settings.json` — but **not** the plugin *installs* or per-machine git config. On a new
+  machine: (1) install the official plugins once (`context7`, `supabase`, `playwright`, `github`
+  from `claude-plugins-official` — the marketplace is pre-declared via `extraKnownMarketplaces`,
+  so Claude Code can offer to install the enabled ones); (2) `git config --global fetch.prune true`.
+  GitHub's auto-delete-on-merge is server-side, so it already applies to everyone.
+- **Sync before branching (every session).** Start with `git fetch origin --prune`, fast-forward
+  local `main` (`git switch main && git pull --ff-only`), then cut new work from fresh upstream:
+  `git switch -c b/foo origin/main` — never off a stale local `main`. GitHub auto-deletes merged
+  head branches and `fetch.prune` is enabled, so after the fetch any local branch marked
+  `[gone]` in `git branch -vv` is a merged leftover — delete it with `git branch -d` (safe: it
+  refuses if not actually merged; squash-merged ones need `-D`).
 - **Plan mode first** for any feature or refactor; get the plan approved before writing code.
 - Stay in scope: do not change logic, signatures, or queries beyond the approved plan. Report
   exactly what changed.
