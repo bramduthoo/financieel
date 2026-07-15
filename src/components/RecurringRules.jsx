@@ -148,7 +148,7 @@ export default function RecurringRules({ walletId, onRulesChanged }) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-medium text-ink">Recurring payments</h2>
         <button onClick={openCreate}
           className="flex items-center gap-1.5 text-xs text-ink hover:text-ink font-medium">
@@ -310,10 +310,10 @@ export default function RecurringRules({ walletId, onRulesChanged }) {
       {rules.length === 0 ? (
         <p className="text-xs text-ink-faint">No recurring payments yet.</p>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {rules.map(r => (
             <div key={r.id}
-              className="flex items-center justify-between bg-card border border-card-border rounded-lg px-4 py-3">
+              className="flex items-center justify-between bg-card border border-card-border rounded-lg px-4 py-2">
               <div>
                 <p className="text-sm font-medium text-ink">{r.name}</p>
                 {r.description && <p className="text-xs text-ink-faint">{r.description}</p>}

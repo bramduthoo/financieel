@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState, useMemo } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, Edit2, X } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { supabase, getCurrentUserId } from '../lib/supabase'
@@ -91,6 +91,7 @@ function SalaryBarChart({ chain }) {
 export default function IncomeRecurringDetail() {
   const { id }   = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const [rule,     setRule]     = useState(null)
   const [allRules, setAllRules] = useState([])
@@ -124,6 +125,13 @@ export default function IncomeRecurringDetail() {
     setAllWallets(w ?? [])
     setUnallocatedWalletId(ua?.id ?? null)
     setLoading(false)
+    // "Log now" from the Income page navigates here with { state: { log: true } } — open the
+    // existing log modal once the rule is loaded, then clear the nav state so a refresh/back
+    // doesn't reopen it. Reuses the existing log flow; adds no new logging logic.
+    if (location.state?.log && r) {
+      setLogModal({ amount: String(r.amount), date: todayStr() })
+      navigate(location.pathname, { replace: true, state: {} })
+    }
   }
 
   const chain = useMemo(() => {
@@ -301,7 +309,7 @@ export default function IncomeRecurringDetail() {
             </thead>
             <tbody className="divide-y divide-inner-border">
               {chain.map(r => (
-                <tr key={r.id} className={r.id === rule.id ? 'bg-accent/5' : ''}>
+                <tr key={r.id} className={r.id === rule.id ? 'bg-accent/5' : 'even:bg-field'}>
                   <td className="px-4 py-2.5 text-ink-soft whitespace-nowrap text-xs">
                     {format(parseISO(r.start_date), 'd MMM yyyy')}
                     {r.end_date ? ` – ${format(parseISO(r.end_date), 'd MMM yyyy')}` : ' – present'}

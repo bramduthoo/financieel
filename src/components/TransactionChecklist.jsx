@@ -87,7 +87,7 @@ export default function TransactionChecklist({ walletId, onBalanceChanged }) {
 
   return (
     <div>
-      <h2 className="text-sm font-medium text-ink mb-4">
+      <h2 className="text-sm font-medium text-ink mb-3">
         Pending payments
         {pending.length > 0 && (
           <span className="ml-2 bg-negative-tint text-negative text-[11px] font-medium px-2 py-0.5 rounded-full">
@@ -97,15 +97,15 @@ export default function TransactionChecklist({ walletId, onBalanceChanged }) {
       </h2>
 
       {pending.length === 0 ? (
-        <div className="text-center py-8 text-ink-faint">
-          <CheckCircle2 size={32} className="mx-auto mb-2 text-positive" />
+        <div className="text-center py-5 text-ink-faint">
+          <CheckCircle2 size={26} className="mx-auto mb-1.5 text-positive" />
           <p className="text-sm">All payments up to date</p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {pending.map((item, i) => (
             <div key={i}
-              className="flex items-center justify-between bg-card border border-warning/30 rounded-lg px-4 py-3">
+              className="flex items-center justify-between bg-card border border-warning/30 rounded-lg px-4 py-2">
               <div className="flex items-center gap-3">
                 <button onClick={() => { setConfirmItem(item); setRemark('') }}>
                   <Circle size={18} className="text-ink-faint dark:text-ink-soft hover:text-accent transition-colors" />

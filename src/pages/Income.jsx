@@ -1,15 +1,18 @@
 ﻿import { useEffect, useState, useMemo } from 'react'
-import { Plus, Edit2, Trash2, X, TrendingUp, FileText, ChevronUp, ChevronDown, ChevronRight } from 'lucide-react'
+import { Plus, Edit2, Trash2, X, TrendingUp, FileText, Repeat, ChevronUp, ChevronDown } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { useNavigate } from 'react-router-dom'
 import { supabase, getCurrentUserId } from '../lib/supabase'
-import { generateUpcomingDates } from '../lib/recurringUtils'
+import { generateUpcomingDates, formatFrequency } from '../lib/recurringUtils'
 import IncomeConfirmModal from '../components/IncomeConfirmModal'
 import DistributionPopup from '../components/DistributionPopup'
 import { distributeIncome } from '../lib/distributeIncome'
 import { evaluateUnallocatedPlans } from '../lib/unallocatedPlans'
+import { incomeSummary, recurringDueState } from '../lib/incomeMetrics'
 import { formatMoney } from '../lib/format'
 import { WalletIcon } from '../lib/walletIcons'
+import SummaryStrip from '../components/ui/SummaryStrip'
+import CompactRow from '../components/ui/CompactRow'
 
 const FREQ_OPTIONS = [
   { value: 'weekly',    label: 'Weekly' },
@@ -30,12 +33,21 @@ function fmt(n) { return formatMoney(n) }
 function round2(n) { return Number(Number(n).toFixed(2)) }
 function todayStr() { return format(new Date(), 'yyyy-MM-dd') }
 
+// Rows [{ [key]: parentId, wallet_id }] → { parentId: distinctWalletCount }.
+function countDistinct(rows, key) {
+  const sets = {}
+  for (const row of rows ?? []) {
+    (sets[row[key]] ??= new Set()).add(row.wallet_id)
+  }
+  return Object.fromEntries(Object.entries(sets).map(([k, set]) => [k, set.size]))
+}
+
 function getNextDue(rule) {
   if (rule.frequency === 'quarterly') return 'every quarter'
   if (rule.frequency === 'yearly')    return 'every year'
   try {
     const dates = generateUpcomingDates(rule, new Date(), 1)
-    return dates[0] ? format(dates[0], 'd MMM yyyy') : '—'
+    return dates[0] ? format(dates[0], 'd MMM').toLowerCase() : '—'
   } catch {
     return '—'
   }
@@ -53,7 +65,11 @@ export default function Income() {
   const [entries,           setEntries]          = useState([])
   const [allRecurringRules, setAllRecurringRules] = useState([])
   const [templates,         setTemplates]        = useState([])
+  const [ruleWalletCount,   setRuleWalletCount]  = useState({})   // income_recurring_id → distinct wallet count
+  const [tplWalletCount,    setTplWalletCount]   = useState({})   // income_template_id → distinct wallet count
   const [loading,           setLoading]          = useState(true)
+
+  const now = new Date()
 
   const recurringRules = useMemo(
     () => allRecurringRules.filter(r => !r.end_date),
@@ -83,7 +99,7 @@ export default function Income() {
 
   const [histSort,   setHistSort]   = useState({ field: 'date', dir: 'desc' })
   const [histFilter, setHistFilter] = useState({ sourceType: 'all', search: '' })
-  const [histLimit,  setHistLimit]  = useState(10)
+  const [histLimit,  setHistLimit]  = useState(5)
 
   const [allWallets,         setAllWallets]         = useState([])
   const [strictMode,         setStrictMode]         = useState(true)
@@ -131,17 +147,21 @@ export default function Income() {
 
   async function fetchAll() {
     setLoading(true)
-    const [{ data: e }, { data: r }, { data: t }, { data: w }, { data: s }, { data: ua }] = await Promise.all([
+    const [{ data: e }, { data: r }, { data: t }, { data: w }, { data: s }, { data: ua }, { data: dr }, { data: ti }] = await Promise.all([
       supabase.from('income_entries').select('*').order('date', { ascending: false }),
       supabase.from('income_recurring').select('*').order('start_date', { ascending: true }),
       supabase.from('income_templates').select('*').order('created_at', { ascending: true }),
       supabase.from('wallets').select('*').eq('is_active', true).order('sort_order'),
       supabase.from('settings').select('strict_distribution').single(),
       supabase.from('wallets').select('id').eq('is_system', true).single(),
+      supabase.from('income_distribution_rules').select('income_recurring_id, wallet_id'),
+      supabase.from('income_template_distribution_items').select('income_template_id, wallet_id'),
     ])
     setEntries(e ?? [])
     setAllRecurringRules(r ?? [])
     setTemplates(t ?? [])
+    setRuleWalletCount(countDistinct(dr, 'income_recurring_id'))
+    setTplWalletCount(countDistinct(ti, 'income_template_id'))
     setAllWallets(w ?? [])
     setStrictMode(s?.strict_distribution ?? true)
     setUnallocatedWalletId(ua?.id ?? null)
@@ -464,113 +484,126 @@ export default function Income() {
 
   // ─── Render ────────────────────────────────────────────────────────────────
 
+  const summary = incomeSummary(entries, now)
+
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-2xl font-medium text-ink">Income</h1>
-          <p className="text-ink-muted text-sm mt-1">Track income from all sources</p>
+          <h1 className="text-xl font-medium tracking-tight text-ink">Income</h1>
+          <p className="text-ink-muted text-[13px] mt-0.5">Track income from all sources</p>
         </div>
         <button
           onClick={() => openModal('quick')}
-          className="flex items-center gap-2 bg-ink text-cream px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-colors"
+          className="flex items-center gap-2 bg-ink text-cream px-4 py-2 rounded-[9px] text-sm font-medium hover:opacity-90 transition-opacity"
         >
           <Plus size={15} />
-          Add Income
+          Add income
         </button>
       </div>
 
-      {/* History table */}
       {loading ? (
         <p className="text-ink-faint text-sm mb-8">Loading…</p>
       ) : (
-        <div className="mb-8">
-          <div className="flex flex-wrap gap-3 mb-3 items-center">
-            <select
-              value={histFilter.sourceType}
-              onChange={e => setHistFilter(f => ({ ...f, sourceType: e.target.value }))}
-              className="px-3 py-1.5 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
-            >
-              <option value="all">All types</option>
-              <option value="manual">Manual</option>
-              <option value="recurring">Recurring</option>
-              <option value="template">Template</option>
-            </select>
-            <input
-              value={histFilter.search}
-              onChange={e => setHistFilter(f => ({ ...f, search: e.target.value }))}
-              placeholder="Search source…"
-              className="px-3 py-1.5 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 min-w-[160px] bg-field text-ink"
-            />
-            <div className="ml-auto">
+        <>
+          {/* Summary strip */}
+          <SummaryStrip
+            className="mb-6"
+            stats={[
+              { label: 'This month', value: `${summary.thisMonthTotal > 0 ? '+' : ''}${fmt(summary.thisMonthTotal)}`, tone: summary.thisMonthTotal > 0 ? 'positive' : 'ink' },
+              { label: `vs ${summary.prevMonthLabel}`, value: `${summary.deltaVsPrev > 0 ? '+' : ''}${fmt(summary.deltaVsPrev)}`, tone: summary.deltaVsPrev > 0 ? 'positive' : summary.deltaVsPrev < 0 ? 'negative' : 'ink' },
+              { label: `Entries · ${summary.year}`, value: String(summary.entryCountThisYear) },
+            ]}
+          />
+
+          {/* History table */}
+          <div className="bg-card border border-card-border rounded-[14px] overflow-hidden mb-8">
+            {/* Filter header row */}
+            <div className="flex flex-wrap gap-3 items-center px-4 py-2 border-b border-inner-border">
+              <select
+                value={histFilter.sourceType}
+                onChange={e => setHistFilter(f => ({ ...f, sourceType: e.target.value }))}
+                className="px-3 py-1.5 border border-card-border rounded-[8px] text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
+              >
+                <option value="all">All types</option>
+                <option value="manual">Manual</option>
+                <option value="recurring">Recurring</option>
+                <option value="template">Template</option>
+              </select>
+              <input
+                value={histFilter.search}
+                onChange={e => setHistFilter(f => ({ ...f, search: e.target.value }))}
+                placeholder="Search source…"
+                className="px-3 py-1.5 border border-card-border rounded-[8px] text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 min-w-[160px] flex-1 bg-field text-ink"
+              />
               <select
                 value={histLimit === 'all' ? 'all' : histLimit}
                 onChange={e => setHistLimit(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-                className="px-3 py-1.5 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink"
+                className="px-3 py-1.5 border border-card-border rounded-[8px] text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink ml-auto"
               >
+                <option value={5}>Show 5</option>
                 <option value={10}>Show 10</option>
                 <option value={25}>Show 25</option>
                 <option value={50}>Show 50</option>
                 <option value="all">Show all</option>
               </select>
             </div>
-          </div>
 
-          <div className="bg-card border border-card-border rounded-[14px] overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-inner-border bg-track">
-                  <th className="px-4 py-3 text-left">
-                    <button onClick={() => toggleSort('date')} className="flex items-center gap-1 text-xs font-medium text-ink-muted uppercase tracking-wide hover:text-ink dark:hover:text-ink">
+                <tr className="border-b border-inner-border">
+                  <th className="px-4 py-2 text-left">
+                    <button onClick={() => toggleSort('date')} className="flex items-center gap-1 text-[11px] font-medium text-ink-muted uppercase tracking-wider hover:text-ink">
                       Date <SortIcon field="date" />
                     </button>
                   </th>
-                  <th className="px-4 py-3 text-left">
-                    <button onClick={() => toggleSort('source')} className="flex items-center gap-1 text-xs font-medium text-ink-muted uppercase tracking-wide hover:text-ink dark:hover:text-ink">
+                  <th className="px-4 py-2 text-left">
+                    <button onClick={() => toggleSort('source')} className="flex items-center gap-1 text-[11px] font-medium text-ink-muted uppercase tracking-wider hover:text-ink">
                       Source <SortIcon field="source" />
                     </button>
                   </th>
-                  <th className="px-4 py-3 text-right">
-                    <button onClick={() => toggleSort('amount')} className="flex items-center gap-1 text-xs font-medium text-ink-muted uppercase tracking-wide hover:text-ink dark:hover:text-ink ml-auto">
+                  <th className="px-4 py-2 text-left text-[11px] font-medium text-ink-muted uppercase tracking-wider">Type</th>
+                  <th className="px-4 py-2 text-right">
+                    <button onClick={() => toggleSort('amount')} className="flex items-center gap-1 text-[11px] font-medium text-ink-muted uppercase tracking-wider hover:text-ink ml-auto">
                       Amount <SortIcon field="amount" />
                     </button>
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-ink-muted uppercase tracking-wide">Type</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-ink-muted uppercase tracking-wide">Note</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-inner-border">
+              <tbody>
                 {displayedEntries.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-4 py-12 text-center text-ink-faint">No entries found</td>
+                    <td colSpan={4} className="px-4 py-12 text-center text-ink-faint">No entries found</td>
                   </tr>
                 ) : displayedEntries.map(e => (
                   <tr
                     key={e.id}
                     onClick={() => setDetailEntry(e)}
-                    className="hover:bg-track transition-colors cursor-pointer"
+                    className="even:bg-field hover:bg-track transition-colors cursor-pointer"
                   >
-                    <td className="px-4 py-3 text-ink-soft whitespace-nowrap">{format(parseISO(e.date), 'd MMM yyyy')}</td>
-                    <td className="px-4 py-3 font-medium text-ink">{e.source}</td>
-                    <td className="px-4 py-3 text-right font-medium text-positive whitespace-nowrap">+{fmt(e.amount)}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-2 text-ink-soft whitespace-nowrap">{format(parseISO(e.date), 'd MMM')}</td>
+                    <td className="px-4 py-2">
+                      <span className="font-medium text-ink">{e.source}</span>
+                      {e.note && <span className="text-ink-muted"> · {e.note}</span>}
+                    </td>
+                    <td className="px-4 py-2">
                       <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium capitalize ${TYPE_BADGE[e.source_type] ?? 'bg-track text-ink-muted'}`}>
                         {e.source_type ?? 'manual'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-ink-faint text-xs">{e.note ?? '—'}</td>
+                    <td className="px-4 py-2 text-right font-medium text-positive whitespace-nowrap">+{fmt(e.amount)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            {filteredEntries.length > displayedEntries.length && (
-              <p className="px-4 py-2 text-xs text-ink-faint border-t border-inner-border">
+            {filteredEntries.length > 0 && (
+              <p className="px-4 py-2 text-[11px] text-ink-muted border-t border-inner-border">
                 Showing {displayedEntries.length} of {filteredEntries.length} entries
               </p>
             )}
           </div>
-        </div>
+        </>
       )}
 
       {/* Two-column grid */}
@@ -596,40 +629,52 @@ export default function Income() {
               <p className="text-xs mt-1">Add a salary or regular source</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {recurringRules.map(rule => (
-                <div
-                  key={rule.id}
-                  onClick={() => navigate(`/income/recurring/${rule.id}`)}
-                  className="bg-card border border-card-border rounded-[14px] p-4 cursor-pointer hover:border-ink-faint hover:shadow-sm transition-all"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="min-w-0">
-                      <p className="font-medium text-ink text-sm truncate">{rule.name}</p>
-                      <p className="text-xs text-ink-faint mt-0.5 capitalize">{rule.frequency} · next: {getNextDue(rule)}</p>
-                    </div>
-                    <div className="flex items-center gap-1 ml-2 shrink-0">
-                      <button
-                        onClick={e => { e.stopPropagation(); openModal('recurring', { editRule: rule }) }}
-                        className="p-1.5 text-ink-faint hover:text-ink rounded-lg transition-colors"
-                      >
-                        <Edit2 size={13} />
-                      </button>
-                      <button
-                        onClick={e => { e.stopPropagation(); archiveRecurring(rule) }}
-                        className="p-1.5 text-ink-faint hover:text-ink rounded-lg transition-colors"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                      <ChevronRight size={15} className="text-ink-faint ml-1" />
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between mt-2">
-                    <p className="text-xl font-medium text-ink dark:text-ink">{fmt(rule.amount)}</p>
-                    <ChevronRight size={16} className="text-ink-faint dark:text-ink-soft" />
-                  </div>
-                </div>
-              ))}
+            <div className="divide-y divide-inner-border">
+              {recurringRules.map(rule => {
+                const wc  = ruleWalletCount[rule.id] ?? 0
+                const due = recurringDueState(rule, entries, now) === 'due'
+                return (
+                  <CompactRow
+                    key={rule.id}
+                    icon={<Repeat size={14} />}
+                    chipClass="bg-[#FAEEDA] text-[#854F0B]"
+                    name={rule.name}
+                    meta={`${formatFrequency(rule.frequency)} · next ${getNextDue(rule)}${wc ? ` · ${wc} wallet${wc > 1 ? 's' : ''}` : ''}`}
+                    value={fmt(rule.amount)}
+                    onClick={() => navigate(`/income/recurring/${rule.id}`)}
+                    trailing={
+                      <div className="ml-2 flex items-center gap-1 flex-shrink-0">
+                        {due ? (
+                          <button
+                            onClick={e => { e.stopPropagation(); navigate(`/income/recurring/${rule.id}`, { state: { log: true } }) }}
+                            className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#FAEEDA] text-[#854F0B] whitespace-nowrap hover:opacity-80 transition-opacity"
+                          >
+                            Log now
+                          </button>
+                        ) : (
+                          <span className="text-[11px] text-ink-faint whitespace-nowrap">logged&nbsp;✓</span>
+                        )}
+                        <div className="hidden group-hover:flex focus-within:flex pointer-coarse:flex items-center gap-1">
+                          <button
+                            onClick={e => { e.stopPropagation(); openModal('recurring', { editRule: rule }) }}
+                            className="p-1.5 text-ink-faint hover:text-ink hover:bg-track rounded-lg transition-colors"
+                            aria-label="Edit recurring income"
+                          >
+                            <Edit2 size={13} />
+                          </button>
+                          <button
+                            onClick={e => { e.stopPropagation(); archiveRecurring(rule) }}
+                            className="p-1.5 text-ink-faint hover:text-negative hover:bg-negative-tint rounded-lg transition-colors"
+                            aria-label="Archive recurring income"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </div>
+                    }
+                  />
+                )
+              })}
             </div>
           )}
         </div>
@@ -655,36 +700,42 @@ export default function Income() {
               <p className="text-xs mt-1">Save amounts you log regularly</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {templates.map(t => (
-                <div
-                  key={t.id}
-                  onClick={() => setLogTemplate({ template: t, amount: String(t.amount), date: todayStr() })}
-                  className="bg-card border border-card-border rounded-[14px] p-4 cursor-pointer hover:border-ink-faint hover:shadow-sm transition-all"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="min-w-0">
-                      <p className="font-medium text-ink text-sm truncate">{t.name}</p>
-                      {t.note && <p className="text-xs text-ink-faint mt-0.5 truncate">{t.note}</p>}
-                    </div>
-                    <div className="flex items-center gap-1 ml-2 shrink-0">
-                      <button
-                        onClick={e => { e.stopPropagation(); openModal('template', { editTemplate: t }) }}
-                        className="p-1.5 text-ink-faint hover:text-ink hover:bg-accent/10 rounded-lg transition-colors"
-                      >
-                        <Edit2 size={13} />
-                      </button>
-                      <button
-                        onClick={e => { e.stopPropagation(); deleteTemplate(t) }}
-                        className="p-1.5 text-ink-faint hover:text-negative hover:bg-negative-tint rounded-lg transition-colors"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-                  </div>
-                  <p className="text-xl font-medium text-ink dark:text-ink mt-2">{fmt(t.amount)}</p>
-                </div>
-              ))}
+            <div className="divide-y divide-inner-border">
+              {templates.map(t => {
+                const wc = tplWalletCount[t.id] ?? 0
+                const meta = wc > 0
+                  ? `${wc} wallet${wc > 1 ? 's' : ''}${t.send_remainder ? ' · remainder → Unallocated' : ''}`
+                  : (t.note || 'no distribution set')
+                return (
+                  <CompactRow
+                    key={t.id}
+                    icon={<FileText size={14} />}
+                    chipClass="bg-positive-tint text-positive"
+                    name={t.name}
+                    meta={meta}
+                    value={fmt(t.amount)}
+                    onClick={() => setLogTemplate({ template: t, amount: String(t.amount), date: todayStr() })}
+                    trailing={
+                      <div className="ml-2 hidden group-hover:flex focus-within:flex pointer-coarse:flex items-center gap-1 flex-shrink-0">
+                        <button
+                          onClick={e => { e.stopPropagation(); openModal('template', { editTemplate: t }) }}
+                          className="p-1.5 text-ink-faint hover:text-ink hover:bg-track rounded-lg transition-colors"
+                          aria-label="Edit template"
+                        >
+                          <Edit2 size={13} />
+                        </button>
+                        <button
+                          onClick={e => { e.stopPropagation(); deleteTemplate(t) }}
+                          className="p-1.5 text-ink-faint hover:text-negative hover:bg-negative-tint rounded-lg transition-colors"
+                          aria-label="Delete template"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    }
+                  />
+                )
+              })}
             </div>
           )}
         </div>

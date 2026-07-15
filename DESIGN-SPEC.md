@@ -139,3 +139,61 @@ positive fill `#639922` family, negative `#E24B4A` family, dashed zero baseline 
 | Dark mode | every element ships both themes; dark uses lighter text stops, alpha tints, fill separation |
 | Money rendering | via `formatMoney()` — inline `toFixed` on amounts is a violation |
 | Budget hints | grey hint only for fixed/capped wallets with non-zero budget; never render "€ 0" |
+
+## 8. Density & completeness patterns (locked — the density pass, 2026-07-13)
+
+Owner-approved via three mockups (`docs/wallets.png`, `docs/income.png`, `docs/settings.png`
+and their `_straightFromClaudeInterface` variants, which are the authoritative target). These
+put **existing** data onto existing surfaces with real density — no new features, no fabricated
+numbers. Every number shown comes from queried data or a tested `src/lib/` calc. The six rules
+below are non-negotiable and apply identically on every page (no per-page reinterpretation).
+
+Shared primitives live in `src/components/ui/` and are reused, never re-copied per page:
+`SummaryStrip` (+ `StatCell`), `CompactRow`, `GhostAddCard`, `CardFooterMeta`, `MetricBar`.
+
+**Rule 1 — Every content card earns its space with a real number, no empty bottom half.**
+Lead with the hero value at **22px `font-medium tracking-tight`** (`text-[22px]`). Supporting
+quantities become a **`MetricBar`** (5–6px tall, `rounded-full`, track `bg-track`, fill =
+wallet/semantic color) with an **11px caption** line directly under it. The card footer is a
+single **11px `text-ink-muted`** metadata line (`CardFooterMeta`, pushed down with `mt-auto`)
+sourced from real data. A bar needs an **honest denominator**: fixed = `balance/budget`,
+capped = `balance/cap`, accumulating = `netInflowThisMonth/budget`. **Exception:** cards with
+no honest denominator (investment — no budget/cap; the Unallocated system card) **omit the
+bar** and instead carry a real delta/status caption — never a fabricated ratio.
+
+**Rule 2 — Summary strip under every page header.** A `SummaryStrip`: a segmented stat bar of
+3–4 `StatCell`s divided by **1px `inner-border`** gaps, each cell an **11px uppercase
+`tracking-wider text-ink-muted`** label above an **18px (`text-lg`) value**. Stats are computed
+**only from that page's own data**. Wallets: total balance / active wallets / budgeted per
+month / Unallocated balance (coral). Income: this-month total / delta vs previous month
+(dynamic month label) / entries this year. Settings has **no** strip (Rule 5 applies instead).
+
+**Rule 3 — Tables are dense.** Merge related columns (source + note → name + `text-ink-muted`
+suffix in one cell). Amounts **hard right-aligned in the last column**. Column headers **11px
+uppercase `tracking-wider text-ink-muted`**. Subtle **zebra striping via `even:bg-field`**
+(auto-themes: warm stripe in light, fill-separation in dark — do not hand-roll per-theme hex).
+Footer row shows **`Showing X of Y`** plus pagination / show-N control. Size columns to content
+— no unallocated-width column leaving a dead horizontal gap.
+
+**Rule 4 — Repeated items are compact rows in ONE card, never individual large cards.** Use
+`CompactRow`: a **28px** icon chip + name + **11px `text-ink-muted`** meta line + right-aligned
+value, separated by **hairline dividers** (`divide-y divide-inner-border`). Applies to: the
+recurring-income list, the templates list, and the Unallocated templates / plans lists. A
+recurring row that is **due/loggable** shows the **existing** manual-log action as a small amber
+**"Log now" pill** (`bg-[#FAEEDA] text-[#854F0B]` light, alpha in dark) — this surfaces the
+existing recurring-log flow only. **No new logging logic, no auto-firing.** A row already logged
+this period shows a muted "logged ✓".
+
+**Rule 5 — Settings inverts.** Content column constrained to **`max-w-[640px]`**. Settings are
+grouped as **rows-with-dividers inside three section cards** labelled **Account / Preferences /
+Danger zone**. Each row = label + optional 11px description on the left, control on the right,
+`divide-y divide-inner-border` between rows. The **Danger zone** card uses a warm-red border
+(`border-negative/40`) and a `text-negative` uppercase section label. One control per
+full-width card is a violation.
+
+**Rule 6 — Grid remainders get a ghost add card.** An empty grid cell after the real cards is a
+`GhostAddCard`: **`border border-dashed border-card-border`**, muted centered icon + label, that
+opens the existing create flow. Never leave bare empty space in a card grid.
+
+Both themes ship for everything here, including zebra (`even:bg-field`) and the danger-zone
+border (the `negative` token already auto-themes per the §2 dark rule of thumb).

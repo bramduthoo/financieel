@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AlertTriangle, LogOut } from 'lucide-react'
+import { AlertTriangle, LogOut, X } from 'lucide-react'
 import { format } from 'date-fns'
 import { supabase } from '../lib/supabase'
 import { useTheme } from '../lib/ThemeContext'
@@ -55,20 +55,20 @@ function Toggle({ checked, onChange }) {
   )
 }
 
-function SettingCard({ label, description, children }) {
+// A single setting rendered as a full-width row inside a grouped section card
+// (DESIGN-SPEC §8, rule 5): label + optional description on the left, control on the right.
+function SettingRow({ label, description, children, danger = false }) {
   return (
-    <div className="bg-card border border-card-border rounded-[14px] p-6">
-      <div className="flex items-start justify-between gap-6">
-        <div className="flex-1">
-          <p className="text-sm font-medium text-ink">{label}</p>
-          {description && (
-            <p className="text-xs text-ink-muted mt-1 leading-relaxed">{description}</p>
-          )}
-        </div>
-        <div className="flex-shrink-0 flex items-center">
-          {children}
-        </div>
+    <div className="flex items-center justify-between gap-6 px-6 py-4">
+      <div className="min-w-0">
+        <p className={`text-sm font-medium ${danger ? 'text-negative' : 'text-ink'}`}>{label}</p>
+        {description && (
+          <p className={`text-xs mt-0.5 leading-relaxed ${danger ? 'text-negative/80' : 'text-ink-muted'}`}>
+            {description}
+          </p>
+        )}
       </div>
+      <div className="flex-shrink-0 flex items-center">{children}</div>
     </div>
   )
 }
@@ -92,6 +92,7 @@ export default function Settings() {
   const [deleteSuccess, setDeleteSuccess] = useState(false)
 
   // Password change (Task C)
+  const [pwModalOpen, setPwModalOpen] = useState(false)
   const [pwCurrent,  setPwCurrent]  = useState('')
   const [pwNew,      setPwNew]      = useState('')
   const [pwConfirm,  setPwConfirm]  = useState('')
@@ -124,6 +125,15 @@ export default function Settings() {
   function clearPwFeedback() {
     if (pwError) setPwError(null)
     if (pwSuccess) setPwSuccess(false)
+  }
+
+  function closePwModal() {
+    setPwModalOpen(false)
+    setPwCurrent('')
+    setPwNew('')
+    setPwConfirm('')
+    setPwError(null)
+    setPwSuccess(false)
   }
 
   async function handlePasswordChange() {
@@ -258,197 +268,168 @@ export default function Settings() {
         </span>
       </div>
 
-      <div className="max-w-2xl space-y-4">
-        {/* Profile (Task D) */}
-        <div className="bg-card border border-card-border rounded-[14px] p-6">
-          <p className="text-sm font-medium text-ink">Profile</p>
-          <p className="text-xs text-ink-muted mt-1 leading-relaxed">Your account details.</p>
-          <dl className="mt-4 space-y-2">
-            <div className="flex items-center justify-between gap-6">
-              <dt className="text-sm text-ink-muted">Email</dt>
-              <dd className="text-sm font-medium text-ink truncate">{userEmail ?? '—'}</dd>
-            </div>
-            {memberSince && (
-              <div className="flex items-center justify-between gap-6">
-                <dt className="text-sm text-ink-muted">Member since</dt>
-                <dd className="text-sm font-medium text-ink">{format(new Date(memberSince), 'd MMM yyyy')}</dd>
+      <div className="max-w-[640px] space-y-8">
+        {/* ── Account ─────────────────────────────────────────────────────────── */}
+        <section>
+          <h2 className="text-[11px] font-medium uppercase tracking-wider text-ink-muted mb-3">Account</h2>
+          <div className="bg-card border border-card-border rounded-[14px] divide-y divide-inner-border">
+            <SettingRow
+              label="Email"
+              description={memberSince ? `Member since ${format(new Date(memberSince), 'd MMM yyyy')}` : undefined}
+            >
+              <span className="text-sm text-ink-soft truncate max-w-[240px]">{userEmail ?? '—'}</span>
+            </SettingRow>
+            <SettingRow label="Password">
+              <button
+                onClick={() => { setPwError(null); setPwSuccess(false); setPwModalOpen(true) }}
+                className="px-3 py-1.5 text-sm font-medium text-ink-soft bg-transparent border border-[#D3D1C7] dark:border-card-border rounded-[9px] hover:bg-track transition-colors"
+              >
+                Change password
+              </button>
+            </SettingRow>
+            <SettingRow label="Sessions" description="Sign out on every device, including this one">
+              <button
+                onClick={() => { setLogoutAllError(null); setLogoutAllModal(true) }}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-ink-soft bg-transparent border border-[#D3D1C7] dark:border-card-border rounded-[9px] hover:bg-track transition-colors"
+              >
+                <LogOut size={14} />
+                Log out everywhere
+              </button>
+            </SettingRow>
+          </div>
+        </section>
+
+        {/* ── Preferences ─────────────────────────────────────────────────────── */}
+        <section>
+          <h2 className="text-[11px] font-medium uppercase tracking-wider text-ink-muted mb-3">Preferences</h2>
+          <div className="bg-card border border-card-border rounded-[14px] divide-y divide-inner-border">
+            <SettingRow label="Currency" description="Display only — amounts are not converted">
+              <span className="text-sm font-medium text-ink-soft bg-field px-3 py-1.5 rounded-[8px]">EUR — €</span>
+            </SettingRow>
+            <SettingRow label="Theme">
+              <div className="flex items-center gap-3">
+                <span className={`text-sm ${settings.theme === 'light' ? 'text-ink font-medium' : 'text-ink-muted'}`}>Light</span>
+                <Toggle
+                  checked={settings.theme === 'dark'}
+                  onChange={isDark => updateSetting('theme', isDark ? 'dark' : 'light')}
+                />
+                <span className={`text-sm ${settings.theme === 'dark' ? 'text-ink font-medium' : 'text-ink-muted'}`}>Dark</span>
               </div>
-            )}
-          </dl>
-        </div>
-
-        <SettingCard
-          label="Currency"
-          description="The currency used throughout the app."
-        >
-          <span className="text-sm font-medium text-ink-soft bg-field px-3 py-1.5 rounded-[8px]">
-            EUR €
-          </span>
-        </SettingCard>
-
-        <SettingCard
-          label="Theme"
-          description="Switch between light and dark mode."
-        >
-          <div className="flex items-center gap-3">
-            <span className={`text-sm ${settings.theme === 'light' ? 'text-ink font-medium' : 'text-ink-muted'}`}>
-              Light
-            </span>
-            <Toggle
-              checked={settings.theme === 'dark'}
-              onChange={isDark => updateSetting('theme', isDark ? 'dark' : 'light')}
-            />
-            <span className={`text-sm ${settings.theme === 'dark' ? 'text-ink font-medium' : 'text-ink-muted'}`}>
-              Dark
-            </span>
-          </div>
-        </SettingCard>
-
-        <SettingCard
-          label="Strict distribution"
-          description={
-            settings.strict_distribution
-              ? 'ON: 100% of income must always be assigned to wallets.'
-              : 'OFF: unassigned income goes to the Unallocated wallet automatically.'
-          }
-        >
-          <div className="flex items-center gap-3">
-            <span className={`text-sm ${!settings.strict_distribution ? 'text-ink font-medium' : 'text-ink-muted'}`}>
-              OFF
-            </span>
-            <Toggle
-              checked={settings.strict_distribution ?? true}
-              onChange={val => updateSetting('strict_distribution', val)}
-            />
-            <span className={`text-sm ${settings.strict_distribution ? 'text-ink font-medium' : 'text-ink-muted'}`}>
-              ON
-            </span>
-          </div>
-        </SettingCard>
-
-        {/* Password change (Task C) */}
-        <div className="bg-card border border-card-border rounded-[14px] p-6">
-          <p className="text-sm font-medium text-ink">Change password</p>
-          <p className="text-xs text-ink-muted mt-1 leading-relaxed">
-            Enter your current password, then choose a new one (at least 8 characters).
-          </p>
-
-          {pwError && (
-            <div className="bg-negative-tint text-negative text-sm px-4 py-3 rounded-[8px] mt-4">
-              {pwError}
-            </div>
-          )}
-          {pwSuccess && (
-            <div className="bg-positive-tint text-positive text-sm px-4 py-3 rounded-[8px] mt-4">
-              Password updated successfully.
-            </div>
-          )}
-
-          <div className="space-y-3 mt-4">
-            <div>
-              <label className="block text-sm font-medium text-ink-soft mb-1">Current password</label>
-              <input
-                type="password"
-                value={pwCurrent}
-                onChange={e => { setPwCurrent(e.target.value); clearPwFeedback() }}
-                autoComplete="current-password"
-                placeholder="••••••••"
-                className={authInputClass}
+            </SettingRow>
+            <SettingRow
+              label="Strict distribution"
+              description={
+                settings.strict_distribution
+                  ? '100% of income must always be assigned to wallets.'
+                  : 'Unassigned income goes to the Unallocated wallet automatically.'
+              }
+            >
+              <Toggle
+                checked={settings.strict_distribution ?? true}
+                onChange={val => updateSetting('strict_distribution', val)}
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-ink-soft mb-1">New password</label>
-              <input
-                type="password"
-                value={pwNew}
-                onChange={e => { setPwNew(e.target.value); clearPwFeedback() }}
-                autoComplete="new-password"
-                placeholder="••••••••"
-                className={authInputClass}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-ink-soft mb-1">Confirm new password</label>
-              <input
-                type="password"
-                value={pwConfirm}
-                onChange={e => { setPwConfirm(e.target.value); clearPwFeedback() }}
-                onKeyDown={e => e.key === 'Enter' && handlePasswordChange()}
-                autoComplete="new-password"
-                placeholder="••••••••"
-                className={authInputClass}
-              />
-            </div>
-            <button
-              onClick={handlePasswordChange}
-              disabled={pwLoading || !pwCurrent || !pwNew || !pwConfirm}
-              className="px-4 py-2 rounded-[9px] bg-ink text-cream text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
-            >
-              {pwLoading ? 'Updating…' : 'Update password'}
-            </button>
+            </SettingRow>
           </div>
-        </div>
+        </section>
 
-        {/* Log out of all devices (Task F) */}
-        <div className="bg-card border border-card-border rounded-[14px] p-6">
-          <div className="flex items-start justify-between gap-6">
-            <div className="flex-1">
-              <p className="text-sm font-medium text-ink">Log out of all devices</p>
-              <p className="text-xs text-ink-muted mt-1 leading-relaxed">
-                Ends every active session, including this one. You'll need to sign in again everywhere.
-              </p>
-            </div>
-            <button
-              onClick={() => { setLogoutAllError(null); setLogoutAllModal(true) }}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-ink-soft bg-transparent border border-[#D3D1C7] dark:border-card-border rounded-[9px] hover:bg-track transition-colors flex-shrink-0"
-            >
-              <LogOut size={14} />
-              Log out everywhere
-            </button>
+        {/* ── Danger zone ─────────────────────────────────────────────────────── */}
+        <section>
+          <h2 className="text-[11px] font-medium uppercase tracking-wider text-negative mb-3">Danger zone</h2>
+          <div className="bg-card border border-negative/40 rounded-[14px] divide-y divide-inner-border">
+            <SettingRow label="Clear activity" description="Removes transactions & history, keeps your setup" danger>
+              <button
+                onClick={() => openDelete('activity')}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-negative bg-card border border-negative/50 rounded-[9px] hover:bg-negative-tint transition-colors"
+              >
+                <AlertTriangle size={14} />
+                Clear…
+              </button>
+            </SettingRow>
+            <SettingRow label="Full reset" description="Also removes templates, rules and plans" danger>
+              <button
+                onClick={() => openDelete('full')}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-negative-bar border border-negative-bar rounded-[9px] hover:opacity-90 transition-opacity"
+              >
+                <AlertTriangle size={14} />
+                Reset…
+              </button>
+            </SettingRow>
           </div>
-        </div>
-
-        {/* Danger zone (Task B — two tiers) */}
-        <div className="bg-negative-tint border border-negative-bar/25 rounded-[14px] p-5 space-y-5">
-          <p className="text-sm font-medium text-negative">Danger zone</p>
-
-          {/* Clear activity */}
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
-              <p className="text-sm font-medium text-negative">Clear activity</p>
-              <p className="text-xs text-negative/80 mt-1 leading-relaxed">
-                Deletes all transactions, income entries, budget allocations and pending conflicts, and resets every wallet balance to €0. Your wallets, distribution rules, recurring income, templates and plans are kept. This cannot be undone.
-              </p>
-            </div>
-            <button
-              onClick={() => openDelete('activity')}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-negative bg-card border border-negative-bar/50 rounded-[9px] hover:bg-negative-tint transition-colors flex-shrink-0"
-            >
-              <AlertTriangle size={14} />
-              Clear activity
-            </button>
-          </div>
-
-          <div className="border-t border-negative-bar/20" />
-
-          {/* Full reset */}
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
-              <p className="text-sm font-medium text-negative">Full reset</p>
-              <p className="text-xs text-negative/80 mt-1 leading-relaxed">
-                Everything in “Clear activity”, and also removes your distribution rules, recurring income &amp; rules, income templates, and unallocated templates &amp; plans. Only your wallets (including Unallocated) and settings are kept. This cannot be undone.
-              </p>
-            </div>
-            <button
-              onClick={() => openDelete('full')}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-negative-bar border border-negative-bar rounded-[9px] hover:opacity-90 transition-opacity flex-shrink-0"
-            >
-              <AlertTriangle size={14} />
-              Full reset
-            </button>
-          </div>
-        </div>
+        </section>
       </div>
+
+      {/* ── Change password modal (Task C) ─────────────────────────────────────── */}
+      {pwModalOpen && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-card border border-card-border rounded-[14px] shadow-xl w-full max-w-sm p-6">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-lg font-medium text-ink">Change password</h2>
+              <button onClick={closePwModal} className="p-1.5 text-ink-faint hover:text-ink-soft dark:hover:text-ink rounded-lg">
+                <X size={16} />
+              </button>
+            </div>
+            <p className="text-xs text-ink-muted leading-relaxed mb-4">
+              Enter your current password, then choose a new one (at least 8 characters).
+            </p>
+
+            {pwError && (
+              <div className="bg-negative-tint text-negative text-sm px-4 py-3 rounded-[8px] mb-4">{pwError}</div>
+            )}
+            {pwSuccess && (
+              <div className="bg-positive-tint text-positive text-sm px-4 py-3 rounded-[8px] mb-4">Password updated successfully.</div>
+            )}
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-ink-soft mb-1">Current password</label>
+                <input
+                  type="password"
+                  value={pwCurrent}
+                  onChange={e => { setPwCurrent(e.target.value); clearPwFeedback() }}
+                  autoComplete="current-password"
+                  placeholder="••••••••"
+                  className={authInputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-ink-soft mb-1">New password</label>
+                <input
+                  type="password"
+                  value={pwNew}
+                  onChange={e => { setPwNew(e.target.value); clearPwFeedback() }}
+                  autoComplete="new-password"
+                  placeholder="••••••••"
+                  className={authInputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-ink-soft mb-1">Confirm new password</label>
+                <input
+                  type="password"
+                  value={pwConfirm}
+                  onChange={e => { setPwConfirm(e.target.value); clearPwFeedback() }}
+                  onKeyDown={e => e.key === 'Enter' && handlePasswordChange()}
+                  autoComplete="new-password"
+                  placeholder="••••••••"
+                  className={authInputClass}
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-5">
+              <button onClick={closePwModal} className="flex-1 py-2 rounded-[9px] border border-card-border text-sm text-ink-soft hover:bg-track transition-colors">
+                {pwSuccess ? 'Close' : 'Cancel'}
+              </button>
+              <button
+                onClick={handlePasswordChange}
+                disabled={pwLoading || !pwCurrent || !pwNew || !pwConfirm}
+                className="flex-1 py-2 rounded-[9px] bg-ink text-cream text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+              >
+                {pwLoading ? 'Updating…' : 'Update password'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Warning modal ──────────────────────────────────────────────────────── */}
       {deleteModal === 'warning' && deleteTier && (
