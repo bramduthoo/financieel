@@ -73,6 +73,12 @@ Prefer the token utilities over raw hex; wallets are identified by their icon (`
 
 ## Workflow conventions
 
+- **Sync before branching (every session).** Start with `git fetch origin --prune`, fast-forward
+  local `main` (`git switch main && git pull --ff-only`), then cut new work from fresh upstream:
+  `git switch -c b/foo origin/main` — never off a stale local `main`. GitHub auto-deletes merged
+  head branches and `fetch.prune` is enabled, so after the fetch any local branch marked
+  `[gone]` in `git branch -vv` is a merged leftover — delete it with `git branch -d` (safe: it
+  refuses if not actually merged; squash-merged ones need `-D`).
 - **Plan mode first** for any feature or refactor; get the plan approved before writing code.
 - Stay in scope: do not change logic, signatures, or queries beyond the approved plan. Report
   exactly what changed.
