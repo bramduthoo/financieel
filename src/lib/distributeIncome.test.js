@@ -45,10 +45,13 @@ const USER_ID = 'user-7'
 
 // Wallet fixtures
 const normalWallet = { id: 'w-normal', name: 'Groceries', budget_type: 'recurring', balance: 0, budget: 0 }
+// Capped wallet: `cap_max` is the ceiling and `cap_reduction_rate` the fraction kept above it.
+// `budget` is nominal plan intent only — the executor no longer reads it. `overflow_wallet_id`
+// null ⇒ overflow falls back to the caller's Unallocated wallet.
 function cappedWallet(overrides = {}) {
   return {
     id: 'w-capped', name: 'Buffer', budget_type: 'capped',
-    balance: 0, budget: 100, cap_reduction_enabled: false, cap_reduction_rate: 0,
+    balance: 0, budget: 100, cap_max: 200, cap_reduction_rate: 0.5, overflow_wallet_id: null,
     ...overrides,
   }
 }
@@ -71,8 +74,9 @@ describe('distributeIncome — manual / template income (isAutomated = false)', 
     expect(creditedTo(UNALLOC)).toBe(0)
   })
 
-  it('does not apply cap-reduction even when reduction is enabled', async () => {
-    const w = cappedWallet({ balance: 100, budget: 100, cap_reduction_enabled: true, cap_reduction_rate: 0.3 })
+  it('does not apply the cap mechanic even when the wallet is above its ceiling', async () => {
+    // Balance already over cap_max: a manual credit must still land in full, no reduction/overflow.
+    const w = cappedWallet({ balance: 250, cap_max: 200, cap_reduction_rate: 0.3 })
     await run([{ wallet_id: w.id, amount: 80 }], [w], false)
 
     expect(creditedTo(w.id)).toBeCloseTo(80, 2)
@@ -81,33 +85,52 @@ describe('distributeIncome — manual / template income (isAutomated = false)', 
 })
 
 describe('distributeIncome — automated income on a capped wallet (isAutomated = true)', () => {
-  it('cap-fill: fills up to the cap and overflows the excess to Unallocated', async () => {
-    // balance 80, cap 100 → room for 20; a 50 credit fills 20 and overflows 30.
-    const w = cappedWallet({ balance: 80, budget: 100 })
+  // Canonical §4.2 cases, driven through the executor. Overflow lands in Unallocated (NULL target).
+  // b, M, B, r → euros the capped wallet keeps vs euros routed to overflow.
+  const cases = [
+    { balance: 190, cap_max: 200, amount: 50, rate: 0.5, received: 30, overflow: 20 },
+    { balance: 220, cap_max: 200, amount: 50, rate: 0.5, received: 25, overflow: 25 },
+    { balance: 190, cap_max: 200, amount: 50, rate: 0.0, received: 10, overflow: 40 },
+    { balance: 0,   cap_max: 200, amount: 50, rate: 0.5, received: 50, overflow: 0  },
+  ]
+
+  for (const c of cases) {
+    it(`b=${c.balance} M=${c.cap_max} B=${c.amount} r=${c.rate} → keeps ${c.received}, overflows ${c.overflow}`, async () => {
+      const w = cappedWallet({ balance: c.balance, cap_max: c.cap_max, cap_reduction_rate: c.rate })
+      await run([{ wallet_id: w.id, amount: c.amount }], [w], true)
+
+      expect(creditedTo(w.id)).toBeCloseTo(c.received, 2)
+      expect(creditedTo(UNALLOC)).toBeCloseTo(c.overflow, 2)
+      // Conservation: nothing created or lost.
+      expect(creditedTo(w.id) + creditedTo(UNALLOC)).toBeCloseTo(c.amount, 2)
+    })
+  }
+
+  it('overflow with a NULL overflow_wallet_id falls back to Unallocated', async () => {
+    const w = cappedWallet({ balance: 190, cap_max: 200, cap_reduction_rate: 0.5, overflow_wallet_id: null })
     await run([{ wallet_id: w.id, amount: 50 }], [w], true)
 
-    expect(creditedTo(w.id)).toBeCloseTo(20, 2)
-    expect(creditedTo(UNALLOC)).toBeCloseTo(30, 2)
-    // Conservation: nothing created or lost.
-    expect(creditedTo(w.id) + creditedTo(UNALLOC)).toBeCloseTo(50, 2)
+    expect(creditedTo(w.id)).toBeCloseTo(30, 2)
+    expect(creditedTo(UNALLOC)).toBeCloseTo(20, 2)
   })
 
-  it('cap-reduction: credits amount * rate to the wallet, the rest to Unallocated', async () => {
-    // At cap, reduction on at 30% → wallet gets 15 of 50, Unallocated gets 35.
-    const w = cappedWallet({ balance: 100, budget: 100, cap_reduction_enabled: true, cap_reduction_rate: 0.3 })
-    await run([{ wallet_id: w.id, amount: 50 }], [w], true)
+  it('overflow routes to a chosen non-capped wallet, not Unallocated', async () => {
+    const w = cappedWallet({ balance: 190, cap_max: 200, cap_reduction_rate: 0.5, overflow_wallet_id: normalWallet.id })
+    await run([{ wallet_id: w.id, amount: 50 }], [w, normalWallet], true)
 
-    expect(creditedTo(w.id)).toBeCloseTo(15, 2)
-    expect(creditedTo(UNALLOC)).toBeCloseTo(35, 2)
-    expect(creditedTo(w.id) + creditedTo(UNALLOC)).toBeCloseTo(50, 2)
+    expect(creditedTo(w.id)).toBeCloseTo(30, 2)
+    expect(creditedTo(normalWallet.id)).toBeCloseTo(20, 2)
+    expect(creditedTo(UNALLOC)).toBe(0)
   })
 
-  it('at cap with reduction OFF: routes the entire amount to Unallocated', async () => {
-    const w = cappedWallet({ balance: 100, budget: 100, cap_reduction_enabled: false })
-    await run([{ wallet_id: w.id, amount: 50 }], [w], true)
+  it('a fractional rate still conserves the amount within 0.005', async () => {
+    // At the ceiling, rate 0.3333 on 10.00 → 3.33 kept, 6.67 overflow, summing to 10.00.
+    const w = cappedWallet({ balance: 200, cap_max: 200, cap_reduction_rate: 0.3333 })
+    await run([{ wallet_id: w.id, amount: 10 }], [w], true)
 
-    expect(creditedTo(w.id)).toBe(0)
-    expect(creditedTo(UNALLOC)).toBeCloseTo(50, 2)
+    expect(creditedTo(w.id)).toBeCloseTo(3.33, 2)
+    expect(creditedTo(UNALLOC)).toBeCloseTo(6.67, 2)
+    expect(Math.abs(creditedTo(w.id) + creditedTo(UNALLOC) - 10)).toBeLessThanOrEqual(0.005)
   })
 
   it('a non-capped automated wallet is credited in full', async () => {
@@ -118,36 +141,10 @@ describe('distributeIncome — automated income on a capped wallet (isAutomated 
   })
 })
 
-describe('distributeIncome — rounding & conservation', () => {
-  it('cap-reduction with a fractional rate still conserves the amount within 0.005', async () => {
-    // rate 0.3333 on 10.00 → 3.33 to wallet, 6.67 to Unallocated, summing to 10.00.
-    const w = cappedWallet({ balance: 100, budget: 100, cap_reduction_enabled: true, cap_reduction_rate: 0.3333 })
-    await run([{ wallet_id: w.id, amount: 10 }], [w], true)
-
-    expect(creditedTo(w.id)).toBeCloseTo(3.33, 2)
-    expect(creditedTo(UNALLOC)).toBeCloseTo(6.67, 2)
-    expect(Math.abs(creditedTo(w.id) + creditedTo(UNALLOC) - 10)).toBeLessThanOrEqual(0.005)
-  })
-
-  it('multiple distributions each conserve their own amount', async () => {
-    const capped = cappedWallet({ id: 'w-capped', balance: 90, budget: 100 })   // room 10
-    const wallets = [capped, normalWallet]
-    await run([
-      { wallet_id: capped.id, amount: 25 },       // 10 filled, 15 overflow
-      { wallet_id: normalWallet.id, amount: 40 }, // full
-    ], wallets, true)
-
-    expect(creditedTo(capped.id)).toBeCloseTo(10, 2)
-    expect(creditedTo(normalWallet.id)).toBeCloseTo(40, 2)
-    // Overflow from the capped wallet is the only thing routed to Unallocated.
-    expect(creditedTo(UNALLOC)).toBeCloseTo(15, 2)
-  })
-})
-
 describe('distributeIncome — transaction rows', () => {
   it('inserts exactly one credit transaction per credit, each stamped with income_entry_id', async () => {
-    // cap-fill produces two credits (wallet + overflow) → two rows.
-    const w = cappedWallet({ balance: 80, budget: 100 })
+    // A capped credit that both fills and overflows produces two credits (wallet + overflow) → two rows.
+    const w = cappedWallet({ balance: 190, cap_max: 200, cap_reduction_rate: 0.5 })
     await run([{ wallet_id: w.id, amount: 50 }], [w], true)
 
     expect(insertedRows).toHaveLength(2)

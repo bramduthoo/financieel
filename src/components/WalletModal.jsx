@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { X, Minus, Plus } from 'lucide-react'
+import { supabase } from '../lib/supabase'
 import { WALLET_ICONS, ICON_CHOICES, defaultIconForType } from '../lib/walletIcons'
 
 // Wallets keep a stored `colour` (defaulted) for legacy data, but the UI now
@@ -28,10 +29,16 @@ export default function WalletModal({ wallet, initialType, onClose, onSave }) {
   const colour = wallet?.colour ?? DEFAULT_COLOUR
   const [icon, setIcon] = useState(wallet?.icon || defaultIconForType(wallet?.type ?? 'fixed'))
 
-  const [capReductionEnabled, setCapReductionEnabled] = useState(wallet?.cap_reduction_enabled ?? false)
-  const [capReductionRate,    setCapReductionRate]    = useState(
-    wallet?.cap_reduction_rate ? String(Math.round(Number(wallet.cap_reduction_rate) * 100)) : '50'
+  const [capMax,           setCapMax]           = useState(wallet?.cap_max != null ? String(wallet.cap_max) : '')
+  const [capReductionRate, setCapReductionRate] = useState(
+    wallet?.cap_reduction_rate != null ? String(Math.round(Number(wallet.cap_reduction_rate) * 100)) : '50'
   )
+  const [overflowWalletId, setOverflowWalletId] = useState(wallet?.overflow_wallet_id ?? '')
+  // Candidate overflow targets: active, non-system, non-capped wallets except this one. Overflow
+  // into a capped wallet is out of scope this phase; NULL/'' means the user's Unallocated wallet.
+  const [overflowOptions,  setOverflowOptions]  = useState([])
+
+  const isCapped = type === 'variable' && budgetType === 'capped'
 
   // When type changes, auto-select the first valid budget_type for that type
   useEffect(() => {
@@ -41,20 +48,48 @@ export default function WalletModal({ wallet, initialType, onClose, onSave }) {
     }
   }, [type])
 
+  // Load overflow-destination candidates once, only when the capped card is in play.
+  useEffect(() => {
+    if (!isCapped) return
+    let cancelled = false
+    ;(async () => {
+      const { data } = await supabase
+        .from('wallets')
+        .select('id, name, budget_type')
+        .eq('is_active', true).eq('is_system', false)
+        .order('sort_order')
+      if (cancelled) return
+      setOverflowOptions((data ?? []).filter(w => w.budget_type !== 'capped' && w.id !== wallet?.id))
+    })()
+    return () => { cancelled = true }
+  }, [isCapped, wallet?.id])
+
   async function handleSave() {
     if (!name.trim()) { setError('Please enter a wallet name.'); return }
+    if (isCapped) {
+      if (budget === '' || capMax === '' || capReductionRate === '') {
+        setError('Budget, maximum balance, and receive % are all required.'); return
+      }
+      if (Number(capMax) < Number(budget)) {
+        setError('Maximum balance must be at least the monthly budget.'); return
+      }
+    }
     setSaving(true)
     setError(null)
     const payload = { name: name.trim(), type, budget_type: budgetType, budget: Number(budget) || 0, colour, icon, sort_order: Number(sortOrder) || 0 }
-    if (type === 'variable' && budgetType === 'capped') {
-      payload.cap_reduction_enabled = capReductionEnabled
-      payload.cap_reduction_rate    = capReductionEnabled ? Number(capReductionRate) / 100 : 1.0
+    if (isCapped) {
+      payload.cap_max            = Number(capMax)
+      payload.cap_reduction_rate = Number(capReductionRate) / 100
+      payload.overflow_wallet_id = overflowWalletId || null
     }
     await onSave(payload)
     setSaving(false)
   }
 
   const order = Number(sortOrder) || 0
+  const overflowDestName = overflowWalletId
+    ? (overflowOptions.find(w => w.id === overflowWalletId)?.name ?? 'the chosen wallet')
+    : 'Unallocated'
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
@@ -189,47 +224,62 @@ export default function WalletModal({ wallet, initialType, onClose, onSave }) {
           </div>
         </div>
 
-        {/* Cap reduction settings — capped variable wallets only */}
-        {type === 'variable' && budgetType === 'capped' && (
+        {/* Capped-wallet settings — variable capped wallets only */}
+        {isCapped && (
           <div className="mb-6 border border-card-border rounded-[11px] p-4 space-y-3">
-            <p className="text-sm font-medium text-ink-soft">Cap reduction settings</p>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-ink-soft">Enable reduction when cap is reached</span>
-              <button
-                type="button"
-                onClick={() => setCapReductionEnabled(v => !v)}
-                className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-accent/30 ${
-                  capReductionEnabled ? 'bg-accent-solid' : 'bg-ink-faint'
-                }`}
-              >
-                <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                  capReductionEnabled ? 'translate-x-5' : 'translate-x-0'
-                }`} />
-              </button>
+            <p className="text-sm font-medium text-ink-soft">Capped wallet settings</p>
+
+            <div>
+              <label className="block text-xs font-medium text-ink-muted mb-1">
+                Maximum balance (€)
+              </label>
+              <input
+                type="number"
+                min={0}
+                value={capMax}
+                onChange={e => setCapMax(e.target.value)}
+                placeholder="0.00"
+                className={`${inputClass} text-right`}
+              />
             </div>
-            {capReductionEnabled && (
-              <>
-                <div>
-                  <label className="block text-xs font-medium text-ink-muted mb-1">
-                    Receive % of normal distribution after cap
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      min={1}
-                      max={100}
-                      value={capReductionRate}
-                      onChange={e => setCapReductionRate(e.target.value)}
-                      className={`${inputClass} w-20 text-right`}
-                    />
-                    <span className="text-sm text-ink-muted">%</span>
-                  </div>
-                </div>
-                <p className="text-xs text-ink-faint leading-relaxed">
-                  When your balance reaches the cap, automated income will be reduced to {capReductionRate || '?'}% of its normal amount. The rest goes to Unallocated.
-                </p>
-              </>
-            )}
+
+            <div>
+              <label className="block text-xs font-medium text-ink-muted mb-1">
+                Receive % after maximum
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={capReductionRate}
+                  onChange={e => setCapReductionRate(e.target.value)}
+                  className={`${inputClass} w-20 text-right`}
+                />
+                <span className="text-sm text-ink-muted">%</span>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-ink-muted mb-1">
+                Overflow destination
+              </label>
+              <select
+                value={overflowWalletId}
+                onChange={e => setOverflowWalletId(e.target.value)}
+                className={inputClass}
+              >
+                <option value="">Unallocated (default)</option>
+                {overflowOptions.map(w => (
+                  <option key={w.id} value={w.id}>{w.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <p className="text-xs text-ink-faint leading-relaxed">
+              Automated income fills this wallet up to its maximum at full rate. Anything above the
+              maximum is reduced to {capReductionRate || '?'}% — the rest flows to {overflowDestName}.
+            </p>
           </div>
         )}
 
