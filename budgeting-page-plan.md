@@ -250,12 +250,26 @@ ALTER TABLE public.wallets
 
 ---
 
-## 9. Open items to confirm (before or during the relevant sub-phase)
+## 9. Open items — CONFIRMED by owner 2026-07-17 (for Phase B)
 
-1. **Retroactivity** (§5): edits affect future logs only, not already-logged income this month?
-   (assumed yes.)
-2. **Sankey vs simpler chart** (§5): Monarch-style proportional-ribbon Sankey assumed as the target.
-3. **Phase B / C schema**: expected to need none; confirm once Claude Code has read the real code.
+1. **Retroactivity — CONFIRMED.** Plan edits affect **future incomes/logs only**; already-logged
+   income this month and its `transactions` are untouched (no past rewrite).
+2. **Sankey fidelity — CONFIRMED.** Full **Monarch-style proportional-ribbon Sankey** is the v1
+   target (salary → wallets, ribbon width ∝ €, amount + % labels, inline SVG per DESIGN-SPEC §6).
+3. **Leftover / free-pool routing — CONFIRMED.** After must-fund wallets are pinned to budget, the
+   remainder **defaults entirely to Unallocated**, with the ability to reassign it to investment
+   wallet(s). No exceeding a wallet's budget on the page.
+4. **Multiple recurring incomes — CONFIRMED.** v1 = **aggregate-by-total overview + each income kept
+   separate/editable in the input/flowchart** (no cross-income auto-balancing). Full multi-income UX
+   deferred.
+5. **Percent-mode rules — CONFIRMED.** A `percent`-mode distribution rule is **kept as percent**
+   (not converted to euro on save) and only **displayed** as euros — don't silently corrupt it.
+6. **Route & nav — CONFIRMED.** Page lives at **`/budgeting`** with a **"Budgeting" top-level nav
+   item** alongside Dashboard / Wallets / Income / Settings.
+7. **Phase B schema — CONFIRMED one column needed.** Persisting the include-in-plan selection required
+   `income_recurring.include_in_budget` (bool NN default true) — drafted, owner-applied & verified
+   2026-07-19. (Original assumption "no schema" no longer holds; the flag is what makes the plan
+   remembered + lets Phase C read "the plan".)
 
 ---
 
@@ -338,6 +352,12 @@ design-check, code-reviewer, Playwright screenshots both themes, wrapup."
   `cap_reduction_enabled`). 103 tests green + design-check + code-reviewer (clean) + db-verifier PASS on
   a live 3-log capped batch (below-ceiling fill AND the 100/100 reduction/overflow case reconcile to the
   cent). PR to open.
-- **Phases B, C:** not started; plans/prompts ready (10.B, 10.C). Open items §9 to confirm.
+- **Phase B build: DONE (branch `b/capped-wallet-fix`, 2026-07-19; A + B in one PR).** New `/budgeting`
+  page + nav; pure `budgetPlan.js`/`sankeyLayout.js` (+tests); inline-SVG `SalarySankey`. Multi-income
+  built in (plan-level coverage; `income_recurring.include_in_budget` flag, applied+verified). Edits each
+  income's `income_distribution_rules` in place; save-verification modal. 114 tests green, build clean,
+  code-reviewer (no criticals), design-check, both-theme render verified. Owner runs the multi-income /
+  setup-Apply Playwright + db-verifier locally. §9 items all confirmed (see §9).
+- **Phase C:** not started; prompt ready (10.C).
 
 *Keep this section and §7 current as sub-phases complete.*
