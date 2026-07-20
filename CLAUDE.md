@@ -51,8 +51,10 @@ remove it).
    remainder. Distribution rows store `mode` + raw `value`; euros are resolved at apply time.
    `distributeIncome.js` is a dumb executor — it never computes splits.
 7. **Capped-wallet behaviour** differs between manual/template income (ignores caps) and
-   automated/recurring income (cap-fill / cap-reduction / overflow to Unallocated). Don't
-   "simplify" this — it's intentional. See PROJECT-CONTEXT.md §5.
+   automated/recurring income (fill to `cap_max` at full rate → reduce the part above the ceiling to
+   `cap_reduction_rate` → overflow to `overflow_wallet_id` else Unallocated). Math lives in pure
+   `src/lib/resolveCappedInflow.js`; `cap_reduction_enabled` is a dead column. Don't "simplify" this —
+   it's intentional. See `budgeting-page-plan.md` §4 (authoritative) + PROJECT-CONTEXT.md §7.
 
 ## Design system (locked — do not deviate without explicit approval)
 

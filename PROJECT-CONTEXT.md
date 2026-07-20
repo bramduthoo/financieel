@@ -152,10 +152,13 @@ shows up under the name "WOUTER" in branches/commits. Two-person project, GitHub
 
 ### Core tables
 - **wallets**: name, type (`fixed`/`variable`/`investment`/`unallocated`), budget_type
-  (`recurring`/`accumulating`/`capped`/`none`/`unallocated`), budget (cap for capped wallets), balance
-  (RPC-only writes), colour, icon, is_active, is_system (true only for Unallocated), sort_order,
-  cap_reduction_enabled bool, cap_reduction_rate numeric (fraction 0 to 1, stored as %/100), created_at,
-  user_id.
+  (`recurring`/`accumulating`/`capped`/`none`/`unallocated`), budget (monthly inflow/plan intent),
+  balance (RPC-only writes), colour, icon, is_active, is_system (true only for Unallocated), sort_order,
+  **cap_max** numeric (capped-wallet ceiling / reduction trigger, Budgeting Phase A), **overflow_wallet_id**
+  uuid (capped overflow target, NULL ⇒ Unallocated, ON DELETE SET NULL), cap_reduction_rate numeric
+  (fraction kept above the ceiling, 0..1, stored as %/100), cap_reduction_enabled bool (**DEAD** —
+  executor ignores it; capped wallets always apply the mechanic), created_at, user_id. Constraints:
+  `wallets_cap_max_nonneg`, `wallets_overflow_not_self`, `wallets_cap_max_gte_budget` (cap_max ≥ budget).
 - **transactions**: wallet_id, type (`credit`/`debit`), amount, date, note, is_confirmed,
   **income_entry_id** (uuid, nullable, FK to income_entries ON DELETE SET NULL, added in Fix C so a
   logged income reliably links to its credit rows), user_id. (Also used for fixed-wallet payment
@@ -163,7 +166,8 @@ shows up under the name "WOUTER" in branches/commits. Two-person project, GitHub
 - **income_entries**: amount, source, date, source_type (`manual`/`template`/`recurring`),
   income_template_id (nullable), income_recurring_id (nullable), user_id.
 - **income_recurring**: name, amount, frequency, day_of_month, start_date, end_date, parent_rule_id
-  (self-ref), user_id. No distribution columns of its own (its distribution lives in
+  (self-ref), **include_in_budget** bool (NOT NULL default true, Budgeting Phase B — whether this income
+  is part of the Budgeting plan), user_id. No distribution columns of its own (its distribution lives in
   income_distribution_rules).
 - **income_templates**: name, amount, note, **send_remainder bool** (added in Fix B), user_id.
   Carries a distribution via `income_template_distribution_items`.
@@ -304,6 +308,56 @@ comparisons. The DB chapter is now outdated vs the live schema.
 ---
 
 ## 6. Current standing (update this when a phase ends)
+
+**Budgeting Phase B — the Budgeting page: DONE (branch `b/capped-wallet-fix`, 2026-07-19; A + B ship in one PR).**
+Implemented + **114 tests green** + build clean + code-reviewer (no criticals; error-guarded writes,
+token checkbox, zero-budget coverage filter applied) + design-check + in-browser render verified (test
+account, both themes, zero console errors) for the plan + setup screens and the Sankey. **Owner is
+running the multi-income / setup-Apply Playwright + db-verifier locally** (deferred here to save tokens).
+- **New route `/budgeting`** ("Budgeting" nav item, after Income). The page edits each recurring
+  income's `income_distribution_rules` **in place** (delete-all-for-income + reinsert, mirroring
+  `IncomeRecurringDetail`), so the plan and the recurring distribution can't desync; saving pops a
+  verification modal stating it rewrites the distribution site-wide.
+- **Multi-income built in from the start.** The budget constraint is **plan-level**: for each must-fund
+  wallet, `funded = Σ over included incomes` vs its `budget` → covered / short / over. Incomes are
+  selected into the plan via the new `income_recurring.include_in_budget` flag and stay separate in data
+  + flowchart. **1 included income →** auto-fill each budget + remainder → Unallocated (warns if income <
+  Σ budgets); **≥2 →** manual per-income edit mode with a live coverage summary.
+- **Must-fund distribution is pinned to budget**, edited only by changing the wallet's budget/cap
+  (`WalletModal`, reachable from the page). Free pool = Unallocated + investment; leftover defaults to
+  Unallocated. Percent-mode rules preserved unless edited.
+- **Pure libs:** `src/lib/budgetPlan.js` (`buildBudgetPlan`/`autoFillSingle`/`buildRuleRows`, reuses
+  `resolveDistribution`) + `src/lib/sankeyLayout.js` (proportional geometry) — both behaviour-tested.
+  **Sankey** = `src/components/budgeting/SalarySankey.jsx`, inline SVG, tokenized (ink nodes/ribbons,
+  coral Unallocated). **No balance/RPC changes** — money still moves only at log time.
+- **Schema (owner-applied & verified 2026-07-19):** `income_recurring.include_in_budget` (bool NN
+  default true) + the Phase A `wallets_cap_max_gte_budget` CHECK. **IMMEDIATE NEXT:** owner reviews/merges
+  the A+B PR; then Budgeting **Phase C** (analytics, kickoff 10.C).
+
+**Budgeting Phase A — capped-wallet mechanic redesign: DONE (branch `b/capped-wallet-fix`, 2026-07-17).**
+Implemented + **103 tests green** + design-check (both-theme Playwright of the capped settings card;
+no indigo/purple) + code-reviewer (clean, no criticals) + **db-verifier PASS on a live 3-log capped
+batch** (test account) — all balances reconcile to the cent. See `budgeting-page-plan.md` §4.
+- **New mechanic (authoritative §4.2):** `budget` (monthly inflow / plan intent) is now split from
+  `cap_max` (ceiling + reduction trigger). Fill balance to `cap_max` at 100%, reduce only the part
+  above the ceiling to `cap_reduction_rate` (fraction kept), overflow (`inflow − received`) → the
+  configured wallet (`overflow_wallet_id`) else the user's Unallocated. Reduce-to semantics; triggers
+  only at balance ≥ `cap_max`.
+- **Money math lifted to pure `src/lib/resolveCappedInflow.js`** (`{balance, amount, max, rate}` →
+  `{received, overflow}`, `overflow` derived from rounded `received` so `received+overflow==inflow`
+  exactly) with its own unit tests. Wired into the automated `capped` branch of `distributeIncome.js`;
+  writes stay via `increment_wallet_balance` + one credit row per credit (`income_entry_id`-stamped).
+  Manual/template and non-capped branches untouched.
+- **`WalletModal.jsx`:** removed the reduction enable/disable toggle; capped wallets now ALWAYS apply
+  the mechanic. Added required `cap_max` ("Maximum balance"), required receive-% , and an overflow
+  destination selector (active non-system **non-capped** wallets, self-fetched, default Unallocated).
+  Validation: budget/cap_max/rate required + `cap_max >= budget`. **Stops writing
+  `cap_reduction_enabled`** — now a dead column (executor ignores it for capped wallets).
+- **Live capped test-account wallet** "Clothing" now carries `cap_max 400`, `cap_reduction_rate 0.50`,
+  `overflow_wallet_id NULL`; balance 620 after the three verification logs (seed data, dummy).
+- **Verified E2E** through the app (test account): below-ceiling fill (full credit, no overflow) AND
+  the reduction case (bal 520 ≥ cap 400, rate 0.5 → 100 kept / 100 overflow to Unallocated, separate
+  stamped credit rows). **IMMEDIATE NEXT:** open the PR; then Budgeting **Phase B** (kickoff 10.B).
 
 **Density & completeness pass: DONE (branch `b/density-pass`, 2026-07-14; PR open).**
 Implemented + `vite build` clean + **95 tests green** + code-reviewer (no Criticals; touch-reachability,
@@ -479,6 +533,22 @@ Deferred / smaller:
 
 ## 7. Decision log (the "why", so new chats don't relitigate)
 
+- **Budgeting page edits the salary's `income_distribution_rules` in place** (same rows the recurring
+  log reads) — "edit one, the other follows" is structural, not a sync job. Must-fund wallets are pinned
+  to their `budget` (change the budget to change the plan; not a free distribution input); leftover
+  defaults to Unallocated. **The budget constraint is plan-level across included incomes, not per income**
+  — two incomes can each cover part of a wallet's budget, so each income keeps its own rules and the page
+  sums coverage. Incomes opt into the plan via `income_recurring.include_in_budget` (persisted so the
+  selection survives and Phase C can read "the plan"). 1 income ⇒ auto-fill budgets; ≥2 ⇒ manual edit.
+- **Capped wallets: ceiling (`cap_max`) is separate from budget, fill-to-max then reduce the
+  remainder** (reduce-to semantics, `cap_reduction_rate` = fraction kept). The old design used one
+  "budget" number as both inflow and reduction trigger, so a €50-budget wallet started throttling at
+  €50; the point of a ceiling is to accumulate first, then throttle. Overflow (`inflow − received`)
+  goes to a configurable **non-capped** wallet (default Unallocated) — restricting to non-capped
+  structurally avoids "overflow into a wallet that's itself at max," deferring the halt-and-redirect
+  conflict flow. **The reduction on/off toggle was removed** — a no-ceiling wallet is an
+  `accumulating` variable wallet, not a capped one; `cap_reduction_enabled` is left as a dead column
+  (project convention: don't migrate dead columns away).
 - **Distribution % is always of total input** (not of the remaining amount), keeps the two progress
   bars consistent.
 - **Global euro/% toggle converts existing values**, never wipes them.
@@ -648,6 +718,12 @@ Deferred / smaller:
 - **Supabase free tier ceiling ~200 to 250 active users** (egress-bound). Usage model ~250 rows/user/month.
 - **npm audit:** a couple of vulnerabilities exist; do NOT `npm audit fix --force` casually (can break
   the build). Address deliberately, not mid-feature.
+- **Legacy capped wallets with NULL `cap_max` reduce from €0.** The capped executor now uses `cap_max`
+  as the ceiling; `Number(null)` → 0, so a capped wallet whose `cap_max` was never set treats its whole
+  inflow as "above ceiling" and multiplies by `cap_reduction_rate`. Benign at the DB default rate `1.0`
+  (received = full, overflow 0), but a capped wallet with a custom rate and no `cap_max` would silently
+  reduce. The UI now makes `cap_max` required, and all current rows are dummy data — but **any real
+  capped wallet created before Phase A should be re-saved (or `cap_max` backfilled) before real use.**
 
 ---
 
