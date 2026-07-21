@@ -326,10 +326,13 @@ running the multi-income / setup-Apply Playwright + db-verifier locally** (defer
 - **Must-fund distribution is pinned to budget**, edited only by changing the wallet's budget/cap
   (`WalletModal`, reachable from the page). Free pool = Unallocated + investment; leftover defaults to
   Unallocated. Percent-mode rules preserved unless edited.
-- **Pure libs:** `src/lib/budgetPlan.js` (`buildBudgetPlan`/`autoFillSingle`/`buildRuleRows`, reuses
-  `resolveDistribution`) + `src/lib/sankeyLayout.js` (proportional geometry) — both behaviour-tested.
-  **Sankey** = `src/components/budgeting/SalarySankey.jsx`, inline SVG, tokenized (ink nodes/ribbons,
-  coral Unallocated). **No balance/RPC changes** — money still moves only at log time.
+- **Pure libs:** `src/lib/budgetPlan.js` (`buildBudgetPlan`/`autoFillSingle`/`buildRuleRows` +
+  `computeWalletFunding`/`fundToBudget`/`resolveIncomeEdit`, all reusing `resolveDistribution`) +
+  `src/lib/budgetFlowLayout.js` (combined two-column Sankey geometry: min ribbon thickness, label
+  de-collision) — both behaviour-tested. **Chart** = `src/components/budgeting/BudgetFlowChart.jsx`,
+  inline SVG, one card for ALL included incomes, one identity-ramp colour per income, coral
+  Unallocated. (Phase B's per-income `SalarySankey.jsx` + `sankeyLayout.js` were replaced in B2-2.)
+  **No balance/RPC changes** — money still moves only at log time.
 - **Schema (owner-applied & verified 2026-07-19):** `income_recurring.include_in_budget` (bool NN
   default true) + the Phase A `wallets_cap_max_gte_budget` CHECK. **IMMEDIATE NEXT:** owner reviews/merges
   the A+B PR; then Budgeting **Phase C** (analytics, kickoff 10.C).

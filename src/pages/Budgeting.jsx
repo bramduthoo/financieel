@@ -1,14 +1,15 @@
 import { useEffect, useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { SlidersHorizontal, Settings2, AlertTriangle, Check } from 'lucide-react'
+import { SlidersHorizontal, Settings2, AlertTriangle } from 'lucide-react'
 import { supabase, getCurrentUserId } from '../lib/supabase'
 import { formatMoney } from '../lib/format'
 import { WalletIcon } from '../lib/walletIcons'
-import { isMustFund, buildBudgetPlan, autoFillSingle, buildRuleRows } from '../lib/budgetPlan'
+import { isMustFund, isFreePool, buildBudgetPlan, autoFillSingle, resolveIncomeEdit } from '../lib/budgetPlan'
 import SummaryStrip from '../components/ui/SummaryStrip'
-import MetricBar from '../components/ui/MetricBar'
 import PageHeader from '../components/ui/PageHeader'
-import SalarySankey from '../components/budgeting/SalarySankey'
+import BudgetFlowChart from '../components/budgeting/BudgetFlowChart'
+import WalletTile from '../components/budgeting/WalletTile'
+import DistributionEditor from '../components/budgeting/DistributionEditor'
 import WalletModal from '../components/WalletModal'
 import IncomeConfirmModal from '../components/IncomeConfirmModal'
 
@@ -69,7 +70,6 @@ export default function Budgeting() {
   const mustFundWallets = useMemo(() => wallets.filter(isMustFund), [wallets])
   // Wallets a per-income allocation can name explicitly (Unallocated is the auto remainder target).
   const editableWallets = useMemo(() => wallets.filter(w => !w.is_system), [wallets])
-  const walletById      = useMemo(() => Object.fromEntries(wallets.map(w => [w.id, w])), [wallets])
 
   const plan = useMemo(
     () => buildBudgetPlan({ incomes: includedIncomes, rulesByIncome, wallets }),
@@ -155,12 +155,21 @@ export default function Budgeting() {
 
   // ── Edit mode (multi-income manual distribution) ─────────────────────────────
 
+  // Seed the editor from the saved rules, preserving each rule's stored mode + raw value (Option A)
+  // so an untouched percent rule stays a percent rule through an edit round-trip.
   function enterEdit() {
     const init = {}
     for (const inc of includedIncomes) {
       init[inc.id] = {}
       for (const r of (rulesByIncome[inc.id] ?? [])) {
-        if (r.wallet_id !== unallocId) init[inc.id][r.wallet_id] = String(round2(r.amount))
+        if (r.wallet_id === unallocId) continue   // the remainder sweep is derived, never edited
+        init[inc.id][r.wallet_id] = {
+          mode: r.mode === 'percent' ? 'percent' : 'euro',
+          // `value` can be null on pre-backfill rows — fall back to `amount` like
+          // IncomeRecurringDetail does, or the row would seed as 0 and silently reroute that
+          // wallet's whole allocation to Unallocated on the next save.
+          value: String(round2(Number(r.value ?? r.amount))),
+        }
       }
     }
     setEdits(init)
@@ -168,18 +177,20 @@ export default function Budgeting() {
     setEditMode(true)
   }
 
-  function setEditValue(incomeId, walletId, value) {
-    setEdits(prev => ({ ...prev, [incomeId]: { ...(prev[incomeId] ?? {}), [walletId]: value } }))
+  function setEditRow(incomeId, walletId, row) {
+    setEdits(prev => ({ ...prev, [incomeId]: { ...(prev[incomeId] ?? {}), [walletId]: row } }))
   }
 
-  function incomeAssigned(incomeId) {
-    const m = edits[incomeId] ?? {}
-    return round2(Object.values(m).reduce((s, v) => s + (Number(v) || 0), 0))
+  // Same helper the editor renders from, so the numbers on screen are the bytes we write.
+  function resolveIncomeEdits(inc) {
+    return resolveIncomeEdit({
+      income: inc, editableWallets, edits: edits[inc.id] ?? {}, unallocatedWalletId: unallocId,
+    })
   }
 
   function requestSave() {
     for (const inc of includedIncomes) {
-      if (incomeAssigned(inc.id) > Number(inc.amount) + 0.005) {
+      if (!resolveIncomeEdits(inc).notOver) {
         setError(`"${inc.name}" distributes more than its amount (${formatMoney(inc.amount)}).`); return
       }
     }
@@ -204,19 +215,15 @@ export default function Budgeting() {
     setBusy(true)
     try {
       for (const inc of includedIncomes) {
-        const allocations = editableWallets
-          .map(w => ({ wallet_id: w.id, amount: Number(edits[inc.id]?.[w.id] || 0) }))
-          .filter(a => a.amount > 0)
-        const rows = buildRuleRows({
-          incomeAmount: Number(inc.amount), allocations,
-          existingRules: rulesByIncome[inc.id] ?? [], unallocatedWalletId: unallocId,
-        })
-        await writeIncomeRules(inc.id, rows)
+        await writeIncomeRules(inc.id, resolveIncomeEdits(inc).allRows)
       }
       await loadAll()
       setEditMode(false)
     } catch (e) {
+      // Incomes are written one at a time, so a mid-loop failure leaves earlier incomes rewritten.
+      // Re-read so the UI shows what is actually stored rather than the stale pre-save state.
       setError(e?.message || 'Could not save the plan.')
+      await loadAll().catch(() => {})
     } finally {
       setBusy(false)
     }
@@ -226,17 +233,16 @@ export default function Budgeting() {
 
   if (loading) return <p className="text-ink-faint p-8">Loading…</p>
 
-  // Empty state — budgeting needs at least one recurring income and one wallet.
+  // Empty state (§12.2) — card-less and centred on the page background, quieter than the surface it
+  // sits on: this is an absence, not content.
   if (incomes.length === 0 || noWallets) {
     return (
-      <div className="max-w-xl">
+      <div className="max-w-6xl">
         <PageHeader title="Budgeting" />
-        <div className="bg-card border border-card-border rounded-[14px] p-8 text-center">
-          <p className="text-ink-soft mb-1">Budgeting needs a recurring income and at least one wallet.</p>
-          <p className="text-sm text-ink-muted mb-5">
-            Set those up first — the plan distributes your recurring income across your wallets.
-          </p>
-          <div className="flex gap-3 justify-center">
+        <div className="flex flex-col items-center justify-center text-center min-h-[52vh]">
+          <p className="text-ink-muted">Budgeting needs a recurring income and at least one wallet.</p>
+          <p className="text-sm text-ink-faint mt-1 mb-6">Set those up and the plan builds itself.</p>
+          <div className="flex gap-3">
             <Link to="/income" className="px-4 py-2 rounded-[9px] bg-ink text-cream text-sm font-medium hover:opacity-90 transition-opacity">
               Add recurring income
             </Link>
@@ -250,17 +256,22 @@ export default function Budgeting() {
   }
 
   return (
-    <div className="max-w-4xl">
+    <div className="max-w-6xl">
       <PageHeader
         title="Budgeting"
         actions={mode === 'plan' && !editMode && (
           <>
-            <button
-              onClick={() => setMode('setup')}
-              className="flex items-center gap-2 px-3 py-2 text-sm text-ink-soft border border-card-border rounded-[9px] hover:bg-track transition-colors"
-            >
-              <Settings2 size={15} /> Configure
-            </button>
+            {/* Configure = which incomes are in the plan. Meaningless with a single always-included
+                income, so it hides in that case (§12.3) — but it MUST stay reachable whenever any
+                income is excluded, or a user with one excluded income has no route back to setup. */}
+            {(incomes.length > 1 || includedIncomes.length !== incomes.length) && (
+              <button
+                onClick={() => setMode('setup')}
+                className="flex items-center gap-2 px-3 py-2 text-sm text-ink-soft border border-card-border rounded-[9px] hover:bg-track transition-colors"
+              >
+                <Settings2 size={15} /> Configure
+              </button>
+            )}
             {includedIncomes.length > 1 && (
               <button
                 onClick={enterEdit}
@@ -309,8 +320,7 @@ export default function Budgeting() {
     return (
       <div className="space-y-6">
         <div className="bg-card border border-card-border rounded-[14px] p-5">
-          <h2 className="text-sm font-medium text-ink mb-1">Recurring incomes in the plan</h2>
-          <p className="text-xs text-ink-muted mb-3">Select which recurring incomes fund your wallet budgets.</p>
+          <h2 className="text-sm font-medium text-ink mb-3">Recurring incomes in the plan</h2>
           <div className="divide-y divide-inner-border">
             {incomes.map(inc => (
               <label key={inc.id} className="flex items-center justify-between py-2.5 cursor-pointer">
@@ -333,8 +343,7 @@ export default function Budgeting() {
         </div>
 
         <div className="bg-card border border-card-border rounded-[14px] p-5">
-          <h2 className="text-sm font-medium text-ink mb-1">Wallets</h2>
-          <p className="text-xs text-ink-muted mb-3">Must-fund wallets are filled to their budget. Tap a wallet to change its budget or cap.</p>
+          <h2 className="text-sm font-medium text-ink mb-3">Wallets</h2>
           <div className="divide-y divide-inner-border">
             {wallets.filter(w => !w.is_system).map(w => (
               <button
@@ -389,46 +398,47 @@ export default function Budgeting() {
     )
   }
 
-  function renderCoverage() {
-    if (plan.coverage.length === 0) return null
-    return (
-      <div className="bg-card border border-card-border rounded-[14px] p-5">
-        <h2 className="text-sm font-medium text-ink mb-3">Budget coverage</h2>
-        <div className="space-y-3">
-          {plan.coverage.map(c => (
-            <div key={c.wallet.id}>
-              <div className="flex items-center justify-between mb-1">
-                <button
-                  onClick={() => setWalletModal(c.wallet)}
-                  className="flex items-center gap-2 text-sm text-ink hover:text-accent transition-colors"
-                >
-                  <WalletIcon wallet={c.wallet} size={14} className="text-ink-soft" />
-                  {c.wallet.name}
-                </button>
-                <span className="text-[11px] tracking-tight">
-                  {c.status === 'short'
-                    ? <span className="text-negative">short {formatMoney(c.short)}</span>
-                    : c.status === 'over'
-                      ? <span className="text-ink-muted">over {formatMoney(c.over)}</span>
-                      : <span className="text-positive">covered</span>}
-                </span>
-              </div>
-              <MetricBar
-                value={Math.min(c.funded, c.budget)} max={c.budget}
-                fillClass={c.status === 'short' ? 'bg-accent-solid' : 'bg-positive-bar'}
-              />
-              <p className="text-[11px] text-ink-muted mt-1">
-                {formatMoney(c.funded)} of {formatMoney(c.budget)} funded
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-    )
+  function requestAutoDistribute() {
+    setConfirm({
+      title: 'Apply auto-distribution?',
+      body: (
+        <span>
+          This fills every must-fund wallet to its budget in order and sweeps the remainder to
+          Unallocated, <strong>replacing the current allocation</strong> for this income. Already-logged
+          income is not affected.
+        </span>
+      ),
+      confirmLabel: 'Apply',
+      onConfirm: doAutoDistribute,
+    })
+  }
+
+  async function doAutoDistribute() {
+    setConfirm(null)
+    const inc = includedIncomes[0]
+    if (!inc || !unallocId) { setError('No income or Unallocated wallet found.'); return }
+    setBusy(true)
+    try {
+      const { rows } = autoFillSingle({ income: inc, wallets, unallocatedWalletId: unallocId })
+      await writeIncomeRules(inc.id, rows)
+      await loadAll()
+    } catch (e) {
+      setError(e?.message || 'Could not apply the auto-distribution.')
+    } finally {
+      setBusy(false)
+    }
   }
 
   function renderPlan() {
     const leftover = round2(plan.totalIncome - plan.coveredTotal)
+
+    // Every wallet gets a tile: must-fund ones show % of budget, free-pool ones show the amount.
+    const tileWallets = wallets.filter(w => isMustFund(w) || isFreePool(w))
+    const allocations = includedIncomes.flatMap(inc =>
+      (rulesByIncome[inc.id] ?? []).map(r => ({
+        income_id: inc.id, wallet_id: r.wallet_id, amount: Number(r.amount),
+      })))
+
     return (
       <div className="space-y-6">
         <SummaryStrip stats={[
@@ -440,110 +450,59 @@ export default function Budgeting() {
             : { label: 'To free pool', value: formatMoney(Math.max(0, leftover)), tone: 'coral' },
         ]} />
 
-        {renderCoverage()}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          {/* Flow chart — one card, one SVG, every included income */}
+          <div className="lg:col-span-2 bg-card border border-card-border rounded-[14px] p-5">
+            <BudgetFlowChart
+              incomes={includedIncomes}
+              allocations={allocations}
+              wallets={wallets}
+            />
+          </div>
 
-        {/* Per-income flow */}
-        {includedIncomes.map(inc => {
-          const rules = rulesByIncome[inc.id] ?? []
-          const flows = rules.map(r => ({ wallet: walletById[r.wallet_id], amount: Number(r.amount) }))
-          return (
-            <div key={inc.id} className="bg-card border border-card-border rounded-[14px] p-5">
-              <div className="flex items-center justify-between mb-2">
-                <h2 className="text-sm font-medium text-ink">{inc.name}</h2>
-                <span className="text-sm font-medium text-ink tracking-tight">{formatMoney(inc.amount)}</span>
-              </div>
-              {flows.length > 0
-                ? <SalarySankey income={Number(inc.amount)} flows={flows} />
-                : <p className="text-sm text-ink-faint py-6 text-center">No distribution set for this income yet — use Edit distribution.</p>}
+          {/* Rail: wallet tiles + the single-income auto-distribute action */}
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              {tileWallets.map(w => (
+                <WalletTile
+                  key={w.id}
+                  wallet={w}
+                  funded={plan.fundedByWallet[w.id] ?? 0}
+                  budget={Number(w.budget) || 0}
+                  freePool={isFreePool(w)}
+                  onClick={() => setWalletModal(w)}
+                />
+              ))}
             </div>
-          )
-        })}
+
+            {includedIncomes.length === 1 && (
+              <button
+                onClick={requestAutoDistribute}
+                disabled={busy}
+                className="w-full px-4 py-2.5 rounded-[9px] bg-ink text-cream text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+              >
+                {busy ? 'Applying…' : 'Apply auto-distribution'}
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     )
   }
 
   function renderEdit() {
     return (
-      <div className="space-y-6">
-        <p className="text-xs text-ink-muted">
-          Set how much of each income goes to each wallet. Whatever you don't assign flows to
-          Unallocated. Must-fund wallets show their budget target; the summary flags any that fall short.
-        </p>
-
-        {includedIncomes.map(inc => {
-          const assigned  = incomeAssigned(inc.id)
-          const remaining = round2(Number(inc.amount) - assigned)
-          const over      = remaining < -0.005
-          return (
-            <div key={inc.id} className="bg-card border border-card-border rounded-[14px] p-5">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-medium text-ink">{inc.name}</h2>
-                <span className="text-sm font-medium text-ink tracking-tight">{formatMoney(inc.amount)}</span>
-              </div>
-              <div className="divide-y divide-inner-border">
-                {editableWallets.map(w => {
-                  const budget = Number(w.budget) || 0
-                  return (
-                    <div key={w.id} className="flex items-center justify-between gap-3 py-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <WalletIcon wallet={w} size={14} className="text-ink-soft shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-sm text-ink truncate">{w.name}</p>
-                          {isMustFund(w) && budget > 0 && (
-                            <p className="text-[11px] text-ink-muted">budget {formatMoney(budget)}</p>
-                          )}
-                        </div>
-                      </div>
-                      <input
-                        type="number" min="0" step="0.01"
-                        value={edits[inc.id]?.[w.id] ?? ''}
-                        onChange={e => setEditValue(inc.id, w.id, e.target.value)}
-                        placeholder="0.00"
-                        className="w-24 px-2 py-1.5 text-sm text-right bg-field border border-card-border rounded-[8px] text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-accent/30"
-                      />
-                    </div>
-                  )
-                })}
-              </div>
-              <div className="flex items-center justify-between mt-3 text-[11px]">
-                <span className="text-ink-muted">
-                  {over ? 'Over-distributed' : 'To Unallocated'}
-                </span>
-                <span className={`tracking-tight font-medium ${over ? 'text-negative' : 'text-ink-soft'}`}>
-                  {over ? `−${formatMoney(Math.abs(remaining))}` : formatMoney(remaining)}
-                </span>
-              </div>
-            </div>
-          )
-        })}
-
-        {/* Live coverage across the edited plan (from saved rules; recomputed after save) */}
-        {plan.totalShort > 0.005 && (
-          <div className="flex items-start gap-3 bg-negative-tint border border-negative/30 rounded-[12px] p-4">
-            <AlertTriangle size={16} className="text-negative shrink-0 mt-0.5" />
-            <p className="text-sm text-ink-soft">
-              After the last save, {formatMoney(plan.totalShort)} of budgets was still unfunded across
-              your wallets. Adjust the amounts above so each budget is covered.
-            </p>
-          </div>
-        )}
-
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={() => { setEditMode(false); setError(null) }}
-            className="px-4 py-2 rounded-[9px] border border-card-border text-sm text-ink-soft hover:bg-track transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={requestSave}
-            disabled={busy}
-            className="flex items-center gap-2 px-4 py-2 rounded-[9px] bg-ink text-cream text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
-          >
-            <Check size={15} /> {busy ? 'Saving…' : 'Save plan'}
-          </button>
-        </div>
-      </div>
+      <DistributionEditor
+        incomes={includedIncomes}
+        wallets={wallets}
+        editableWallets={editableWallets}
+        unallocatedWalletId={unallocId}
+        edits={edits}
+        onChange={setEditRow}
+        onCancel={() => { setEditMode(false); setError(null) }}
+        onSave={requestSave}
+        busy={busy}
+      />
     )
   }
 }
