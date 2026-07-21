@@ -447,7 +447,8 @@ wrapup (fold the outcome back into budgeting-page-plan.md §11 and its decision 
   a live 3-log capped batch (below-ceiling fill AND the 100/100 reduction/overflow case reconcile to the
   cent). **Merged to `main` via PR #14 (2026-07-21)** together with Phase B.
 - **Phase B build: DONE (branch `b/capped-wallet-fix`, 2026-07-19; A + B in one PR).** New `/budgeting`
-  page + nav; pure `budgetPlan.js`/`sankeyLayout.js` (+tests); inline-SVG `SalarySankey`. Multi-income
+  page + nav; pure `budgetPlan.js`/`sankeyLayout.js` (+tests); inline-SVG `SalarySankey` (both
+  superseded in B2-2 by `budgetFlowLayout.js` + `BudgetFlowChart.jsx`). Multi-income
   built in (plan-level coverage; `income_recurring.include_in_budget` flag, applied+verified). Edits each
   income's `income_distribution_rules` in place; save-verification modal. 114 tests green, build clean,
   code-reviewer (no criticals), design-check, both-theme render verified. Owner runs the multi-income /
@@ -460,8 +461,21 @@ wrapup (fold the outcome back into budgeting-page-plan.md §11 and its decision 
   `design-check` skill updated (incl. a new bare-`<h1>` grep). 114 tests green, build clean, zero new
   lint issues, design-check clean, code-reviewer (no criticals), Playwright both themes × 7 pages.
   **One owner-approved override of §12.1 — see §12.8 item 1.**
-- **Phase B2-2 (Budgeting page rework):** not started; prompt ready (10.E), and it now consumes
-  `PageHeader`.
+- **Phase B2-2 (Budgeting page rework): DONE (branch `b/budgeting-rework`, 2026-07-21).**
+  Card-less centred empty state; two-column layout (flow chart ~2/3 + wallet-tile rail ~1/3, page
+  widened to `max-w-6xl`); "Budget coverage" card deleted; compact `WalletTile`s open `WalletModal`
+  in place; single-income `Apply auto-distribution` with a confirm step; **one combined
+  `BudgetFlowChart`** replacing the per-income `SalarySankey` (pure `budgetFlowLayout.js` — shared
+  scale, min ribbon thickness, deterministic label de-collision + leader lines; one identity-ramp
+  colour per income, neutral wallet nodes, coral Unallocated); `DistributionEditor` extracted with
+  per-row €/% toggles, `fund to budget`, and funding bars aggregated across ALL incomes.
+  138 tests green, build clean, zero new lint issues, design-check clean, code-reviewer (no
+  criticals; 5 Important findings all fixed), **db-verifier PASS on all 6 invariants** including
+  zero balance movement. Playwright: both themes × empty / single-income / multi-income + privacy.
+  - **Known limitation (surfaced by db-verifier):** the chart shows *planned* rule amounts. For a
+    **capped** wallet at/above its ceiling the amount that actually lands is reduced by
+    `resolveCappedInflow` at apply time, so the plan view can overstate that wallet and understate
+    its overflow target. Planned-vs-actual is exactly what **Phase C** (§6) exists to add.
 - **Phase C:** not started; prompt ready (10.C).
 
 *Keep this section and §7 current as sub-phases complete.*

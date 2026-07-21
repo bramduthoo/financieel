@@ -120,6 +120,27 @@ Map existing wallet `colour` values onto these families; do not invent new hues.
   one euro, one percent** (owner explicitly rejected a segmented per-wallet bar);
   footer right-aligned Cancel + Confirm.
 
+- **Empty states are card-less, centred and muted.** No `card` background, no border — they sit
+  directly on the page bg, centred **horizontally and vertically** in the content area. Headline
+  `text-ink-muted`, one supporting line `text-ink-faint`. Deliberately lower contrast than body text:
+  this is an absence, not content. Keep the action buttons (§4 button styles). Empty states are the
+  one place explanatory copy is allowed — they must explain the absence.
+- **Compact metric tile** (`WalletTile`): name 13px truncating, ONE prominent number at 18px
+  `font-medium tracking-tight`, an 11px `ink-muted` support line; nested-card styling
+  `rounded-[11px] border border-inner-border`, ~12px padding, **no bar**. Tiles are real `<button>`s
+  when clickable. **Explicit exception to §8 Rule 1:** a tile is not a content card, so the
+  hero-number + `MetricBar` + `CardFooterMeta` requirement does NOT apply to it. Tiles with no honest
+  denominator (free-pool wallets) show the amount and a role label instead of a percentage — the §8
+  Rule 1 "never a fabricated ratio" rule still binds.
+- **Flow diagrams** (`BudgetFlowChart`): one colour per SOURCE, taken from the §2 identity-ramp bar
+  stops (`#378ADD`, `#639922`, `#D4537E`, `#7F77DD`, `#EF9F27`) and assigned by display order —
+  never invented hues. Ribbons carry their source's colour at ~0.22 alpha (light) / ~0.30 (dark),
+  raised on hover. Destination nodes stay **neutral** (`ink-soft`) so the eye reads sources, except
+  **Unallocated, which keeps coral `accent`** per §2. Nodes ~8px wide `rounded-[4px]`, with a minimum
+  ribbon thickness so small flows stay visible. Labels must be de-collided (push-apart + leader line);
+  overlapping labels are a violation. Geometry lives in a pure `src/lib/` function with unit tests —
+  never inline in JSX.
+
 ## 5. Money formatting (rollout requirement)
 
 Create `src/lib/format.js` exporting `formatMoney(amount, opts)` producing European
@@ -140,6 +161,9 @@ positive fill `#639922` family, negative `#E24B4A` family, dashed zero baseline 
 | Page background | `cream #F4F0E7` (dark `#14140F`) |
 | Page header | `PageHeader` from `src/components/ui/` — title 26px `font-medium tracking-tight`, bottom hairline `card-border`. A bare `<h1>` on a page is a violation (auth pages excepted) |
 | Page subtitles | header `meta` carries short factual data only. Explanatory/instructional prose in a page header is a violation |
+| Empty states | no card, centred both axes on the page bg, `ink-muted` headline + `ink-faint` support line. A boxed empty-state card is a violation |
+| Metric tiles | `rounded-[11px] border border-inner-border`, one 18px number, 11px support, no bar. Explicit exception to §8 Rule 1; free-pool tiles show an amount, never a fabricated % |
+| Flow diagrams | one colour per source from the §2 ramp stops; neutral destination nodes; coral Unallocated; min ribbon thickness; de-collided labels; geometry in a tested `src/lib/` function |
 | Cards | white, 0.5–1px `#E4DFD3` border, `rounded-[14px]` (dark `#1E1E17`, fill-separated) |
 | Hero numbers | 36px `font-medium tracking-tight` — bold/semibold on numbers is a violation |
 | Section labels | 11–12px uppercase `tracking-wider` `#888780` |

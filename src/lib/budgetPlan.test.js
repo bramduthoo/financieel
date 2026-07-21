@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { isMustFund, isFreePool, buildBudgetPlan, autoFillSingle, buildRuleRows } from './budgetPlan'
+import {
+  isMustFund, isFreePool, buildBudgetPlan, autoFillSingle, buildRuleRows,
+  computeWalletFunding, fundToBudget,
+} from './budgetPlan'
 
 // Wallet fixtures (sort_order drives auto-fill priority).
 const rent      = { id: 'w-rent',   name: 'Rent',      type: 'fixed',      budget_type: 'fixed-recurring', budget: 1200, sort_order: 0 }
@@ -123,5 +126,128 @@ describe('budgetPlan — buildRuleRows', () => {
     })
     const clothChanged = changed.find(r => r.wallet_id === 'w-cloth')
     expect(clothChanged).toMatchObject({ mode: 'euro', value: 250, amount: 250 })
+  })
+})
+
+describe('budgetPlan — computeWalletFunding', () => {
+  it('sums allocations per wallet across every income', () => {
+    const { fundedByWallet } = computeWalletFunding({
+      wallets,
+      allocations: [
+        { income_id: 'inc-sal',  wallet_id: 'w-rent', amount: 800 },
+        { income_id: 'inc-side', wallet_id: 'w-rent', amount: 400 },
+        { income_id: 'inc-sal',  wallet_id: 'w-groc', amount: 300 },
+      ],
+    })
+    expect(fundedByWallet['w-rent']).toBe(1200)
+    expect(fundedByWallet['w-groc']).toBe(300)
+  })
+
+  it('a wallet fed 40/60 by two incomes reads 100% funded', () => {
+    const { coverage } = computeWalletFunding({
+      wallets,
+      allocations: [
+        { income_id: 'inc-sal',  wallet_id: 'w-rent', amount: 480 },
+        { income_id: 'inc-side', wallet_id: 'w-rent', amount: 720 },
+      ],
+    })
+    const rentCov = coverage.find(c => c.wallet.id === 'w-rent')
+    expect(rentCov.funded).toBe(1200)
+    expect(rentCov.pct).toBeCloseTo(100, 5)
+    expect(rentCov.status).toBe('covered')
+  })
+
+  it('flags short and over, and gives free-pool wallets no coverage row', () => {
+    const { coverage } = computeWalletFunding({
+      wallets,
+      allocations: [
+        { income_id: 'inc-sal', wallet_id: 'w-rent',  amount: 1000 },  // short 200
+        { income_id: 'inc-sal', wallet_id: 'w-cloth', amount: 500 },   // over 100
+        { income_id: 'inc-sal', wallet_id: 'w-unal',  amount: 900 },
+        { income_id: 'inc-sal', wallet_id: 'w-inv',   amount: 100 },
+      ],
+    })
+    expect(coverage.find(c => c.wallet.id === 'w-rent')).toMatchObject({ short: 200, status: 'short' })
+    expect(coverage.find(c => c.wallet.id === 'w-cloth')).toMatchObject({ over: 100, status: 'over' })
+    // Unallocated + investment have no honest denominator → never a coverage row.
+    expect(coverage.find(c => c.wallet.id === 'w-unal')).toBeUndefined()
+    expect(coverage.find(c => c.wallet.id === 'w-inv')).toBeUndefined()
+  })
+
+  it('ignores zero and negative allocations', () => {
+    const { fundedByWallet } = computeWalletFunding({
+      wallets,
+      allocations: [
+        { income_id: 'inc-sal', wallet_id: 'w-rent', amount: 0 },
+        { income_id: 'inc-sal', wallet_id: 'w-groc', amount: -50 },
+      ],
+    })
+    expect(fundedByWallet['w-rent']).toBeUndefined()
+    expect(fundedByWallet['w-groc']).toBeUndefined()
+  })
+
+  it('matches buildBudgetPlan, which now delegates to it', () => {
+    const rulesByIncome = { 'inc-sal': [{ wallet_id: 'w-rent', amount: 1200, mode: 'euro', value: 1200 }] }
+    const plan = buildBudgetPlan({ incomes: [salary], rulesByIncome, wallets })
+    const direct = computeWalletFunding({
+      wallets, allocations: [{ income_id: 'inc-sal', wallet_id: 'w-rent', amount: 1200 }],
+    })
+    expect(plan.coverage).toEqual(direct.coverage)
+    expect(plan.fundedByWallet).toEqual(direct.fundedByWallet)
+  })
+})
+
+describe('budgetPlan — fundToBudget', () => {
+  it('fills the whole budget when nothing else funds the wallet', () => {
+    expect(fundToBudget({
+      wallet: rent, incomeId: 'inc-sal', incomeAmount: 2000, allocations: [],
+    })).toBe(1200)
+  })
+
+  it('fills only the remaining shortfall when another income already funds it', () => {
+    expect(fundToBudget({
+      wallet: rent, incomeId: 'inc-sal', incomeAmount: 2000,
+      allocations: [{ income_id: 'inc-side', wallet_id: 'w-rent', amount: 500 }],
+    })).toBe(700)
+  })
+
+  it("is clamped to this income's unassigned remainder", () => {
+    // Salary is 2000 but has already committed 1900 elsewhere → only 100 left, not the 1200 budget.
+    expect(fundToBudget({
+      wallet: rent, incomeId: 'inc-sal', incomeAmount: 2000,
+      allocations: [{ income_id: 'inc-sal', wallet_id: 'w-groc', amount: 1900 }],
+    })).toBe(100)
+  })
+
+  it('returns 0 when the wallet is already fully funded by other incomes', () => {
+    expect(fundToBudget({
+      wallet: rent, incomeId: 'inc-sal', incomeAmount: 2000,
+      allocations: [{ income_id: 'inc-side', wallet_id: 'w-rent', amount: 1500 }],
+    })).toBe(0)
+  })
+
+  it('returns 0 when the income has nothing left to give', () => {
+    expect(fundToBudget({
+      wallet: rent, incomeId: 'inc-sal', incomeAmount: 2000,
+      allocations: [{ income_id: 'inc-sal', wallet_id: 'w-groc', amount: 2000 }],
+    })).toBe(0)
+  })
+
+  it('ignores this row\'s own current allocation, so ticking it twice is idempotent', () => {
+    const args = {
+      wallet: rent, incomeId: 'inc-sal', incomeAmount: 2000,
+      allocations: [{ income_id: 'inc-sal', wallet_id: 'w-rent', amount: 300 }],
+    }
+    expect(fundToBudget(args)).toBe(1200)
+    expect(fundToBudget(args)).toBe(1200)
+  })
+
+  it('returns 0 for a wallet with no budget (free pool)', () => {
+    expect(fundToBudget({
+      wallet: unalloc, incomeId: 'inc-sal', incomeAmount: 2000, allocations: [],
+    })).toBe(0)
+    expect(fundToBudget({
+      wallet: invest, incomeId: 'inc-sal', incomeAmount: 2000, allocations: [],
+    })).toBe(0)
   })
 })
