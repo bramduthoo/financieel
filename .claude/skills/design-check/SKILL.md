@@ -17,6 +17,8 @@ utilities (`bg-cream`, `text-ink`, `text-positive`, `border-card-border`, …) o
 | Element | Required |
 |---|---|
 | Page background | `cream #F4F0E7` (dark `#14140F`) |
+| Page header | `PageHeader` from `src/components/ui/` — title 26px `font-medium tracking-tight`, bottom hairline `card-border`. A bare `<h1>` on a page is a violation (`Login.jsx` / `ResetPassword.jsx` excepted — centred auth cards, not app-shell pages) |
+| Page subtitles | header `meta` carries **short factual data only** (month label, wallet type + budget, recurrence). An explanatory/instructional sentence in a page header is a violation — labels, numbers and empty states carry the meaning |
 | Cards | white, 0.5–1px `#E4DFD3` border, `rounded-[14px]` (dark `#1E1E17`, fill-separated) |
 | Hero numbers | 36px `font-medium tracking-tight` — bold/semibold on numbers is a violation |
 | Section labels | 11–12px uppercase `tracking-wider` `#888780` |
@@ -53,6 +55,8 @@ utilities (`bg-cream`, `text-ink`, `text-positive`, `border-card-border`, …) o
 2. Grep each for violations. Run these explicitly and treat any hit as a finding:
    - `grep -nE "indigo|purple|violet|fuchsia"` → **purple leakage** (toggles, focus rings,
      buttons, active tabs). This is the pattern reviews keep missing — always run it.
+   - `grep -n "<h1" src/pages/` → **bare page title**. Any hit outside `Login.jsx` /
+     `ResetPassword.jsx` is a finding: the page must use `PageHeader` instead.
    - `grep -nE "font-(bold|semibold)"` on large/number text.
    - `grep -nE "rounded-(lg|xl|2xl)"` on cards (should be `rounded-[14px]`).
    - hardcoded hex outside the DESIGN-SPEC palette; chart-library imports; containers missing a

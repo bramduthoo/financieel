@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local browser-testing artifacts (Playwright MCP snapshots/logs, review screenshots)
+.playwright-mcp/
+screens/

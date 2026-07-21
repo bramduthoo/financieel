@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState, useMemo } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { ArrowLeft, Edit2, X } from 'lucide-react'
+import { Edit2, X } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { supabase, getCurrentUserId } from '../lib/supabase'
 import IncomeConfirmModal from '../components/IncomeConfirmModal'
@@ -9,6 +9,7 @@ import { distributeIncome } from '../lib/distributeIncome'
 import { evaluateUnallocatedPlans } from '../lib/unallocatedPlans'
 import { formatMoney, formatMoneyCompact } from '../lib/format'
 import { WalletIcon } from '../lib/walletIcons'
+import PageHeader from '../components/ui/PageHeader'
 
 const FREQ_OPTIONS = [
   { value: 'weekly',    label: 'Weekly' },
@@ -246,27 +247,24 @@ export default function IncomeRecurringDetail() {
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <button
-          onClick={() => navigate('/income')}
-          className="p-2 text-ink-faint hover:text-ink-soft dark:hover:text-ink hover:bg-track rounded-lg transition-colors"
-        >
-          <ArrowLeft size={18} />
-        </button>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-2xl font-medium text-ink truncate">{rule.name}</h1>
-          <p className="text-ink-faint text-sm capitalize mt-0.5">
+      <PageHeader
+        eyebrow="Income"
+        eyebrowTo="/income"
+        title={rule.name}
+        meta={
+          <span className="capitalize">
             {rule.frequency}{showDay && rule.day_of_month ? ` · day ${rule.day_of_month}` : ''}
-          </p>
-        </div>
-        <button
-          onClick={openEdit}
-          className="flex items-center gap-2 px-3 py-2 text-sm text-ink-soft hover:bg-track rounded-lg transition-colors"
-        >
-          <Edit2 size={15} /> Edit
-        </button>
-      </div>
+          </span>
+        }
+        actions={
+          <button
+            onClick={openEdit}
+            className="flex items-center gap-2 px-3 py-2 text-sm text-ink-soft hover:bg-track rounded-lg transition-colors"
+          >
+            <Edit2 size={15} /> Edit
+          </button>
+        }
+      />
 
       {/* Current amount */}
       <div className="bg-card rounded-[14px] border border-card-border p-5 mb-6">

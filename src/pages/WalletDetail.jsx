@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Settings, Plus, Trash2, X, Edit2, FileText, Zap } from 'lucide-react'
+import { useParams } from 'react-router-dom'
+import { Settings, Plus, Trash2, X, Edit2, FileText, Zap } from 'lucide-react'
 import { supabase, getCurrentUserId } from '../lib/supabase'
 import { format, startOfMonth, endOfMonth } from 'date-fns'
 import RecurringRules from '../components/RecurringRules'
@@ -18,6 +18,7 @@ import { formatMoney } from '../lib/format'
 import { WalletIcon } from '../lib/walletIcons'
 import MetricBar from '../components/ui/MetricBar'
 import CompactRow from '../components/ui/CompactRow'
+import PageHeader from '../components/ui/PageHeader'
 
 const round2 = n => Number(Number(n).toFixed(2))
 
@@ -29,7 +30,6 @@ const PLAN_MODES = [
 
 export default function WalletDetail() {
   const { id }     = useParams()
-  const navigate   = useNavigate()
   const [wallet,       setWallet]       = useState(null)
   const [rules,        setRules]        = useState([])
   const [transactions, setTransactions] = useState([])
@@ -334,32 +334,25 @@ export default function WalletDetail() {
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate('/wallets')}
-            className="p-2 text-ink-faint hover:text-ink-soft dark:hover:text-ink hover:bg-track rounded-lg transition-colors"
-          >
-            <ArrowLeft size={18} />
-          </button>
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-[9px] bg-accent/10 flex items-center justify-center flex-shrink-0">
-              <WalletIcon wallet={wallet} size={16} className="text-accent" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-medium text-ink">{wallet.name}</h1>
-              <p className="text-ink-faint text-sm capitalize">
-                {wallet.type === 'unallocated'
-                  ? 'System wallet'
-                  : `${wallet.type} · ${wallet.budget_type.replace('-', ' ')}${wallet.type !== 'investment' ? ` · ${formatMoney(Number(wallet.budget))}/mo` : ''}`
-                }
-              </p>
-            </div>
+      <PageHeader
+        eyebrow="Wallets"
+        eyebrowTo="/wallets"
+        icon={
+          <div className="w-8 h-8 rounded-[9px] bg-accent/10 flex items-center justify-center flex-shrink-0">
+            <WalletIcon wallet={wallet} size={16} className="text-accent" />
           </div>
-        </div>
-
-        <div className="flex items-center gap-3">
+        }
+        title={wallet.name}
+        meta={
+          <span className="capitalize">
+            {wallet.type === 'unallocated'
+              ? 'System wallet'
+              : `${wallet.type} · ${wallet.budget_type.replace('-', ' ')}${wallet.type !== 'investment' ? ` · ${formatMoney(Number(wallet.budget))}/mo` : ''}`
+            }
+          </span>
+        }
+        actions={
+          <>
           {/* Compact spending bar — variable wallets only */}
           {wallet.type === 'variable' && (
             <div className="flex flex-col gap-1 min-w-[140px]">
@@ -391,8 +384,9 @@ export default function WalletDetail() {
               <Settings size={15} /> Settings
             </button>
           )}
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* ── Fixed wallet ──────────────────────────────────────────────────────── */}
       {wallet.type === 'fixed' && (

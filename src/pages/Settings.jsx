@@ -5,6 +5,7 @@ import { format } from 'date-fns'
 import { supabase } from '../lib/supabase'
 import { useTheme } from '../lib/ThemeContext'
 import IncomeConfirmModal from '../components/IncomeConfirmModal'
+import PageHeader from '../components/ui/PageHeader'
 
 const authInputClass =
   'w-full px-3 py-2 bg-field border border-card-border rounded-[8px] text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-accent/30'
@@ -254,19 +255,18 @@ export default function Settings() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-medium tracking-tight text-ink">Settings</h1>
-          <p className="text-ink-soft text-sm mt-1">App preferences and configuration</p>
-        </div>
-        <span
-          className={`text-sm font-medium text-positive transition-opacity duration-500 ${
-            saved ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
-          Saved
-        </span>
-      </div>
+      <PageHeader
+        title="Settings"
+        actions={
+          <span
+            className={`text-sm font-medium text-positive transition-opacity duration-500 ${
+              saved ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            Saved
+          </span>
+        }
+      />
 
       <div className="max-w-[640px] space-y-8">
         {/* ── Account ─────────────────────────────────────────────────────────── */}
