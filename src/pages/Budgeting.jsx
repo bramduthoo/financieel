@@ -7,6 +7,7 @@ import { WalletIcon } from '../lib/walletIcons'
 import { isMustFund, buildBudgetPlan, autoFillSingle, buildRuleRows } from '../lib/budgetPlan'
 import SummaryStrip from '../components/ui/SummaryStrip'
 import MetricBar from '../components/ui/MetricBar'
+import PageHeader from '../components/ui/PageHeader'
 import SalarySankey from '../components/budgeting/SalarySankey'
 import WalletModal from '../components/WalletModal'
 import IncomeConfirmModal from '../components/IncomeConfirmModal'
@@ -229,8 +230,8 @@ export default function Budgeting() {
   if (incomes.length === 0 || noWallets) {
     return (
       <div className="max-w-xl">
-        <h1 className="text-2xl font-medium text-ink mb-2">Budgeting</h1>
-        <div className="bg-card border border-card-border rounded-[14px] p-8 text-center mt-6">
+        <PageHeader title="Budgeting" />
+        <div className="bg-card border border-card-border rounded-[14px] p-8 text-center">
           <p className="text-ink-soft mb-1">Budgeting needs a recurring income and at least one wallet.</p>
           <p className="text-sm text-ink-muted mb-5">
             Set those up first — the plan distributes your recurring income across your wallets.
@@ -250,14 +251,10 @@ export default function Budgeting() {
 
   return (
     <div className="max-w-4xl">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-medium text-ink">Budgeting</h1>
-          <p className="text-ink-faint text-sm mt-0.5">How your recurring income fills your wallet budgets.</p>
-        </div>
-        {mode === 'plan' && !editMode && (
-          <div className="flex items-center gap-2">
+      <PageHeader
+        title="Budgeting"
+        actions={mode === 'plan' && !editMode && (
+          <>
             <button
               onClick={() => setMode('setup')}
               className="flex items-center gap-2 px-3 py-2 text-sm text-ink-soft border border-card-border rounded-[9px] hover:bg-track transition-colors"
@@ -272,9 +269,9 @@ export default function Budgeting() {
                 <SlidersHorizontal size={15} /> Edit distribution
               </button>
             )}
-          </div>
+          </>
         )}
-      </div>
+      />
 
       {error && <p className="text-negative text-sm mb-4">{error}</p>}
 

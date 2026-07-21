@@ -81,6 +81,18 @@ Map existing wallet `colour` values onto these families; do not invent new hues.
 
 ## 4. Components
 
+- **PageHeader** (`src/components/ui/PageHeader.jsx`): the one page header — **every app-shell
+  page uses it, no page renders a bare `<h1>`**. Slots: optional `eyebrow` (+ `eyebrowTo` to render
+  it as a route link), optional `icon` chip, required `title`, optional `meta`, optional
+  right-aligned `actions`. Title **26px `font-medium tracking-tight text-ink`** (weights 400/500
+  only, per §3). Eyebrow 11px uppercase `tracking-wider text-ink-muted`; on detail pages it names
+  the parent section and **replaces ad-hoc back-arrow buttons** — it says *where* back goes.
+  `meta` is 13px `text-ink-muted` and carries **short factual data only** (a month label, a
+  wallet's type + budget, a recurrence) — **explanatory or instructional prose in a page header is
+  a violation**; labels, numbers and empty states carry the meaning instead. Closed by a bottom
+  hairline `border-b border-card-border` across the content width, `pb-4 mb-6`. Not sticky.
+  **Excluded:** `Login` and `ResetPassword` — centred auth cards outside the app shell, whose
+  `<h1>` is a card heading, not a page header.
 - **Cards:** bg `card`, border 0.5–1px `card-border`, `rounded-[14px]`, padding ~24px
   (dense cards 20px). Nested cards inside cards: border `inner-border`, `rounded-[11px]`.
 - **Icon chips:** 28–36px square, `rounded-[9px]`, pastel bg + strong icon per the
@@ -126,6 +138,8 @@ positive fill `#639922` family, negative `#E24B4A` family, dashed zero baseline 
 | Element | Required |
 |---|---|
 | Page background | `cream #F4F0E7` (dark `#14140F`) |
+| Page header | `PageHeader` from `src/components/ui/` — title 26px `font-medium tracking-tight`, bottom hairline `card-border`. A bare `<h1>` on a page is a violation (auth pages excepted) |
+| Page subtitles | header `meta` carries short factual data only. Explanatory/instructional prose in a page header is a violation |
 | Cards | white, 0.5–1px `#E4DFD3` border, `rounded-[14px]` (dark `#1E1E17`, fill-separated) |
 | Hero numbers | 36px `font-medium tracking-tight` — bold/semibold on numbers is a violation |
 | Section labels | 11–12px uppercase `tracking-wider` `#888780` |

@@ -13,6 +13,7 @@ import { formatMoney } from '../lib/format'
 import { WalletIcon } from '../lib/walletIcons'
 import SummaryStrip from '../components/ui/SummaryStrip'
 import CompactRow from '../components/ui/CompactRow'
+import PageHeader from '../components/ui/PageHeader'
 
 const FREQ_OPTIONS = [
   { value: 'weekly',    label: 'Weekly' },
@@ -488,20 +489,18 @@ export default function Income() {
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-xl font-medium tracking-tight text-ink">Income</h1>
-          <p className="text-ink-muted text-[13px] mt-0.5">Track income from all sources</p>
-        </div>
-        <button
-          onClick={() => openModal('quick')}
-          className="flex items-center gap-2 bg-ink text-cream px-4 py-2 rounded-[9px] text-sm font-medium hover:opacity-90 transition-opacity"
-        >
-          <Plus size={15} />
-          Add income
-        </button>
-      </div>
+      <PageHeader
+        title="Income"
+        actions={
+          <button
+            onClick={() => openModal('quick')}
+            className="flex items-center gap-2 bg-ink text-cream px-4 py-2 rounded-[9px] text-sm font-medium hover:opacity-90 transition-opacity"
+          >
+            <Plus size={15} />
+            Add income
+          </button>
+        }
+      />
 
       {loading ? (
         <p className="text-ink-faint text-sm mb-8">Loading…</p>

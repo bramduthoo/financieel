@@ -6,6 +6,7 @@ import WalletCard from '../components/WalletCard'
 import WalletModal from '../components/WalletModal'
 import SummaryStrip from '../components/ui/SummaryStrip'
 import GhostAddCard from '../components/ui/GhostAddCard'
+import PageHeader from '../components/ui/PageHeader'
 
 export default function Wallets() {
   const [wallets,      setWallets]      = useState([])
@@ -86,19 +87,17 @@ export default function Wallets() {
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-xl font-medium tracking-tight text-ink">Wallets</h1>
-          <p className="text-ink-soft text-[13px] mt-0.5">Manage your spending and saving categories</p>
-        </div>
-        <button
-          onClick={() => openCreate()}
-          className="flex items-center gap-2 bg-ink text-cream px-4 py-2 rounded-[9px] text-sm font-medium hover:opacity-90 transition-opacity"
-        >
-          + New wallet
-        </button>
-      </div>
+      <PageHeader
+        title="Wallets"
+        actions={
+          <button
+            onClick={() => openCreate()}
+            className="flex items-center gap-2 bg-ink text-cream px-4 py-2 rounded-[9px] text-sm font-medium hover:opacity-90 transition-opacity"
+          >
+            + New wallet
+          </button>
+        }
+      />
 
       {loading ? (
         <p className="text-ink-muted">Loading wallets...</p>
