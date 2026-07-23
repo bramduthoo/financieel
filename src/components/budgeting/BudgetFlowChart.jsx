@@ -11,6 +11,7 @@
 
 import { useMemo, useState } from 'react'
 import { computeBudgetFlowLayout } from '../../lib/budgetFlowLayout'
+import { isMustFund } from '../../lib/budgetPlan'
 import { formatMoney } from '../../lib/format'
 
 // DESIGN-SPEC §2 identity-ramp bar stops, cycled by income index.
@@ -26,6 +27,10 @@ const LABEL_PAD = 8       // matches decollide()'s edge padding
 
 export default function BudgetFlowChart({ incomes = [], allocations = [], wallets = [], className = '' }) {
   const [hovered, setHovered] = useState(null)
+
+  // Wallet lookup so node labels can show INTENT (the wallet's budget) rather than just the routed
+  // amount (§6.0.3). Ribbon thickness already encodes the allocation — the label's job is the target.
+  const walletById = useMemo(() => new Map(wallets.map(w => [w.id, w])), [wallets])
 
   const walletCount = useMemo(() => {
     const ids = new Set(allocations.filter(a => Number(a.amount) > 0).map(a => a.wallet_id))
@@ -89,19 +94,16 @@ export default function BudgetFlowChart({ incomes = [], allocations = [], wallet
         )
       })}
 
-      {/* Income nodes — thin, coloured, one per included income */}
+      {/* Income nodes — thin, coloured, one per included income. Label shows the income's € amount
+          (intent) beneath its name (§6.0.3). */}
       {layout.incomeNodes.map(n => (
         <g key={`i-${n.id}`}>
           <rect x={n.x} y={n.y} width={n.width} height={n.height} rx={4} fill={colorFor(n.colorIndex)} />
-          <text
-            x={n.x + n.width + 8}
-            y={n.y + n.height / 2}
-            fontSize={12}
-            fontWeight="500"
-            dominantBaseline="middle"
-            className="fill-ink"
-          >
+          <text x={n.x + n.width + 8} y={n.y + n.height / 2 - 5} fontSize={12} fontWeight="500" dominantBaseline="middle" className="fill-ink">
             {n.name}
+          </text>
+          <text x={n.x + n.width + 8} y={n.y + n.height / 2 + 9} fontSize={11} dominantBaseline="middle" className="fill-ink-muted">
+            {formatMoney(n.amount)}
           </text>
         </g>
       ))}
@@ -125,17 +127,26 @@ export default function BudgetFlowChart({ incomes = [], allocations = [], wallet
         />
       ))}
 
-      {/* Wallet labels: name, then amount + share beneath */}
-      {layout.labels.map(l => (
-        <g key={`t-${l.wallet_id}`}>
-          <text x={l.x} y={l.y - 5} fontSize={13} dominantBaseline="middle" className="fill-ink">
-            {l.name}
-          </text>
-          <text x={l.x} y={l.y + 9} fontSize={11} dominantBaseline="middle" className="fill-ink-muted">
-            {formatMoney(l.amount)} · {l.pct}%
-          </text>
-        </g>
-      ))}
+      {/* Wallet labels: name, then INTENT beneath — a must-fund wallet shows its monthly budget (with
+          a negative shortfall when the allocation falls short); a free-pool wallet has no budget, so it
+          keeps showing the allocated amount (§6.0.3). */}
+      {layout.labels.map(l => {
+        const w = walletById.get(l.wallet_id)
+        const mustFund = w ? isMustFund(w) : false
+        const budget = Number(w?.budget) || 0
+        const short = mustFund && budget > 0 ? Number((budget - l.amount).toFixed(2)) : 0
+        return (
+          <g key={`t-${l.wallet_id}`}>
+            <text x={l.x} y={l.y - 5} fontSize={13} dominantBaseline="middle" className="fill-ink">
+              {l.name}
+            </text>
+            <text x={l.x} y={l.y + 9} fontSize={11} dominantBaseline="middle" className="fill-ink-muted">
+              {mustFund && budget > 0 ? formatMoney(budget) : formatMoney(l.amount)}
+              {short > 0.005 && <tspan className="fill-negative"> · {formatMoney(short)} short</tspan>}
+            </text>
+          </g>
+        )
+      })}
     </svg>
   )
 }

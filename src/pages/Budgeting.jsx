@@ -5,11 +5,18 @@ import { supabase, getCurrentUserId } from '../lib/supabase'
 import { formatMoney } from '../lib/format'
 import { WalletIcon } from '../lib/walletIcons'
 import { isMustFund, isFreePool, buildBudgetPlan, autoFillSingle, resolveIncomeEdit } from '../lib/budgetPlan'
-import SummaryStrip from '../components/ui/SummaryStrip'
+import {
+  getMonthWindows, computeWalletMonthlyActivity, computeBudgetPerformance,
+  detectBudgetDrift, computeExecutionStatus,
+} from '../lib/budgetPerformance'
 import PageHeader from '../components/ui/PageHeader'
 import BudgetFlowChart from '../components/budgeting/BudgetFlowChart'
 import WalletTile from '../components/budgeting/WalletTile'
 import DistributionEditor from '../components/budgeting/DistributionEditor'
+import ExecutionStatusLine from '../components/budgeting/ExecutionStatusLine'
+import BudgetPerformanceChart from '../components/budgeting/BudgetPerformanceChart'
+import AttentionList from '../components/budgeting/AttentionList'
+import WalletPerformanceGrid from '../components/budgeting/WalletPerformanceGrid'
 import WalletModal from '../components/WalletModal'
 import IncomeConfirmModal from '../components/IncomeConfirmModal'
 
@@ -19,8 +26,15 @@ export default function Budgeting() {
   const [incomes,       setIncomes]       = useState([])
   const [rulesByIncome, setRulesByIncome] = useState({})
   const [wallets,       setWallets]       = useState([])
+  const [transactions,  setTransactions]  = useState([])  // Phase C: spending/received history
+  const [incomeEntries, setIncomeEntries] = useState([])  // Phase C: logged-income + recurring links
   const [unallocId,     setUnallocId]     = useState(null)
   const [loading,       setLoading]       = useState(true)
+
+  // Fixed clock for the whole render — every time-relative Phase C calc keys off the same `now`, so
+  // the month windows, performance and execution status can never disagree with each other.
+  const now = useMemo(() => new Date(), [])
+  const windows = useMemo(() => getMonthWindows({ now }), [now])
 
   const [includeMap, setIncludeMap] = useState({})   // incomeId → boolean
   const [mode,       setMode]       = useState('plan') // 'setup' | 'plan'
@@ -29,16 +43,25 @@ export default function Budgeting() {
   const [error,      setError]      = useState(null)
   const [busy,       setBusy]       = useState(false)
 
-  const [walletModal, setWalletModal] = useState(null)  // wallet being edited
-  const [confirm,     setConfirm]     = useState(null)  // IncomeConfirmModal payload
+  const [walletModal,      setWalletModal]      = useState(null)  // wallet being edited
+  const [walletModalFocus, setWalletModalFocus] = useState(false) // focus the budget field (nudge)
+  const [confirm,          setConfirm]          = useState(null)  // IncomeConfirmModal payload
+
+  // Open the wallet edit modal; `focusBudget` lands the cursor on the budget field (used by the nudge).
+  const openWallet = (w, focusBudget = false) => { setWalletModalFocus(focusBudget); setWalletModal(w) }
 
   useEffect(() => { loadAll(true) }, [])
 
   async function loadAll(initial = false) {
     if (initial) setLoading(true)
-    const [{ data: inc }, { data: w }] = await Promise.all([
+    // Only pull history back to the start of the performance window (Phase C) — no need for the whole
+    // ledger. windows[0].key is 'yyyy-MM'; its first day is the earliest date any chart shows.
+    const windowStart = `${windows[0].key}-01`
+    const [{ data: inc }, { data: w }, { data: tx }, { data: ent }] = await Promise.all([
       supabase.from('income_recurring').select('*').is('end_date', null).order('start_date', { ascending: true }),
       supabase.from('wallets').select('*').eq('is_active', true).order('sort_order'),
+      supabase.from('transactions').select('id, wallet_id, amount, type, date, is_confirmed, income_entry_id').gte('date', windowStart),
+      supabase.from('income_entries').select('id, income_recurring_id, date, amount').gte('date', windowStart),
     ])
     const activeIncomes = inc ?? []
     const ws = w ?? []
@@ -55,6 +78,8 @@ export default function Budgeting() {
 
     setIncomes(activeIncomes)
     setWallets(ws)
+    setTransactions(tx ?? [])
+    setIncomeEntries(ent ?? [])
     setRulesByIncome(byIncome)
     setUnallocId(ws.find(x => x.is_system)?.id ?? null)
     if (initial) {
@@ -74,6 +99,25 @@ export default function Budgeting() {
   const plan = useMemo(
     () => buildBudgetPlan({ incomes: includedIncomes, rulesByIncome, wallets }),
     [includedIncomes, rulesByIncome, wallets],
+  )
+
+  // ── Phase C — performance derivations (all pure, `now`-injected) ─────────────────────────────
+  const activity = useMemo(
+    () => computeWalletMonthlyActivity({ transactions, incomeEntries, windows }),
+    [transactions, incomeEntries, windows],
+  )
+  const performance = useMemo(
+    () => computeBudgetPerformance({ activity, wallets, plannedByWallet: plan.fundedByWallet }),
+    [activity, wallets, plan.fundedByWallet],
+  )
+  const drift = useMemo(() => detectBudgetDrift({ performance }), [performance])
+  const evaluatedCount = useMemo(
+    () => performance.filter(p => p.monthsWithData >= 3 && p.monthsWithSpending >= 3).length,
+    [performance],
+  )
+  const executionStatus = useMemo(
+    () => computeExecutionStatus({ incomes: includedIncomes, incomeEntries, transactions, wallets, now }),
+    [includedIncomes, incomeEntries, transactions, wallets, now],
   )
 
   const noWallets = wallets.filter(w => !w.is_system).length === 0
@@ -138,6 +182,7 @@ export default function Budgeting() {
   async function handleWalletSave(values) {
     const { error } = await supabase.from('wallets').update(values).eq('id', walletModal.id)
     setWalletModal(null)
+    setWalletModalFocus(false)
     if (error) { setError(error.message); return }
     const data = await loadAll()
     const included = data.incomes.filter(i => includeMap[i.id])
@@ -296,7 +341,8 @@ export default function Budgeting() {
       {walletModal && (
         <WalletModal
           wallet={walletModal}
-          onClose={() => setWalletModal(null)}
+          focusBudget={walletModalFocus}
+          onClose={() => { setWalletModal(null); setWalletModalFocus(false) }}
           onSave={handleWalletSave}
         />
       )}
@@ -348,7 +394,7 @@ export default function Budgeting() {
             {wallets.filter(w => !w.is_system).map(w => (
               <button
                 key={w.id}
-                onClick={() => setWalletModal(w)}
+                onClick={() => openWallet(w)}
                 className="w-full flex items-center justify-between py-2.5 text-left hover:bg-track/60 -mx-2 px-2 rounded-[9px] transition-colors"
               >
                 <div className="flex items-center gap-2.5">
@@ -430,8 +476,6 @@ export default function Budgeting() {
   }
 
   function renderPlan() {
-    const leftover = round2(plan.totalIncome - plan.coveredTotal)
-
     // Every wallet gets a tile: must-fund ones show % of budget, free-pool ones show the amount.
     const tileWallets = wallets.filter(w => isMustFund(w) || isFreePool(w))
     const allocations = includedIncomes.flatMap(inc =>
@@ -441,15 +485,8 @@ export default function Budgeting() {
 
     return (
       <div className="space-y-6">
-        <SummaryStrip stats={[
-          { label: 'Included income', value: formatMoney(plan.totalIncome) },
-          { label: 'Budgeted', value: formatMoney(plan.totalBudget) },
-          { label: 'Covered', value: formatMoney(plan.coveredTotal), tone: plan.totalShort < 0.005 ? 'positive' : 'ink' },
-          plan.totalShort > 0.005
-            ? { label: 'Short', value: formatMoney(plan.totalShort), tone: 'negative' }
-            : { label: 'To free pool', value: formatMoney(Math.max(0, leftover)), tone: 'coral' },
-        ]} />
-
+        {/* Summary strip removed (§6.0.1): its four values were all duplicated elsewhere — an explicit
+            exception to DESIGN-SPEC §8 Rule 2, recorded there alongside Settings. */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           {/* Flow chart — one card, one SVG, every included income */}
           <div className="lg:col-span-2 bg-card border border-card-border rounded-[14px] p-5">
@@ -470,7 +507,7 @@ export default function Budgeting() {
                   funded={plan.fundedByWallet[w.id] ?? 0}
                   budget={Number(w.budget) || 0}
                   freePool={isFreePool(w)}
-                  onClick={() => setWalletModal(w)}
+                  onClick={() => openWallet(w)}
                 />
               ))}
             </div>
@@ -486,6 +523,14 @@ export default function Budgeting() {
             )}
           </div>
         </div>
+
+        {/* ── Phase C — budget performance ("am I budgeting well?"). Two deliberately separate
+            questions: execution (did the plan run this month) then estimate quality (the chart + the
+            nudge). Everything degrades to an honest empty state on sparse history. ── */}
+        <ExecutionStatusLine status={executionStatus} />
+        <BudgetPerformanceChart performance={performance} />
+        <AttentionList flagged={drift} evaluatedCount={evaluatedCount} onEdit={w => openWallet(w, true)} />
+        <WalletPerformanceGrid performance={performance} />
       </div>
     )
   }

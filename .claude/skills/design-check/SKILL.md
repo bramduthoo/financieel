@@ -31,6 +31,7 @@ utilities (`bg-cream`, `text-ink`, `text-positive`, `border-card-border`, …) o
 | Icon chips | pastel bg + strong icon from the same ramp |
 | Progress bars | 5–6px, track `#F1EFE8`/`#2C2C2A` |
 | Charts | inline SVG only — chart library import is a violation |
+| Performance charts | budget-comparison charts compare against the **current** budget (no history) — must be labelled "vs current budget", never implied historical. Diverging deviation bars: over = `negative-bar` above baseline, under = `positive-bar` below; partial current month drawn lighter (`opacity-40`). A month with no logged income renders a distinct "not logged" state, **never €0 received**. Time/deviation calcs live in a tested `src/lib/` function taking an injectable `now` |
 | Icons | lucide-react only |
 | Dark mode | every element ships both themes; dark uses lighter text stops, alpha tints, fill separation |
 | Money rendering | via `formatMoney()` — inline `toFixed` on amounts is a violation |
@@ -42,7 +43,7 @@ utilities (`bg-cream`, `text-ink`, `text-positive`, `border-card-border`, …) o
 | Element | Required |
 |---|---|
 | Content cards | hero 22px `font-medium tracking-tight` + `MetricBar` (5–6px) + 11px caption + `CardFooterMeta` (11px muted). **No empty bottom half.** Bar needs an honest denominator; investment / Unallocated cards omit the bar (no fabricated ratio) |
-| Summary strip | every reworked page (except Settings) has a `SummaryStrip` under the header: 3–4 cells, 1px `inner-border` gaps, 11px uppercase label + 18px value, computed from that page's own data |
+| Summary strip | every reworked page (except **Settings** and **Budgeting**) has a `SummaryStrip` under the header: 3–4 cells, 1px `inner-border` gaps, 11px uppercase label + 18px value, computed from that page's own data. Budgeting is an explicit exception — its four strip values all duplicated the tiles/chart, so it carries none (§6.0.1) |
 | Tables | 11px uppercase headers, amount hard-right in last column, zebra via `even:bg-field`, `Showing X of Y` footer, merged source+note cell, no dead-width column |
 | Repeated items | `CompactRow` inside ONE card (28px chip + name + 11px meta + right value + `divide-y divide-inner-border`) — never individual large cards. Due recurring rows: amber "Log now" pill surfacing the existing flow (no new logic) |
 | Settings | `max-w-[640px]`, three grouped section cards (Account / Preferences / Danger zone) as divider rows; danger zone `border-negative/40` + `text-negative` label. One-control-per-full-width-card is a violation |

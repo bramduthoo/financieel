@@ -127,3 +127,21 @@ a `now` param into the time-relative projection functions so they're determinist
 **deliberately NOT done here** and is deferred to the **dashboard rebuild** phase (PROJECT-CONTEXT §6
 feature #4). Rationale: those functions will be reworked in that phase, so adding a seam now would be
 churn; the deterministic month-scoped calcs remain covered in the meantime.
+
+---
+
+## Update — 2026-07-22 (branch `b/budgeting-performance`): now-injection gap CLOSED for Budgeting Phase C
+
+The deferred `now`-injection seam is **closed for the new Phase C analytics** (it remains open only for
+the legacy `dashboardCalcs.js` projection functions, which the dashboard-rebuild phase still owns). All
+of Phase C's time-relative math lives in the new pure **`src/lib/budgetPerformance.js`**, every entry
+point taking an **injectable `now`** (or `windows` derived from it): `getMonthWindows`,
+`computeWalletMonthlyActivity`, `computeBudgetPerformance`, `detectBudgetDrift`, `computeExecutionStatus`.
+
+`src/lib/budgetPerformance.test.js` (21 tests) drives them under a **fixed injected clock** and covers
+the brief's list: month-boundary transactions (first/last day of a month and the days either side),
+wallets excluded for having no budget, the lumpy/accumulating case (zero-spend months must NOT trigger
+the nudge), fewer than 3 months of data, months with no logged income (`received` absent, not zero),
+capped wallets with throttled inflow, deviation exactly at the threshold, direction-consistency, and
+determinism. Month bucketing is by the `'yyyy-MM'` date-string prefix (not `new Date(str)`), so there
+is **no UTC-midnight drift** between the owner's machine and the UTC CI runner.

@@ -17,7 +17,7 @@ const BUDGET_TYPES = {
 const inputClass =
   'w-full px-3 py-2 bg-field border border-card-border rounded-[8px] text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-accent/30'
 
-export default function WalletModal({ wallet, initialType, onClose, onSave }) {
+export default function WalletModal({ wallet, initialType, onClose, onSave, focusBudget = false }) {
   const [name,       setName]       = useState(wallet?.name        ?? '')
   const [type,       setType]       = useState(wallet?.type        ?? initialType ?? 'fixed')
   const [budgetType, setBudgetType] = useState(wallet?.budget_type ?? 'fixed-recurring')
@@ -168,6 +168,7 @@ export default function WalletModal({ wallet, initialType, onClose, onSave }) {
               value={budget}
               onChange={e => setBudget(e.target.value)}
               placeholder="0.00"
+              autoFocus={focusBudget}
               className={`${inputClass} text-right`}
             />
           </div>

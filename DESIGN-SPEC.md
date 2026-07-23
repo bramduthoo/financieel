@@ -154,6 +154,18 @@ Behaviour tests accompany it.
 Inline SVG only (unchanged rule). Recolor to spec: axis/gridlines `ink-faint`/`track`,
 positive fill `#639922` family, negative `#E24B4A` family, dashed zero baseline kept.
 
+**Budget-performance charts** (`BudgetPerformanceChart`, `WalletPerformanceGrid`): comparisons are
+against the **current** `wallets.budget` — there is no budget history — so they are labelled honestly
+("vs current budget") and never imply a historical series. The overall chart is **diverging deviation
+bars**: the zero baseline is the budget total, over-budget rises in the **`negative-bar`** token
+above it, under-budget drops in **`positive-bar`** below it; the partial current month is drawn
+lighter (`opacity-40`); a month with no data draws no bar (a full-height "under" bar for a pre-history
+month is a lie, not a saving). A month with no logged recurring income is a **distinct state**, never
+rendered as €0 received. Capped wallets show realized (throttled) inflow distinctly so a cap throttle
+is not misread as underfunding. All euro strings via `formatMoney()` **inside the SVG** so privacy
+mode masks them. Time/deviation math lives in the tested pure `src/lib/budgetPerformance.js` with an
+injectable `now`.
+
 ## 7. design-check table (replaces the old one in .claude/skills/design-check/SKILL.md)
 
 | Element | Required |
@@ -204,7 +216,11 @@ bar** and instead carry a real delta/status caption — never a fabricated ratio
 `tracking-wider text-ink-muted`** label above an **18px (`text-lg`) value**. Stats are computed
 **only from that page's own data**. Wallets: total balance / active wallets / budgeted per
 month / Unallocated balance (coral). Income: this-month total / delta vs previous month
-(dynamic month label) / entries this year. Settings has **no** strip (Rule 5 applies instead).
+(dynamic month label) / entries this year. **Settings** has **no** strip (Rule 5 applies instead).
+**Budgeting** has **no** strip either (explicit exception, budgeting-page-plan.md §6.0.1): its
+former INCLUDED INCOME / BUDGETED / COVERED / TO FREE POOL cells all duplicated the wallet tiles or
+the flow chart, so the strip was pure weight — the tiles carry funding, the chart carries income, and
+an underfunded tile carries its own `€ X short` line.
 
 **Rule 3 — Tables are dense.** Merge related columns (source + note → name + `text-ink-muted`
 suffix in one cell). Amounts **hard right-aligned in the last column**. Column headers **11px

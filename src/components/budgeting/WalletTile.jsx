@@ -27,6 +27,10 @@ export default function WalletTile({ wallet, funded = 0, budget = 0, freePool = 
       ? 'text-positive'
       : 'text-ink'
 
+  // Underfunding used to live in the (now-deleted) summary strip; it belongs on the tile that is
+  // short (§6.0.2). Only meaningful with a real budget denominator and an actual shortfall.
+  const short = showPct && pct < 99.995 ? Number((budget - funded).toFixed(2)) : 0
+
   return (
     <button
       type="button"
@@ -45,6 +49,10 @@ export default function WalletTile({ wallet, funded = 0, budget = 0, freePool = 
       <p className="text-[11px] text-ink-muted truncate">
         {showPct ? formatMoney(funded) : freePool ? 'free pool' : 'no budget'}
       </p>
+
+      {short > 0.005 && (
+        <p className="text-[11px] text-negative truncate">{formatMoney(short)} short</p>
+      )}
     </button>
   )
 }

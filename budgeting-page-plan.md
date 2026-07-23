@@ -235,6 +235,19 @@ ALTER TABLE public.wallets
   rule; behaviour tests survive the future encryption migration.
 - **Planned/used derived from `income_entry_id` credits + debits** — no monthly snapshots, history is
   self-describing; the only cost is that unlogged months have no data.
+- **Phase C keeps execution and estimate-quality as two separate surfaces** (a status line vs the
+  chart) — conflating "did the plan run?" with "is the budget right?" into one bar was the main design
+  risk; they answer different questions and diverge for different reasons (unlogged income vs a cap
+  throttle vs a wrong estimate).
+- **Every deviation metric + the nudge use a trailing 3-month average, never a single month** — a
+  per-month bar is dishonest for `accumulating` wallets (lumpy by design: €0 for months, then a big
+  spend). The nudge's real guard is ≥3 months WITH spending plus actual spend in each trailing month,
+  which is what stops it nagging a holiday fund that is behaving exactly as intended.
+- **Compared against the CURRENT budget, labelled as such — no budget history, no snapshots** — the
+  chart's honest question is "is my current estimate right?", which is exactly the right frame;
+  snapshotting budgets monthly would need a schema change and is explicitly out of scope.
+- **The nudge suggests, never writes** — it links into the existing wallet edit modal with the budget
+  field focused; the human stays in the loop on every budget change.
 
 ---
 
@@ -476,7 +489,35 @@ wrapup (fold the outcome back into budgeting-page-plan.md §11 and its decision 
     **capped** wallet at/above its ceiling the amount that actually lands is reduced by
     `resolveCappedInflow` at apply time, so the plan view can overstate that wallet and understate
     its overflow target. Planned-vs-actual is exactly what **Phase C** (§6) exists to add.
-- **Phase C:** not started; prompt ready (10.C).
+- **Phase C build: DONE (branch `b/budgeting-performance`, 2026-07-22).** Per the replacement spec in
+  `budgeting-phase-C.md` (§6 + prompt 10.C). **No schema change; no touch to `distributeIncome.js`,
+  balance paths, or RPCs — purely read-only over history.**
+  - **Part 1 (carried-over B2 fixes):** deleted the summary strip (recorded as an explicit
+    Budgeting-page exception to DESIGN-SPEC §8 Rule 2, mirrored into design-check); underfunded
+    `WalletTile`s now carry a `negative` `€ X short` line; `BudgetFlowChart` labels show intent
+    (income node = name + € amount; wallet node = its monthly budget with a `negative` shortfall when
+    the allocation falls short; free-pool wallets keep the allocated amount).
+  - **Part 2 (performance section):** new pure **`src/lib/budgetPerformance.js`** — `getMonthWindows`,
+    `computeWalletMonthlyActivity`, `computeBudgetPerformance`, `detectBudgetDrift`,
+    `computeExecutionStatus`, all **`now`-injected** (closes the deferred projection-test gap; noted in
+    `docs/testing-notes.md`). Four new components: `ExecutionStatusLine` (did the recurring income log
+    this month + the wallets/free-pool split, distinct not-logged state), `BudgetPerformanceChart`
+    (**diverging deviation bars** vs the current budget — owner's choice — partial month lighter,
+    no-data months draw no bar), `AttentionList` (the nudge — suggests a budget, links into
+    `WalletModal` with the budget field focused, **never writes**; good-outcome empty state),
+    `WalletPerformanceGrid` (small-multiples, default 5 wallets + a multi-select dropdown — owner's
+    hybrid; capped realized inflow shown distinctly). `Budgeting.jsx` fetches `transactions` +
+    `income_entries` scoped to the 6-month window and derives everything via `useMemo`.
+  - **Honesty:** labelled "vs current budget" (no history); trailing-3-month average excludes the
+    partial month; nudge gate = ≥3 months data AND ≥3 months spending, same direction, with every
+    trailing month requiring actual spend (dormant wallets don't nag); `received` is absent (not €0)
+    for unlogged months; investment/Unallocated excluded; every euro via `formatMoney()` incl. inside
+    SVG (privacy verified).
+  - **Gates:** 160 tests green (22 new `now`-injected behaviour tests), build clean, zero new lint,
+    design-check clean (strip exception + performance-chart rules added to DESIGN-SPEC §6/§8 + the
+    skill), code-reviewer (no criticals; 3 of 4 low-severity suggestions applied incl. the dormant-
+    wallet false-positive guard). Playwright: Budgeting page both themes × partial-history/multi-income
+    + privacy mode (chart masks correctly). **Not yet merged.**
 
 *Keep this section and §7 current as sub-phases complete.*
 
