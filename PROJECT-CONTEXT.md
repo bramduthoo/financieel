@@ -309,7 +309,40 @@ comparisons. The DB chapter is now outdated vs the live schema.
 
 ## 6. Current standing (update this when a phase ends)
 
-**Budgeting Phase B — the Budgeting page: DONE (branch `b/capped-wallet-fix`, 2026-07-19; A + B ship in one PR).**
+**Budgeting Phase C — budget-performance analytics: DONE (branch `b/budgeting-performance`, 2026-07-22; committed, PR not yet open).**
+Per the replacement spec in `budgeting-phase-C.md` (§6 + prompt 10.C). Implemented + **160 tests green**
+(22 new `now`-injected behaviour tests) + build clean + zero new lint + design-check clean + code-reviewer
+(no criticals; 3 of 4 low-severity suggestions applied) + Playwright both themes (multi-income partial-history
++ privacy mode, chart masks correctly, zero console errors, test account). **Purely read-only over history:
+no schema change, no touch to `distributeIncome.js`, balance paths, or RPCs.**
+- **Two structurally-separate questions.** Execution ("did the plan run this month?") is a compact
+  `ExecutionStatusLine`; estimate-quality ("is the budget right?") is `BudgetPerformanceChart` (diverging
+  deviation bars vs the **current** budget — no history, labelled as such) + the nudge. Not merged into one bar.
+- **The nudge (`AttentionList`)** flags a wallet only where honest — ≥3 complete months of data AND ≥3 months
+  with spending AND same-direction across the trailing window AND actual spend in each trailing month (so a
+  lumpy holiday fund or a wallet gone quiet doesn't nag). It **suggests** a budget and opens `WalletModal`
+  with the budget field focused; **it never writes the budget.**
+- **`WalletPerformanceGrid`** = small-multiples (default 5 wallets) + a multi-select dropdown; capped realized
+  (throttled) inflow drawn distinctly so a cap throttle isn't misread as underfunding.
+- **Carried-over B2-review fixes** shipped in the same commit: deleted the Budgeting summary strip (explicit
+  DESIGN-SPEC §8 R2 exception), underfunded tiles show a `negative` "€ X short" line, flow-chart labels show
+  intent (income € amounts, wallet budgets + shortfall).
+- **New pure `src/lib/budgetPerformance.js`** (`getMonthWindows`, `computeWalletMonthlyActivity`,
+  `computeBudgetPerformance`, `detectBudgetDrift`, `computeExecutionStatus`), every entry point **`now`-injected**
+  — this **closes the deferred projection-test gap** (`docs/testing-notes.md` updated). Month bucketing by
+  `'yyyy-MM'` string prefix ⇒ no UTC drift. Derivation: `spent` = confirmed debits; `received` = credits linked
+  via `income_entry_id` to a recurring income entry (absent, not €0, for unlogged months); planned = the plan's
+  `fundedByWallet`; budget = current `wallets.budget`. **IMMEDIATE NEXT:** open the Phase C PR. Budgeting is then
+  feature-complete; remaining roadmap phases are Dashboard rebuild, PDF import, backup/restore, encryption
+  (see `PHASE-ROADMAP.md`).
+
+**Budgeting Phase B2 — polish & design-system fixes: DONE & MERGED (2026-07-21).** Split into B2-1 (shared
+`PageHeader` primitive rolled out to all app-shell pages, PR #15) and B2-2 (Budgeting page rework: card-less
+centred empty state, two-column flow-chart + wallet-tile layout, combined `BudgetFlowChart` replacing the
+per-income `SalarySankey`, extracted `DistributionEditor` with €/% toggles + funding bars, PR #16). Phases A + B
+merged together via **PR #14**. See `budgeting-page-plan.md` §11/§12 for the full record.
+
+**Budgeting Phase B — the Budgeting page: DONE & MERGED (branch `b/capped-wallet-fix`, 2026-07-19; A + B via PR #14).**
 Implemented + **114 tests green** + build clean + code-reviewer (no criticals; error-guarded writes,
 token checkbox, zero-budget coverage filter applied) + design-check + in-browser render verified (test
 account, both themes, zero console errors) for the plan + setup screens and the Sankey. **Owner is
@@ -334,8 +367,7 @@ running the multi-income / setup-Apply Playwright + db-verifier locally** (defer
   Unallocated. (Phase B's per-income `SalarySankey.jsx` + `sankeyLayout.js` were replaced in B2-2.)
   **No balance/RPC changes** — money still moves only at log time.
 - **Schema (owner-applied & verified 2026-07-19):** `income_recurring.include_in_budget` (bool NN
-  default true) + the Phase A `wallets_cap_max_gte_budget` CHECK. **IMMEDIATE NEXT:** owner reviews/merges
-  the A+B PR; then Budgeting **Phase C** (analytics, kickoff 10.C).
+  default true) + the Phase A `wallets_cap_max_gte_budget` CHECK. (Merged via PR #14; superseded by B2 + C above.)
 
 **Budgeting Phase A — capped-wallet mechanic redesign: DONE (branch `b/capped-wallet-fix`, 2026-07-17).**
 Implemented + **103 tests green** + design-check (both-theme Playwright of the capped settings card;
@@ -360,7 +392,7 @@ batch** (test account) — all balances reconcile to the cent. See `budgeting-pa
   `overflow_wallet_id NULL`; balance 620 after the three verification logs (seed data, dummy).
 - **Verified E2E** through the app (test account): below-ceiling fill (full credit, no overflow) AND
   the reduction case (bal 520 ≥ cap 400, rate 0.5 → 100 kept / 100 overflow to Unallocated, separate
-  stamped credit rows). **IMMEDIATE NEXT:** open the PR; then Budgeting **Phase B** (kickoff 10.B).
+  stamped credit rows). (Merged via PR #14 with Phase B.)
 
 **Density & completeness pass: DONE (branch `b/density-pass`, 2026-07-14; PR open).**
 Implemented + `vite build` clean + **95 tests green** + code-reviewer (no Criticals; touch-reachability,
@@ -552,6 +584,24 @@ Deferred / smaller:
   conflict flow. **The reduction on/off toggle was removed** — a no-ceiling wallet is an
   `accumulating` variable wallet, not a capped one; `cap_reduction_enabled` is left as a dead column
   (project convention: don't migrate dead columns away).
+- **Budgeting Phase C analytics are derived from history, not snapshots** — `spent` = confirmed debits,
+  `received` = credits linked via `income_entry_id` to a recurring income entry, planned = the plan's
+  `fundedByWallet`, budget = the **current** `wallets.budget`. Comparison is labelled "vs current budget";
+  there is no budget history and snapshotting would need a schema change (out of scope). Unlogged months
+  render `received` as **absent, never €0** — the recurring income doesn't auto-fire, so a missing month
+  is missing data, not a zero.
+- **Execution and estimate-quality are kept as two separate surfaces** (a status line vs the deviation
+  chart) — "did the plan run?" and "is the budget right?" are different questions that diverge for
+  different reasons (unlogged income vs a cap throttle vs a genuinely wrong estimate); merging them into
+  one bar was the main design risk.
+- **Every Phase C deviation metric + the nudge use a trailing 3-month average, never a single month**, and
+  the nudge only fires with ≥3 months of spending AND actual spend in every trailing month — a per-month
+  bar is dishonest for lumpy `accumulating` wallets (€0 for months, then one big spend), and the spending
+  gate is what stops it nagging a fund behaving exactly as intended. **The nudge suggests a budget, never
+  writes it** (links into `WalletModal` with the budget field focused).
+- **All Phase C time-relative math is pure `src/lib/budgetPerformance.js` with an injectable `now`** —
+  this closes the long-deferred projection-test seam (`docs/testing-notes.md`); month bucketing is by the
+  `'yyyy-MM'` date-string prefix (not `new Date(str)`) so there is no UTC drift between local and CI.
 - **Distribution % is always of total input** (not of the remaining amount), keeps the two progress
   bars consistent.
 - **Global euro/% toggle converts existing values**, never wipes them.
