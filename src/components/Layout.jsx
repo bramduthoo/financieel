@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Wallet, ArrowDownCircle, Split, Settings, LogOut, Eye, EyeOff } from 'lucide-react'
+import { LayoutDashboard, Wallet, ArrowDownCircle, FileUp, Split, Settings, LogOut, Eye, EyeOff } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { usePrivacy } from '../lib/PrivacyContext'
 
@@ -7,6 +7,7 @@ const navItems = [
   { path: '/',         label: 'Dashboard', icon: LayoutDashboard },
   { path: '/wallets',  label: 'Wallets',   icon: Wallet },
   { path: '/income',   label: 'Income',    icon: ArrowDownCircle },
+  { path: '/import',   label: 'Import',    icon: FileUp },
   { path: '/budgeting', label: 'Budgeting', icon: Split },
 ]
 

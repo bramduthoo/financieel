@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { supabase } from './lib/supabase'
 import { ThemeContext } from './lib/ThemeContext'
 import { PrivacyContext } from './lib/PrivacyContext'
@@ -14,6 +14,11 @@ import Budgeting from './pages/Budgeting'
 import Settings from './pages/Settings'
 import Login from './pages/Login'
 import ResetPassword from './pages/ResetPassword'
+
+// Code-split: this route pulls in pdf.js (~450 KB), which only the import flow needs.
+// Every other page is imported eagerly above, so without this split every visitor would
+// download the PDF parser on every page.
+const Import = lazy(() => import('./pages/Import'))
 
 export default function App() {
   const [session,           setSession]           = useState(undefined)
@@ -94,6 +99,11 @@ export default function App() {
                     <Route path="/wallets/:id"     element={<WalletDetail />} />
                     <Route path="/income"          element={<Income />}       />
                     <Route path="/income/recurring/:id" element={<IncomeRecurringDetail />} />
+                    <Route path="/import"          element={
+                      <Suspense fallback={<p className="text-ink-faint text-sm">Loading…</p>}>
+                        <Import />
+                      </Suspense>
+                    } />
                     <Route path="/budgeting"       element={<Budgeting />}     />
                     <Route path="/settings"        element={<Settings />}     />
                   </Routes>

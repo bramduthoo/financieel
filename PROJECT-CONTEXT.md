@@ -132,11 +132,22 @@ shows up under the name "WOUTER" in branches/commits. Two-person project, GitHub
 
 ## 4. Database, current live schema (post-migrations)
 
-> **CRITICAL GOTCHA: there are NO SQL migration files in the repo.** Every schema change in this
-> project has been applied **manually**, early ones via the Supabase SQL Editor, later ones via the
-> assistant's `apply_migration` connector. The repo (and the `Cursus/` DDL) does **not** reflect the
-> live schema. The **live database is the only complete source of truth for schema.** A new chat must
-> read the live DB, not trust the course docs.
+> **CHANGED 2026-07-26 — the repo now HAS a `supabase/migrations/` folder.** Since 2026-07-09 every
+> new schema change is committed there as a timestamped `.sql` file (`YYYYMMDDHHMMSS_short_name.sql`)
+> carrying a purpose/date/impact/rollback header, per the `db-migration` skill. Five files exist today:
+> `reset_user_data`, `wallets_cap_max_gte_budget`, `income_recurring_include_in_budget`, and the two
+> PDF-import ones (`import_schema`, `import_transactions_rpc`).
+>
+> **This does NOT make the folder the source of truth.** Nothing auto-applies it — there is no
+> migration runner, no `supabase db push` in the workflow. The owner applies each file by hand and the
+> assistant re-verifies read-only afterwards. So:
+> - the folder is the **history of changes made since 2026-07-09**, and the reviewable artefact;
+> - **everything older than that was applied manually with no file** (SQL Editor early, the assistant's
+>   `apply_migration` connector later), so the folder is *incomplete* as a schema definition;
+> - the **live database remains the only complete source of truth for schema**, and a file existing in
+>   the folder is NOT evidence it ran. Always verify against the live DB.
+>
+> The `Cursus/` DDL and `ARCHITECTURE.md` still do not reflect the live schema — don't trust them.
 
 ### RLS pattern (every user-data table)
 - Nullable `user_id uuid`, FK to `auth.users(id) ON DELETE CASCADE`.
@@ -174,7 +185,25 @@ shows up under the name "WOUTER" in branches/commits. Two-person project, GitHub
 - **recurring_rules**: recurring EXPENSE rules (separate concept from income_recurring). user_id.
 - **budget_allocations**: user_id.
 - **settings**: currency, currency_symbol, month_start_day, theme, strict_distribution (governs
-  manual/template distribution strictness only), user_id. One row per user.
+  manual/template distribution strictness only), **bank_provider** (text, nullable, CHECK restricting
+  to supported importers — `'kbc'` today; a default/tiebreaker for the PDF importer, never an override:
+  the PDF identifies its own bank), user_id. One row per user.
+
+### PDF-import tables (added 2026-07-26, applied & verified)
+- **transactions.import_fingerprint** (text, nullable, partial index on `(user_id, import_fingerprint)`
+  where not null): the dedupe key for imported rows, `'<own iban>|<date>|<amount>|<direction>|<counterparty key>'`.
+  A plain composite key, **not** a hash (collision-free + debuggable; reveals nothing `note` doesn't).
+  **Deliberately NOT unique** — two genuinely identical same-day purchases exist, so duplicates are
+  flagged in the preview and default to skipped, never blocked. Also distinguishes imported from manual rows.
+- **counterparty_wallet_mappings**: counterparty_key, wallet_id (FK wallets ON DELETE CASCADE),
+  times_confirmed, last_confirmed_at, created_at, user_id. **UNIQUE (user_id, counterparty_key)** — the
+  upsert target. The learned layer of the wallet-suggestion engine: every confirmed import upserts the
+  mapping, so from the second import onward the wallet is pre-filled. Re-confirming to a different wallet
+  MOVES the mapping (newest confirmation wins).
+- **imported_statements**: bank, account_iban_hash, statement_number, imported_at, user_id.
+  **Currently written by NOTHING** — the KBC mobile export is a per-transaction format with no
+  volgnummer, so there is no document-level ledger to keep. Scaffolding for a future classic-uittreksel
+  adapter. Don't be surprised it's empty; don't "fix" it by writing placeholder rows.
 
 ### Distribution tables (after the distribution-redesign migrations done in this project)
 - **income_distribution_rules** (the saved distribution for a recurring income): income_recurring_id,
@@ -204,6 +233,18 @@ shows up under the name "WOUTER" in branches/commits. Two-person project, GitHub
   sum to the income amount (within 0.005). Leaves income_entries untouched. SECURITY INVOKER. **Written by
   the assistant and verified correct against the live DB** (a self-contained set-up/edit/assert/teardown
   test confirmed reverse+reapply nets exactly, no drift, with no residue left behind).
+
+- `import_transactions(p_items jsonb) returns jsonb` (added 2026-07-26): **transactional, all-or-nothing**
+  commit path for a batch of imported bank transactions. SECURITY INVOKER, `search_path=''`, everything
+  scoped to `auth.uid()` (raises if null). Validates EVERY item first (positive amount, direction in
+  debit/credit, date present, wallet owned by caller) before writing anything, so a bad item at position
+  7 cannot leave 1–6 committed; then per item inserts the `transactions` row (with `import_fingerprint`,
+  `is_confirmed`, `completed_at`) and adjusts `wallets.balance` **inside the function**, and upserts the
+  `counterparty_wallet_mappings` row. Returns `{inserted, debits, credits}`. **No cap logic** — capped
+  behaviour is income-distribution only; an imported debit is a plain spend. **Income-type credits do NOT
+  come through here** — they use the existing income path (`income_entries` + DistributionPopup +
+  `distributeIncome`), which has its own atomic write. Two commit mechanisms, kept separate on purpose.
+  Applied & verified live 2026-07-26.
 
 - `reset_user_data(p_full boolean)`: **transactional two-tier data reset**, SECURITY INVOKER,
   `search_path=''`, everything scoped to `auth.uid()` (raises if null). Always deletes the caller's
@@ -693,8 +734,12 @@ Deferred / smaller:
 
 ## 8. Known risks / gotchas (hard-won in this project)
 
-- **No SQL files in the repo; all migrations applied manually** (SQL Editor early, `apply_migration`
-  connector later). The repo and `Cursus/` DDL lag the live schema. **Trust the live DB + this file.**
+- **`supabase/migrations/` exists but is NOT the source of truth (updated 2026-07-26).** Schema changes
+  made since 2026-07-09 are committed there as timestamped `.sql` files; anything older was applied
+  manually with no file at all, so the folder is an incomplete record. Critically, **nothing applies it
+  automatically** — the owner runs each file by hand — so *a file in the folder is not evidence it ran.*
+  The repo and `Cursus/` DDL still lag the live schema. **Trust the live DB + this file**, and always
+  verify after applying.
 - **Verify migrations actually ran.** The original multi-user migration was *assumed* applied (Claude
   Code "had it"), but it silently never ran, the `user_id` columns/policies/trigger didn't exist,
   which broke account deletion and isolation until the migration was actually run by hand. Lesson:
