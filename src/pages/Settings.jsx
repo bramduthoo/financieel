@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase'
 import { useTheme } from '../lib/ThemeContext'
 import IncomeConfirmModal from '../components/IncomeConfirmModal'
 import PageHeader from '../components/ui/PageHeader'
+import { SUPPORTED_BANKS } from '../lib/import/detectBank'
 
 const authInputClass =
   'w-full px-3 py-2 bg-field border border-card-border rounded-[8px] text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-accent/30'
@@ -305,6 +306,21 @@ export default function Settings() {
           <div className="bg-card border border-card-border rounded-[14px] divide-y divide-inner-border">
             <SettingRow label="Currency" description="Display only — amounts are not converted">
               <span className="text-sm font-medium text-ink-soft bg-field px-3 py-1.5 rounded-[8px]">EUR — €</span>
+            </SettingRow>
+            <SettingRow
+              label="Bank"
+              description="Used to pre-select an importer. Statements are still identified from the file itself."
+            >
+              <select
+                value={settings.bank_provider ?? ''}
+                onChange={e => updateSetting('bank_provider', e.target.value || null)}
+                className="px-3 py-1.5 bg-field border border-card-border rounded-[8px] text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent/30"
+              >
+                <option value="">Not set</option>
+                {SUPPORTED_BANKS.map(b => (
+                  <option key={b.id} value={b.id}>{b.label}</option>
+                ))}
+              </select>
             </SettingRow>
             <SettingRow label="Theme">
               <div className="flex items-center gap-3">

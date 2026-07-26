@@ -66,7 +66,7 @@ export default function PaymentHistory({ walletId }) {
       : <ChevronDown size={12} className="text-ink" />
   }
 
-  function openEdit(t) {
+  async function openEdit(t) {
     setDetail(null)
     setEditForm({
       id: t.id,
@@ -76,12 +76,30 @@ export default function PaymentHistory({ walletId }) {
         ? format(new Date(t.completed_at), 'yyyy-MM-dd')
         : '',
       remark: t.remark ?? '',
+      // The name lives on the recurring RULE, not on this row — every payment the rule ever
+      // generated shares it, so editing it renames the cost everywhere (owner's choice).
+      ruleId: t.recurring_rule_id ?? null,
+      name: t.recurring_rules?.name ?? '',
+      oldName: t.recurring_rules?.name ?? '',
+      affected: null,
     })
+
+    // Count the payments the rename would touch, so the warning states a real number rather
+    // than a guess. Counts every payment of the rule, not just this wallet's confirmed ones.
+    if (t.recurring_rule_id) {
+      const { count } = await supabase
+        .from('transactions')
+        .select('id', { count: 'exact', head: true })
+        .eq('recurring_rule_id', t.recurring_rule_id)
+      setEditForm(f => (f && f.id === t.id ? { ...f, affected: count ?? null } : f))
+    }
   }
 
   function submitEdit() {
     const f = editForm
     if (!f.amount || isNaN(Number(f.amount)) || Number(f.amount) <= 0) return
+    // Only enforce a name when there is a rule to name — ad-hoc payments have none.
+    if (f.ruleId && !f.name.trim()) return
     setConfirm({
       onConfirm: async () => {
         setSaving(true)
@@ -97,6 +115,22 @@ export default function PaymentHistory({ walletId }) {
             : null,
           remark: f.remark.trim() || null,
         }).eq('id', f.id)
+        // The name is a property of the cost, not of this payment, so it is written to the
+        // recurring rule — which is why it changes every payment of this cost at once.
+        if (f.ruleId && f.name.trim() !== f.oldName) {
+          await supabase.from('recurring_rules')
+            .update({ name: f.name.trim() })
+            .eq('id', f.ruleId)
+          // TransactionChecklist snapshots the rule name onto transactions.note when a
+          // payment is confirmed, so the rename has to follow that copy too — otherwise the
+          // old name survives on every past payment row and "renamed everywhere" is a lie.
+          await supabase.from('transactions')
+            .update({ note: f.name.trim() })
+            .eq('recurring_rule_id', f.ruleId)
+          // The filter dropdown holds rule NAMES, so a rename would leave it pointing at a
+          // name that no longer exists and show an empty history. Carry it to the new name.
+          setFilter(prev => (prev === f.oldName ? f.name.trim() : prev))
+        }
         setSaving(false)
         setConfirm(null)
         setEditForm(null)
@@ -302,6 +336,27 @@ export default function PaymentHistory({ walletId }) {
             </div>
             <div className="space-y-3">
               <div>
+                <label className="block text-xs font-medium text-ink-soft mb-1">Name</label>
+                <input
+                  value={editForm.name}
+                  onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
+                  disabled={!editForm.ruleId}
+                  placeholder={editForm.ruleId ? 'e.g. Electricity' : 'No recurring cost linked'}
+                  className="w-full px-3 py-2 border border-card-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 bg-field text-ink placeholder:text-ink-faint disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                {!editForm.ruleId ? (
+                  <p className="text-xs text-ink-faint mt-1">
+                    This payment isn't linked to a recurring cost, so it has no name to change.
+                  </p>
+                ) : editForm.name.trim() !== editForm.oldName && (
+                  <p className="text-xs text-[#854F0B] mt-1">
+                    Renames this cost on {editForm.affected === null
+                      ? 'every payment'
+                      : `all ${editForm.affected} payment${editForm.affected === 1 ? '' : 's'}`}, past and future.
+                  </p>
+                )}
+              </div>
+              <div>
                 <label className="block text-xs font-medium text-ink-soft mb-1">Amount (€)</label>
                 <input
                   type="number"
@@ -343,7 +398,8 @@ export default function PaymentHistory({ walletId }) {
               </button>
               <button
                 onClick={submitEdit}
-                className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:opacity-90"
+                disabled={!!editForm.ruleId && !editForm.name.trim()}
+                className="flex-1 py-2 rounded-lg bg-ink text-cream text-sm font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Save changes
               </button>
@@ -357,12 +413,28 @@ export default function PaymentHistory({ walletId }) {
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4">
           <div className="bg-card rounded-[14px] shadow-xl w-full max-w-sm p-6">
             <h2 className="text-lg font-medium text-ink mb-2">Save changes?</h2>
-            <p className="text-sm text-ink-muted mb-6">
-              {Number(editForm?.amount) !== Number(editForm?.oldAmount)
-                ? `The amount will change from ${formatMoney(Number(editForm?.oldAmount))} to ${formatMoney(Number(editForm?.amount))} and the wallet balance will be updated.`
-                : 'The payment details will be updated.'
-              }
-            </p>
+            <div className="text-sm text-ink-muted mb-6 space-y-2">
+              {Number(editForm?.amount) !== Number(editForm?.oldAmount) && (
+                <p>
+                  The amount will change from {formatMoney(Number(editForm?.oldAmount))} to{' '}
+                  {formatMoney(Number(editForm?.amount))} and the wallet balance will be updated.
+                </p>
+              )}
+              {editForm?.ruleId && editForm.name.trim() !== editForm.oldName && (
+                <p>
+                  <span className="text-ink">“{editForm.oldName}”</span> will be renamed to{' '}
+                  <span className="text-ink">“{editForm.name.trim()}”</span> on{' '}
+                  {editForm.affected === null
+                    ? 'every payment of this cost'
+                    : `all ${editForm.affected} payment${editForm.affected === 1 ? '' : 's'} of this cost`}
+                  , past and future.
+                </p>
+              )}
+              {Number(editForm?.amount) === Number(editForm?.oldAmount)
+                && !(editForm?.ruleId && editForm.name.trim() !== editForm.oldName) && (
+                <p>The payment details will be updated.</p>
+              )}
+            </div>
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirm(null)}

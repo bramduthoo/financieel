@@ -1,7 +1,10 @@
 import { supabase } from './supabase'
 import { resolveCappedInflow } from './resolveCappedInflow'
 
-export async function distributeIncome({ distributions, wallets, unallocatedWalletId, sourceName, date, isAutomated = false, userId, incomeEntryId = null }) {
+// `importFingerprint` (optional) stamps the dedupe key from a statement import onto the
+// credit rows this creates, so a re-imported statement is recognised as a duplicate. Null
+// for every hand-entered income — the existing callers are unaffected.
+export async function distributeIncome({ distributions, wallets, unallocatedWalletId, sourceName, date, isAutomated = false, userId, incomeEntryId = null, importFingerprint = null }) {
   const transactionRows = []
 
   for (const dist of distributions) {
@@ -16,7 +19,7 @@ export async function distributeIncome({ distributions, wallets, unallocatedWall
       await supabase.rpc('increment_wallet_balance', { p_wallet_id: dist.wallet_id, p_amount: amount })
       transactionRows.push({
         wallet_id: dist.wallet_id, type: 'credit', amount,
-        date, note: `Income distribution — ${sourceName}`, is_confirmed: true, user_id: userId, income_entry_id: incomeEntryId,
+        date, note: `Income distribution — ${sourceName}`, is_confirmed: true, user_id: userId, income_entry_id: incomeEntryId, import_fingerprint: importFingerprint,
       })
       continue
     }
@@ -34,7 +37,7 @@ export async function distributeIncome({ distributions, wallets, unallocatedWall
         await supabase.rpc('increment_wallet_balance', { p_wallet_id: wallet.id, p_amount: received })
         transactionRows.push({
           wallet_id: wallet.id, type: 'credit', amount: received,
-          date, note: `Income distribution — ${sourceName}`, is_confirmed: true, user_id: userId, income_entry_id: incomeEntryId,
+          date, note: `Income distribution — ${sourceName}`, is_confirmed: true, user_id: userId, income_entry_id: incomeEntryId, import_fingerprint: importFingerprint,
         })
       }
 
@@ -42,7 +45,7 @@ export async function distributeIncome({ distributions, wallets, unallocatedWall
         await supabase.rpc('increment_wallet_balance', { p_wallet_id: overflowTargetId, p_amount: overflow })
         transactionRows.push({
           wallet_id: overflowTargetId, type: 'credit', amount: overflow,
-          date, note: `Cap overflow (${wallet.name}) — ${sourceName}`, is_confirmed: true, user_id: userId, income_entry_id: incomeEntryId,
+          date, note: `Cap overflow (${wallet.name}) — ${sourceName}`, is_confirmed: true, user_id: userId, income_entry_id: incomeEntryId, import_fingerprint: importFingerprint,
         })
       }
     } else {
@@ -50,7 +53,7 @@ export async function distributeIncome({ distributions, wallets, unallocatedWall
       await supabase.rpc('increment_wallet_balance', { p_wallet_id: dist.wallet_id, p_amount: amount })
       transactionRows.push({
         wallet_id: dist.wallet_id, type: 'credit', amount,
-        date, note: `Income distribution — ${sourceName}`, is_confirmed: true, user_id: userId, income_entry_id: incomeEntryId,
+        date, note: `Income distribution — ${sourceName}`, is_confirmed: true, user_id: userId, income_entry_id: incomeEntryId, import_fingerprint: importFingerprint,
       })
     }
   }
