@@ -370,7 +370,7 @@ comparisons. The DB chapter is now outdated vs the live schema.
 
 ## 6. Current standing (update this when a phase ends)
 
-**KBC monthly CSV import — IMPLEMENTED, awaiting the schema apply (branch `b/csv-import`, 2026-07-30).**
+**KBC monthly CSV import — DONE, PR #18 open (branch `b/csv-import`, 2026-07-30).**
 Implemented + **352 tests green** + build clean + eslint unchanged from `origin/main` (44 pre-existing
 problems, 0 new) + design-check (0 indigo/purple; summary strip kept to four cells) + **code-reviewer
 (2 criticals + 10 important findings, all fixed and re-tested — see §8)** + both-theme
@@ -397,10 +397,24 @@ really does commit only on confirm.
   shared with `Income.jsx` via the new `src/lib/recurringAmountUpdate.js`.
 - **Monthly balance snapshots + two soft checks** (chain + total, drift vs stored snapshots). Warn,
   never block, never drop a row; recurring rows stay in the balance math even though they never post.
-- **Schema: DRAFTED, NOT APPLIED** — `supabase/migrations/20260730120000_csv_import_schema.sql`
-  (`recurring_import_links`, `monthly_balance_snapshots`, RLS + four policies each). **IMMEDIATE NEXT:**
-  owner applies it via the chat assistant, then re-verify read-only, run one real CSV import, db-verifier
-  the batch (recurring rows did NOT post, no double-count, both snapshots written), then commit + PR.
+- **Schema: APPLIED & VERIFIED 2026-07-30** — `supabase/migrations/20260730120000_csv_import_schema.sql`
+  (`recurring_import_links`, `monthly_balance_snapshots`). Re-verified read-only after the owner applied
+  it: columns, both `user_id NOT NULL`, every CHECK (incl. the one-rule XOR and the boundary-day rule),
+  all three FKs `ON DELETE CASCADE`, both unique indexes on exactly the columns the client upserts on,
+  RLS on, 8/8 policies. The Import page's "reduced checks" banner is gone and the page loads with zero
+  console errors.
+- **db-verifier PASS** (test account, post-migration/pre-first-import): 0.00 balance drift on all 5
+  wallets, both new tables empty and constraint-sound, and **no writes at all from the browser
+  verification session** (0 transactions, 0 income entries, 0 archived rules, rule counts still 2 + 2).
+  The only reported violation is the **pre-existing** stale `Test salary` €1000 entry from 2026-07-10
+  (already a known loose end below) — no balance impact.
+- **NEW open question (not from this phase):** `transactions_import_fingerprint_idx` (added with the PDF
+  import) is **non-unique**, so cross-import dedupe is client-side only — a double-submit or a second tab
+  with a stale fingerprint set could insert the same bank transaction twice. Promoting it to a UNIQUE
+  partial index would make the invariant DB-enforced, and with 0 imported rows today nothing can
+  conflict. Needs the owner's approval via the db-migration skill; deliberately NOT bundled into PR #18.
+- **IMMEDIATE NEXT:** owner reviews/merges PR #18, then runs the first real CSV import and db-verifies
+  that batch (recurring rows did NOT post, no double-count, both boundary snapshots written).
 
 **Budgeting Phase B — the Budgeting page: DONE (branch `b/capped-wallet-fix`, 2026-07-19; A + B ship in one PR).**
 Implemented + **114 tests green** + build clean + code-reviewer (no criticals; error-guarded writes,
