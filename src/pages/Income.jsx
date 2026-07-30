@@ -7,6 +7,7 @@ import { generateUpcomingDates, formatFrequency } from '../lib/recurringUtils'
 import IncomeConfirmModal from '../components/IncomeConfirmModal'
 import DistributionPopup from '../components/DistributionPopup'
 import { distributeIncome } from '../lib/distributeIncome'
+import { saveRecurringDistribution } from '../lib/recurringAmountUpdate'
 import { evaluateUnallocatedPlans } from '../lib/unallocatedPlans'
 import { incomeSummary, recurringDueState } from '../lib/incomeMetrics'
 import { formatMoney } from '../lib/format'
@@ -1198,23 +1199,23 @@ export default function Income() {
           strictMode={true}
           onClose={null}
           onConfirm={async (distributions, meta) => {
-            const ruleRows = meta?.allRows ?? []
-            if (ruleRows.length > 0) {
-              const userId = await getCurrentUserId()
-              // Persist the user's %/€ intent (mode + value); keep amount in
-              // sync with the resolved euro value for backward compatibility.
-              await supabase.from('income_distribution_rules').insert(
-                ruleRows.map((r, i) => ({
-                  income_recurring_id: distributionState.ruleId,
-                  wallet_id: r.wallet_id,
-                  mode: r.mode,
-                  value: r.value,
-                  amount: r.amount,
-                  priority: i,
-                  user_id: userId,
-                }))
+            // Shared with the Import page's deviation flow, so a new rule version's
+            // distribution is written the same way wherever it is created.
+            //
+            // The helper THROWS on a failed insert, and DistributionPopup calls onConfirm
+            // without awaiting it: an escaping rejection would leave this mandatory popup
+            // (onClose={null}) open with no message and no way out. So it is caught here, and
+            // the popup only closes once the distribution is actually saved.
+            try {
+              await saveRecurringDistribution(distributionState.ruleId, meta?.allRows ?? [])
+            } catch (err) {
+              setEditDistError(
+                `Could not save the distribution for this recurring income: ${err?.message ?? 'unknown error'}. `
+                + 'Try again — the recurring income cannot be logged until it has one.',
               )
+              return
             }
+            setEditDistError(null)
             setDistributionState(null)
           }}
         />

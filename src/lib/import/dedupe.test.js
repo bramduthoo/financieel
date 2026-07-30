@@ -71,3 +71,83 @@ describe('flagDuplicates', () => {
     expect(flagDuplicates(undefined)).toEqual([])
   })
 })
+
+describe('flagDuplicates with per-file scope (the CSV path)', () => {
+  const inFile = (fileName, sourceIndex, over = {}) =>
+    tx({ fileName, sourceIndex, ...over })
+
+  it('treats two identical rows inside one file as two real transactions', () => {
+    // A monthly export is the bank's own ledger: two €10,40 train tickets on one day are two
+    // journeys, and flagging the second would default real spending to skipped.
+    const rows = flagDuplicates(
+      [inFile('dec.csv', 0), inFile('dec.csv', 1)],
+      [],
+      { batchScope: 'per-file' },
+    )
+    expect(rows.map(r => r.duplicateOf)).toEqual([null, null])
+  })
+
+  it('still flags the same file added twice', () => {
+    const rows = flagDuplicates(
+      [inFile('dec.csv', 0), inFile('dec.csv', 0)],
+      [],
+      { batchScope: 'per-file' },
+    )
+    expect(rows.map(r => r.duplicateOf)).toEqual([null, 'batch'])
+  })
+
+  it('still flags a row repeated across two different files', () => {
+    const rows = flagDuplicates(
+      [inFile('dec.csv', 4), inFile('nov.csv', 9)],
+      [],
+      { batchScope: 'per-file' },
+    )
+    expect(rows.map(r => r.duplicateOf)).toEqual([null, 'batch'])
+  })
+
+  it('flags BOTH copies when two overlapping exports each list the same pair', () => {
+    // December lists two identical €10,40 tickets; a Nov–Jan export lists the same two. The
+    // real count is two, not four, so the second file's pair is fully covered.
+    const rows = flagDuplicates(
+      [inFile('dec.csv', 0), inFile('dec.csv', 5), inFile('nov-jan.csv', 3), inFile('nov-jan.csv', 8)],
+      [],
+      { batchScope: 'per-file' },
+    )
+    expect(rows.map(r => r.duplicateOf)).toEqual([null, null, 'batch', 'batch'])
+  })
+
+  it('does not flag the extra occurrence when one export lists more than the other', () => {
+    // The overlapping export only covered one of the two tickets, so the second is still real.
+    const rows = flagDuplicates(
+      [inFile('nov-jan.csv', 3), inFile('dec.csv', 0), inFile('dec.csv', 5)],
+      [],
+      { batchScope: 'per-file' },
+    )
+    expect(rows.map(r => r.duplicateOf)).toEqual([null, 'batch', null])
+  })
+
+  it('does not flag unrelated rows that share a file name and position', () => {
+    // Every KBC download is called the same thing, so two different files can both be
+    // "export.csv". Position alone would flag the second file's rows one-for-one and default a
+    // whole real month to skipped.
+    const rows = flagDuplicates(
+      [inFile('export.csv', 0), inFile('export.csv', 0, { amount: 4.2 })],
+      [],
+      { batchScope: 'per-file' },
+    )
+    expect(rows.map(r => r.duplicateOf)).toEqual([null, null])
+  })
+
+  it('still flags rows already in the database', () => {
+    const rows = flagDuplicates(
+      [inFile('dec.csv', 0)],
+      [fingerprintOf(tx())],
+      { batchScope: 'per-file' },
+    )
+    expect(rows[0].duplicateOf).toBe('existing')
+  })
+
+  it('leaves the default scope — the PDF path — unchanged', () => {
+    expect(flagDuplicates([tx(), tx()], []).map(r => r.duplicateOf)).toEqual([null, 'batch'])
+  })
+})
