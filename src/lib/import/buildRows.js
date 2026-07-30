@@ -66,7 +66,18 @@ export function buildRows(files, ctx = {}) {
   // twice is only detectable across files).
   const flagged = flagDuplicates(parsed, existingFingerprints)
 
-  const rows = flagged.map(row => {
+  return { rows: decorateRows(flagged, { wallets, mappings }), errors, warnings }
+}
+
+/**
+ * Turns flagged transactions into preview rows. Shared by both import sources so the row
+ * defaults — id, suggestion, include, credit mode — are defined exactly once.
+ *
+ * @param {Array<object>} flagged  rows that already carry `fingerprint` + `duplicateOf`
+ * @param {{ wallets?: Array<object>, mappings?: Array<object> }} ctx
+ */
+export function decorateRows(flagged, { wallets = [], mappings = [] } = {}) {
+  return (flagged ?? []).map(row => {
     const suggestion = suggestWallet(row, { mappings, wallets })
     return {
       ...row,
@@ -74,15 +85,40 @@ export function buildRows(files, ctx = {}) {
       suggestion,
       // Pre-filled but visibly marked; an unmatched row stays empty so the user must choose.
       walletId: suggestion?.walletId ?? '',
-      // A duplicate defaults to SKIPPED but stays visible and overridable.
-      include: !row.duplicateOf,
+      include: shouldInclude(row),
       // Credits are hybrid (pdf-import-plan.md §3): default to a plain refund credit,
       // because most imported credits here are peer transfers and refunds, not salary.
       creditMode: row.direction === 'credit' ? 'refund' : null,
     }
   })
+}
 
-  return { rows, errors, warnings }
+/**
+ * Whether a row is committed by default. ONE definition, used both when rows are built and when
+ * the user answers a recurring question — a row can be BOTH already-imported and a recurring
+ * candidate, and answering the (blocking) question must not quietly undo the duplicate skip.
+ *
+ * A duplicate defaults to skipped but stays visible and overridable by the checkbox; a row a
+ * recurring rule accounts for is never pre-included, because committing it would double-count
+ * against the recurring flow that posts it.
+ */
+export function shouldInclude(row) {
+  if (row?.duplicateOf) return false
+  return !isRecurringHandled(row)
+}
+
+/**
+ * True while a row is claimed by a recurring rule — recognised, or awaiting the user's answer.
+ * Such a row is NEVER committed: the recurring flow posts that money.
+ *
+ * Answering "this is not that rule" (`rejected`) releases the row: it becomes an ordinary
+ * importable transaction again.
+ */
+export function isRecurringHandled(row) {
+  const verdict = row?.recurring
+  if (!verdict || verdict.rejected) return false
+  const { state } = verdict
+  return state === 'recognised' || state === 'deviation' || state === 'needs-confirmation'
 }
 
 /**
@@ -92,7 +128,9 @@ export function buildRows(files, ctx = {}) {
  */
 export function toCommitItems(rows) {
   return (rows ?? [])
-    .filter(r => r.include && r.walletId && !isIncomeRow(r))
+    // The recurring guard is belt AND braces: such rows already arrive excluded, but a
+    // double-posted salary is the one mistake this feature must make impossible.
+    .filter(r => r.include && r.walletId && !isIncomeRow(r) && !isRecurringHandled(r))
     .map(r => ({
       wallet_id: r.walletId,
       amount: r.amount,
@@ -106,9 +144,10 @@ export function toCommitItems(rows) {
 
 /** Included credit rows the user routed to the income flow instead of a wallet credit. */
 export function toIncomeRows(rows) {
-  return (rows ?? []).filter(r => r.include && isIncomeRow(r))
+  return (rows ?? []).filter(r => r.include && isIncomeRow(r) && !isRecurringHandled(r))
 }
 
-function isIncomeRow(row) {
+/** A credit the user routed to the income flow instead of a plain wallet credit. */
+export function isIncomeRow(row) {
   return row.direction === 'credit' && row.creditMode === 'income'
 }

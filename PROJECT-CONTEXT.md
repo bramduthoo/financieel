@@ -201,6 +201,26 @@ shows up under the name "WOUTER" in branches/commits. Two-person project, GitHub
   mapping, so from the second import onward the wallet is pre-filled. Re-confirming to a different wallet
   MOVES the mapping (newest confirmation wins).
 - **imported_statements**: bank, account_iban_hash, statement_number, imported_at, user_id.
+
+### CSV-import tables (DRAFTED 2026-07-30 — **NOT applied yet**, `supabase/migrations/20260730120000_csv_import_schema.sql`)
+> Claude Code consumes these; the owner applies the migration via the chat assistant, then it is
+> re-verified read-only. Until then the Import page degrades visibly ("reduced checks" banner) and the
+> recurring/snapshot writes are skipped.
+- **recurring_import_links**: rule_kind (`income`/`expense`) + the matching nullable FK
+  (income_recurring_id / recurring_rule_id, CHECK exactly one, both ON DELETE CASCADE), counterparty_key,
+  direction, linked_amount, account_iban, created_at, last_seen_at, user_id.
+  **UNIQUE (user_id, counterparty_key, direction)** — one rule per counterparty per direction, so a match
+  can never be ambiguous; re-confirming MOVES the link. The client de-duplicates its upsert payload by
+  that key (a weekly rule recognises several rows a month, and repeating a conflict key in one statement
+  is a Postgres error).
+- **monthly_balance_snapshots**: account_iban (plain, like the fingerprint — not hashed), boundary_date
+  (CHECK it is the 1st), balance, source (default `'kbc_csv'`), created_at, updated_at, user_id.
+  **UNIQUE (user_id, account_iban, boundary_date)**. A boundary is simultaneously one month's end and the
+  next month's start, so an import upserts the newer value AND raises the drift warning when it disagrees.
+- **Open question for the owner:** `reset_user_data(p_full)` touches neither these nor the 2026-07-26
+  import tables. A full reset already removes the links via FK cascade (rules are deleted), but the
+  snapshots survive. Whether a full reset should clear them (and the older import tables) is a separate
+  `CREATE OR REPLACE FUNCTION` migration, not this one.
   **Currently written by NOTHING** — the KBC mobile export is a per-transaction format with no
   volgnummer, so there is no document-level ledger to keep. Scaffolding for a future classic-uittreksel
   adapter. Don't be surprised it's empty; don't "fix" it by writing placeholder rows.
@@ -349,6 +369,38 @@ comparisons. The DB chapter is now outdated vs the live schema.
 ---
 
 ## 6. Current standing (update this when a phase ends)
+
+**KBC monthly CSV import — IMPLEMENTED, awaiting the schema apply (branch `b/csv-import`, 2026-07-30).**
+Implemented + **352 tests green** + build clean + eslint unchanged from `origin/main` (44 pre-existing
+problems, 0 new) + design-check (0 indigo/purple; summary strip kept to four cells) + **code-reviewer
+(2 criticals + 10 important findings, all fixed and re-tested — see §8)** + both-theme
+in-browser verification on the test account (CSV → preview → recurring answers → source switch; zero app
+console errors — only the expected 404s for the two not-yet-created tables). **Not yet run: the owner's
+one real CSV import**, and therefore no db-verifier pass on a committed batch. A read-only check confirms
+the browser session wrote **nothing** (0 transactions, 0 income entries, no rules archived) — the preview
+really does commit only on confirm.
+- **Second import source on `/import`**, behind a source toggle: "Monthly export (CSV)" (default) vs the
+  unchanged "Individual transaction (PDF)". Same downstream pipeline — `suggestWallet`, dedupe, the
+  hybrid credit routing, and the `import_transactions` RPC are **untouched**.
+- **Pure libs** (all behaviour-tested): `src/lib/import/csv.js` (hand-rolled RFC4180 tokenizer — no
+  papaparse dependency; owner's call), `banks/kbcCsv.js` (columns by HEADER NAME, `dd/mm/yyyy`,
+  explicit `credit`/`debet`, two-path counterparty), `matchRecurring.js`, `reconcile.js`,
+  `monthlySnapshots.js`, `buildCsvRows.js`.
+- **Three format facts corrected against the real export** (42 rows): rows are **not** sorted by `Datum`
+  (it inverts) or `Valuta` — the **file's own order is the ledger order**, verified by a zero-break
+  `Saldo` chain, so `Datum` is only the transaction date and re-sorting by it would break every balance
+  check. UTF-8, no BOM, CR-only terminators, zero quoted fields. `Afschriftnummer` is per-row.
+- **Recurring links:** a row matching a recurring rule is excluded from the commit and asks once; a saved
+  link then recognises it silently; a changed amount resurfaces with confirm+update / confirm / reject.
+  Confirmed deviations re-price the rule **in the app's existing versioning style** (archive + successor
+  with `parent_rule_id`), and an income rule's new version runs the mandatory distribution popup —
+  shared with `Income.jsx` via the new `src/lib/recurringAmountUpdate.js`.
+- **Monthly balance snapshots + two soft checks** (chain + total, drift vs stored snapshots). Warn,
+  never block, never drop a row; recurring rows stay in the balance math even though they never post.
+- **Schema: DRAFTED, NOT APPLIED** — `supabase/migrations/20260730120000_csv_import_schema.sql`
+  (`recurring_import_links`, `monthly_balance_snapshots`, RLS + four policies each). **IMMEDIATE NEXT:**
+  owner applies it via the chat assistant, then re-verify read-only, run one real CSV import, db-verifier
+  the batch (recurring rows did NOT post, no double-count, both snapshots written), then commit + PR.
 
 **Budgeting Phase B — the Budgeting page: DONE (branch `b/capped-wallet-fix`, 2026-07-19; A + B ship in one PR).**
 Implemented + **114 tests green** + build clean + code-reviewer (no criticals; error-guarded writes,
@@ -577,6 +629,39 @@ Deferred / smaller:
 
 ## 7. Decision log (the "why", so new chats don't relitigate)
 
+- **The KBC export CSV's ledger order is the FILE's order, never a `Datum` sort.** The real export's
+  `Datum` column inverts (21/12 listed after 22/12) and `Valuta` is not monotonic either, but the running
+  `Saldo` chain is consistent across all 42 rows in file order. So the adapter reverses the file to get
+  oldest-first and keeps a `sourceIndex`; boundary balances are derived by summing rows dated before the
+  boundary (order-independent). A "just sort by date" refactor would silently corrupt every balance
+  check — there is a test that fails if the two orders ever coincide.
+- **A recurring-matched import row is excluded from the commit, not imported "as a plain spend".** Nothing
+  in the app auto-posts recurring items (income is logged from `IncomeRecurringDetail`, expenses ticked in
+  `TransactionChecklist`), so importing them again double-counts — and importing one as a plain debit
+  would also leave its checklist item unticked, inviting a second log. The matcher is deliberately
+  conservative: **only a saved link auto-excludes**, a first encounter always asks, a link covers only as
+  many rows per month as the rule actually schedules, and an unanswered question BLOCKS the import. A
+  wrong auto-exclude silently loses a real spend, which is worse than a missed match.
+- **The learned link lives in its own table** (`recurring_import_links`), not as a column on the two rule
+  tables: neither stores a counterparty, the link's amount must be able to diverge from the rule's
+  ("confirm without updating"), and rule versioning would strand a column on the archived row.
+- **A confirmed deviation re-prices the rule the way the app already does it** — archive (`end_date`) +
+  insert a successor with `parent_rule_id` — so past entries keep the amount they were posted with. An
+  income rule's successor starts with no `income_distribution_rules`, so the Import page runs the same
+  mandatory `DistributionPopup` step the Income page does; the distribution write is now shared
+  (`src/lib/recurringAmountUpdate.js`). Links are written AFTER the re-pricing so they point at the
+  surviving version.
+- **The reconciliation checks are soft, and the app's own balance is deliberately NOT one of them.**
+  Σ wallet balances is not the bank account's balance in a wallet model (the monthly transfer to savings
+  leaves the account), so that comparison would fail on every correct import. Snapshot-vs-snapshot is
+  bank-truth vs bank-truth — that is the drift detector.
+- **Duplicate scope differs per import source.** One PDF = one transaction, so a repeat inside a batch is
+  the same file dropped twice. One CSV = the bank's own month-long ledger, so two identical rows inside it
+  are two real transactions (two €10,40 train tickets in a day) and must NOT default to skipped;
+  `flagDuplicates` takes an opt-in `batchScope: 'per-file'` and the PDF path's behaviour is unchanged.
+- **No papaparse.** The real export has zero quoted fields, so the dependency bought a `split(';')`; the
+  in-repo tokenizer still implements the full RFC 4180 quoting rules, because a future quoted field
+  containing `;` must not shift every column after it.
 - **Budgeting page edits the salary's `income_distribution_rules` in place** (same rows the recurring
   log reads) — "edit one, the other follows" is structural, not a sync job. Must-fund wallets are pinned
   to their `budget` (change the budget to change the plan; not a free distribution input); leftover
@@ -734,6 +819,24 @@ Deferred / smaller:
 
 ## 8. Known risks / gotchas (hard-won in this project)
 
+- **A Supabase `upsert` payload must not repeat its conflict key.** Postgres refuses ("cannot affect
+  row a second time"), so the whole statement fails. Both CSV-import upserts hit this in review: a
+  weekly rule recognises several rows a month (one link key) and two overlapping exports prove the same
+  month boundary. De-duplicate the payload in the pure layer, where it is testable.
+- **`DistributionPopup` calls `onConfirm` without `await` or `catch`.** Any promise that rejects inside
+  a caller's `onConfirm` becomes an unhandled rejection, and because the mandatory popups pass
+  `onClose={null}` the user is left with no message and no way out. Every `onConfirm` must catch its own
+  errors, surface them, and close only on success (`Income.jsx` recurringSetup, `Import.jsx` both queues).
+- **Re-pricing a recurring rule is not idempotent.** It archives the current version and inserts a
+  successor, so running it twice for one rule leaves two active successors sharing a `parent_rule_id` —
+  two live recurring rules. Anything that can produce several updates for the same rule (a multi-month
+  import, a weekly rule) must collapse them per rule id first.
+- **A row can be both "already imported" and a recurring candidate.** Recomputing a row's `include`
+  flag from one condition drops the other; the CSV import keeps ONE `shouldInclude()` used both when
+  rows are built and when a recurring question is answered.
+- **A commit sequence fired from a modal callback is not awaited by anything.** An unhandled rejection
+  leaves `committing` true, the button disabled and no error on screen. Wrap each entry point.
+
 - **`supabase/migrations/` exists but is NOT the source of truth (updated 2026-07-26).** Schema changes
   made since 2026-07-09 are committed there as timestamped `.sql` files; anything older was applied
   manually with no file at all, so the folder is an incomplete record. Critically, **nothing applies it
@@ -778,6 +881,9 @@ Deferred / smaller:
 ## 9. Companion plan files (kept alongside this one)
 
 - `distribution-unallocated-plan.md`, finishing distribution + the Unallocated wallet (active phase).
+- `pdf-import-plan.md` + `kbc-adapter-spec.md`, the PDF import phase (shipped, PR #17).
+- `kbc-csv-import-background.md`, the KBC export-CSV format facts + the recurring-link and
+  balance-snapshot decisions (background only — corrections from the real file are folded into §6/§7).
 - `testing-setup-plan.md`, Vitest + CI testing phase.
 - `backup-restore-feature-plan.md`, export/import backup feature (prerequisite for encryption).
 - `encryption-with-key-plan.md`, client-side encryption (after testing + backup), incl. the two open

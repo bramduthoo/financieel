@@ -48,7 +48,12 @@ export function parseKbcDate(raw) {
   if (typeof raw !== 'string') return null
   const m = /^(\d{2})-(\d{2})-(\d{4})$/.exec(raw.trim())
   if (!m) return null
-  const [, dd, mm, yyyy] = m
+  return isoOrNull(m[3], m[2], m[1])
+}
+
+// Shared by the per-source date parsers: validates an already-SEPARATED y/m/d and renders
+// the ISO string. Only the calendar check is shared — each source keeps its own regex.
+function isoOrNull(yyyy, mm, dd) {
   const day = Number(dd)
   const month = Number(mm)
   if (month < 1 || month > 12 || day < 1 || day > 31) return null
@@ -56,6 +61,19 @@ export function parseKbcDate(raw) {
   const probe = new Date(Date.UTC(Number(yyyy), month - 1, day))
   if (probe.getUTCMonth() !== month - 1 || probe.getUTCDate() !== day) return null
   return `${yyyy}-${mm}-${dd}`
+}
+
+/**
+ * "31/12/2025" (DD/MM/YYYY) → "2025-12-31". The CSV export uses SLASHES where the mobile
+ * export uses hyphens, so this is its own function rather than a loosened `parseKbcDate`:
+ * a shared date regex would let a format drift in one source pass silently in the other.
+ * @returns {string|null}
+ */
+export function parseKbcCsvDate(raw) {
+  if (typeof raw !== 'string') return null
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(raw.trim())
+  if (!m) return null
+  return isoOrNull(m[3], m[2], m[1])
 }
 
 /**
