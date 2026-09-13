@@ -122,3 +122,97 @@ unresolved. Reading `INVENTORY.md` §1 and deciding the following is the gate:
 7. **Optional but recommended:** authenticate the Supabase MCP at the start of the next session so
    the four open schema questions above can be settled. Sessions 5 and 6 will otherwise inherit
    D-01 unresolved, and D-01 is a direct self-contradiction inside `PROJECT-CONTEXT.md` §4 vs §6.
+
+---
+
+## Session 2 — CLEANUP PROPOSAL (read-only) — COMPLETE
+
+- **Date:** 2026-09-13
+- **Model:** Claude Opus 5 (`claude-opus-5`)
+- **Branch:** `b/audit-cleanup`, cut from `origin/main` (`aaeb44e`)
+- **Prerequisite satisfied:** zero open PRs, and the owner's 2026-09-07 decision on the two
+  unmerged branches (recorded above) supplies the "owner has said otherwise" the brief requires.
+
+### Housekeeping performed first (owner-approved 2026-09-13)
+
+- `git fetch origin --prune`; local `main` fast-forwarded `919a71d → aaeb44e`.
+- Deleted three fully-merged leftover branches with `git branch -d` (safe mode — each was
+  verified merged before deletion): `b/budgeting-rework`, `b/csv-import`, `b/pdf-import`.
+  **`b/budgeting-performance` and `b/privacy-mode` were not touched**, per the standing decision.
+- Created `b/audit-cleanup` from `origin/main` and committed the three previously-untracked paths:
+  - `7409024` — `docs/audit/` (brief, addendum, questionnaire spec, Session 1 artefacts, journal)
+  - `bc6aca4` — `PHASE-ROADMAP.md` and `docs/dashboard-recon.md`, committed as-is with their
+    staleness documented in the commit message
+- Working tree clean afterwards. This means all three are now **in scope** for cleanup, which is
+  why C-009 and C-016 could be written at all.
+
+### Produced
+
+| File | Contents |
+|---|---|
+| `docs/audit/CLEANUP-PROPOSAL.md` | 21 decision blocks, C-001 … C-021, in six categories, ordered safest-first. 13 DELETE, 5 ARCHIVE, 3 KEEP-BUT-FLAG. Opens with a one-screen summary and names the three highest-risk proposals; closes with §7, the four things swept for that produced nothing. |
+| `docs/audit/cleanup-review.html` | The review interface required by `AUDIT-BRIEF-ADDENDUM.md` §2. Single file, zero network references (verified), all 21 blocks embedded verbatim as JSON, `localStorage` autosave under key `financieel-audit-cleanup-v1`, Export → `cleanup-decisions.json`, clipboard fallback, JSON import, keyboard-first (`j`/`k`, `1`/`2`/`3`/`0`, `/`, Enter, Esc), undecided filter, light + dark from the real `DESIGN-SPEC.md` §2 tokens. |
+
+### Verification actually performed
+
+- Every candidate's basename was grepped across the repo; the result is stated in its block.
+  Several proposals were **narrowed** by what the greps returned — see below.
+- The HTML was served locally and driven in a real browser: page renders, **zero console errors**
+  (the single 404 was my throwaway server's missing `favicon.ico`, not the page), keyboard
+  decisions set state and auto-advance, counters and progress bar update, autosave fires.
+  The embedded JSON was separately parsed with `node`: 21 blocks, no duplicate ids, no block
+  missing a required field, action counts match the markdown summary table exactly.
+- Test state from that run lives under origin `http://localhost:8321`, which is a different
+  origin from the `file://` the owner will open — so the interface opens empty for them.
+
+### Judgement calls worth knowing about
+
+1. **`screens/` was nearly mis-swept.** The obvious move was "delete the three gitignored artifact
+   directories". `docs/dashboard-recon.md:6` and its §4 cite **nine** screenshots in `screens/`
+   root by name as the evidence base for the not-yet-started Phase 2 dashboard rebuild, and the
+   folder is gitignored, so deletion would be permanent. C-008 is therefore scoped to the two
+   subfolders only, and C-009 exists purely to flag the nine as load-bearing.
+2. **Four root plan files are deliberately not proposed.** `pdf-import-plan.md`,
+   `kbc-adapter-spec.md`, `kbc-csv-import-background.md` and `budgeting-page-plan.md` are cited
+   from *source-code comments* as living specifications (e.g. `dedupe.js` → "pdf-import-plan.md §7",
+   `resolveCappedInflow.js` → "budgeting-page-plan.md §4.2"). They are reference documents, not
+   consumed prompts.
+3. **`docs/wallets.png`, `docs/income.png`, `docs/settings.png` are protected by proxy** —
+   `DESIGN-SPEC.md:183` cites all three as the owner-approved mockups. Only the three
+   `*_straightFromClaudeInterface.png` siblings are proposed (C-012), and that block says so.
+4. **§6 is dependency edits, not file deletions**, so it sits last. C-018 (`sql`) is the highest-
+   value block in the file: removing one unused line eliminates the project's only **critical**
+   vulnerability, because `sql@0.78.0` is the sole parent of `lodash@4.1.0`.
+
+### Skipped / not done
+
+- **Live-DB verification still not performed.** A fresh OAuth URL was generated this session
+  (new `client_id` — the stale registration that caused `Unrecognized client_id` was purged on
+  2026-09-07 and the credentials backup sits at `~/.claude/.credentials.json.bak-20260907`). The
+  owner has not yet completed the browser consent step. **Does not affect Session 2 or 3**; blocks
+  Sessions 5–6 via discrepancy D-01.
+- **Nothing was deleted, moved or archived.** Session 2 is read-only; execution is Session 3's job
+  and only for blocks marked `ok`.
+- **Minor:** the browser verification added files to `.playwright-mcp/`, so C-007's stated count
+  (101 files, 1.9 MB) is now a slight undercount. The proposal is unaffected — the whole directory
+  is the candidate.
+
+### What the owner must do before Session 3 runs
+
+1. **Decide the 21 blocks.** Either open `docs/audit/cleanup-review.html` (double-click), work
+   through them, click **Export**, and move `cleanup-decisions.json` into `docs/audit/` — or edit
+   `DECISION:` fields directly in `CLEANUP-PROPOSAL.md`. Both are valid; the JSON is what Session 3
+   parses if it is present.
+2. Partial is fine. Export halfway and Session 3 will execute what is decided and report the rest
+   as skipped. **Blocks left as `?` are never executed.**
+3. Pay particular attention to **C-019** (`supabase` CLI — most likely to be a deliberate choice I
+   cannot see from the repo) and **C-021** (the only build-config edit).
+
+> **Supersedes "Owner decisions — 2026-09-07" item 4.** That item says the `Unrecognized client_id`
+> fix "has not been applied" and the credentials file "is unchanged". It was written *before* the
+> fix ran later that same day. Corrected state, verified 2026-09-13: the three stale
+> `plugin:supabase:supabase|…` entries **were removed**, a backup exists at
+> `~/.claude/.credentials.json.bak-20260907`, and `claudeAiOauth` plus the unrelated
+> `supabase|5de00e37…` entry (a different project, `bljaqfeqkjaqvdxwbpkx`) were preserved. Only the
+> browser consent step remains outstanding. Left as an append rather than an edit, per the
+> append-only rule.

@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cleanup Review — Financieel audit</title>
+<style>
+/* ── Design tokens: DESIGN-SPEC.md §2 "the blend" (locked) ───────────────── */
+:root{
+  --cream:#F4F0E7; --card:#FFFFFF; --card-border:#E4DFD3; --inner-border:#ECE7DB;
+  --field:#F7F4EC; --track:#F1EFE8;
+  --ink:#2C2C2A; --ink-soft:#5F5E5A; --ink-muted:#888780; --ink-faint:#B4B2A9;
+  --accent:#D85A30; --accent-solid:#D85A30;
+  --positive:#3B6D11; --positive-bar:#639922; --positive-tint:#EAF3DE;
+  --negative:#993C1D; --negative-tint:#FAECE7; --warning:#EF9F27;
+  --shadow:0 1px 2px rgba(44,44,42,.04);
+}
+:root[data-theme="dark"]{
+  --cream:#14140F; --card:#1E1E17; --card-border:#2C2C2A; --inner-border:#2C2C2A;
+  --field:#14140F; --track:#2C2C2A;
+  --ink:#F1EFE8; --ink-soft:#B4B2A9; --ink-muted:#888780; --ink-faint:#5F5E5A;
+  --accent:#F0997B;
+  --positive:#97C459; --positive-tint:rgba(99,153,34,.18);
+  --negative:#F09595; --negative-tint:rgba(226,75,74,.15);
+  --shadow:none;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --cream:#14140F; --card:#1E1E17; --card-border:#2C2C2A; --inner-border:#2C2C2A;
+    --field:#14140F; --track:#2C2C2A;
+    --ink:#F1EFE8; --ink-soft:#B4B2A9; --ink-muted:#888780; --ink-faint:#5F5E5A;
+    --accent:#F0997B;
+    --positive:#97C459; --positive-tint:rgba(99,153,34,.18);
+    --negative:#F09595; --negative-tint:rgba(226,75,74,.15);
+    --shadow:none;
+  }
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--cream); color:var(--ink);
+  font:400 14px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace}
+button{font:inherit;color:inherit;cursor:pointer}
+::selection{background:var(--positive-tint)}
+
+/* ── Shell ──────────────────────────────────────────────────────────────── */
+.wrap{max-width:1280px;margin:0 auto;padding:0 16px;padding-block:20px}
+header.page{border-bottom:1px solid var(--card-border);padding-bottom:14px;margin-bottom:16px}
+.hrow{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;justify-content:space-between}
+h1{margin:0;font-size:26px;font-weight:500;letter-spacing:-.02em}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);margin-bottom:5px}
+.sub{margin:6px 0 0;font-size:13px;color:var(--ink-soft)}
+.actions{display:flex;flex-wrap:wrap;gap:7px}
+.btn{background:var(--card);border:1px solid var(--card-border);border-radius:9px;padding:7px 12px;font-size:13px;font-weight:500}
+.btn:hover{border-color:var(--ink-faint)}
+.btn.primary{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+.btn.primary:hover{opacity:.9}
+
+/* ── Summary strip (DESIGN-SPEC §8 rule 2) ──────────────────────────────── */
+.strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--inner-border);
+  border:1px solid var(--card-border);border-radius:14px;overflow:hidden;margin-bottom:14px}
+.cell{background:var(--card);padding:11px 14px}
+.cell .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted)}
+.cell .val{font-size:18px;font-weight:500;letter-spacing:-.02em;margin-top:3px}
+.bar{height:6px;border-radius:999px;background:var(--track);overflow:hidden;margin-top:10px}
+.bar>i{display:block;height:100%;background:var(--positive-bar);border-radius:999px;transition:width .2s}
+
+/* ── Toolbar ────────────────────────────────────────────────────────────── */
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
+.search{flex:1;min-width:180px;background:var(--field);border:1px solid var(--card-border);
+  border-radius:9px;padding:8px 11px;font-size:13px;color:var(--ink)}
+.search::placeholder{color:var(--ink-faint)}
+.search:focus{outline:2px solid var(--accent);outline-offset:1px}
+.toggle{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--ink-soft);
+  background:var(--card);border:1px solid var(--card-border);border-radius:9px;padding:7px 11px}
+.toggle input{accent-color:var(--accent-solid);width:14px;height:14px}
+
+/* ── Two-pane ───────────────────────────────────────────────────────────── */
+.panes{display:grid;grid-template-columns:320px 1fr;gap:14px;align-items:start}
+@media (max-width:880px){.panes{grid-template-columns:1fr}}
+.list{background:var(--card);border:1px solid var(--card-border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+.li{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border-bottom:1px solid var(--inner-border);cursor:pointer}
+.li:last-child{border-bottom:none}
+.li:hover{background:var(--field)}
+.li.sel{background:var(--field);box-shadow:inset 3px 0 0 var(--accent-solid)}
+.li .id{font-size:12px;font-weight:500;font-family:ui-monospace,monospace;color:var(--ink-soft);min-width:44px}
+.li .nm{flex:1;font-size:12.5px;line-height:1.4;color:var(--ink);word-break:break-word}
+.li .nm em{display:block;font-style:normal;font-size:11px;color:var(--ink-muted);margin-top:2px}
+.grp{padding:8px 12px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--ink-muted);background:var(--field);border-bottom:1px solid var(--inner-border)}
+
+.dot{width:9px;height:9px;border-radius:999px;background:var(--track);flex:none;margin-top:5px;border:1px solid var(--card-border)}
+.dot.ok{background:var(--positive-bar);border-color:transparent}
+.dot.no{background:var(--negative);border-color:transparent}
+.dot.defer{background:var(--warning);border-color:transparent}
+
+/* ── Detail ─────────────────────────────────────────────────────────────── */
+.detail{background:var(--card);border:1px solid var(--card-border);border-radius:14px;padding:20px;box-shadow:var(--shadow)}
+.detail h2{margin:0;font-size:20px;font-weight:500;letter-spacing:-.02em;word-break:break-word}
+.detail .meta{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);margin-bottom:6px}
+.fld{margin-top:15px;padding-top:14px;border-top:1px solid var(--inner-border)}
+.fld .k{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);margin-bottom:5px}
+.fld .v{font-size:13.5px;color:var(--ink);line-height:1.6}
+.fld .v p{margin:0 0 8px}
+.fld .v p:last-child{margin-bottom:0}
+code{background:var(--field);border:1px solid var(--inner-border);border-radius:5px;padding:.5px 4px;font-size:12px}
+pre{background:var(--field);border:1px solid var(--inner-border);border-radius:9px;padding:11px;
+  overflow-x:auto;font-size:12px;line-height:1.5;margin:8px 0}
+pre code{background:none;border:none;padding:0}
+
+.pill{display:inline-block;font-size:11px;font-weight:500;letter-spacing:.04em;padding:3px 9px;border-radius:999px;text-transform:uppercase}
+.pill.DELETE{background:var(--negative-tint);color:var(--negative)}
+.pill.ARCHIVE{background:var(--positive-tint);color:var(--positive)}
+.pill.MOVE{background:var(--positive-tint);color:var(--positive)}
+.pill.FLAG{background:var(--field);color:var(--ink-soft);border:1px solid var(--card-border)}
+.paired{margin-top:12px;background:var(--field);border:1px solid var(--card-border);border-left:3px solid var(--warning);
+  border-radius:9px;padding:10px 12px;font-size:12.5px;color:var(--ink-soft)}
+
+/* ── Decision ───────────────────────────────────────────────────────────── */
+.decide{margin-top:18px;padding-top:15px;border-top:1px solid var(--card-border)}
+.choices{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.ch{background:var(--card);border:1px solid var(--card-border);border-radius:9px;padding:9px 15px;font-size:13px;font-weight:500;display:flex;gap:8px;align-items:center}
+.ch kbd{font-size:10px;background:var(--field);border:1px solid var(--inner-border);border-radius:4px;padding:1px 5px;color:var(--ink-muted)}
+.ch:hover{border-color:var(--ink-faint)}
+.ch[aria-pressed="true"]{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+.ch[aria-pressed="true"] kbd{background:transparent;border-color:currentColor;color:inherit}
+textarea{width:100%;margin-top:11px;background:var(--field);border:1px solid var(--card-border);border-radius:9px;
+  padding:10px 12px;font:inherit;font-size:13px;color:var(--ink);resize:vertical;min-height:64px}
+textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.hint{font-size:11px;color:var(--ink-faint);margin-top:6px}
+
+/* ── Keys + status ──────────────────────────────────────────────────────── */
+.keys{margin-top:16px;font-size:11.5px;color:var(--ink-muted);display:flex;flex-wrap:wrap;gap:5px 14px;align-items:center}
+.keys kbd{font-size:10.5px;background:var(--card);border:1px solid var(--card-border);border-radius:4px;padding:1.5px 5px;color:var(--ink-soft)}
+.saved{font-size:11.5px;color:var(--ink-muted)}
+.saved b{font-weight:500;color:var(--positive)}
+.empty{padding:40px 20px;text-align:center;color:var(--ink-muted)}
+.empty p{margin:5px 0;font-size:13px}
+.empty p+p{color:var(--ink-faint);font-size:12.5px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:var(--cream);
+  padding:10px 18px;border-radius:9px;font-size:13px;box-shadow:0 4px 14px rgba(0,0,0,.16);z-index:50}
+.toast[hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<script id="blocks" type="application/json">
+[
+{"id":"C-001","cat":"§1 Vite starter-template leftovers","path":"src/App.css","action":"DELETE",
+ "what":"184 lines of plain CSS from the Vite React starter template. Contains only `.counter`, `.hero`, `.base`, `.framework`, `.vite` rules — the starter's demo counter and logo animation. Zero `@apply`, `@tailwind`, `:root` or `#root` rules (verified: `grep -c` → 0).",
+ "why":"**Not imported anywhere.** `git grep --fixed-strings \"App.css\"` across the repo returns no hits at all — `src/main.jsx` imports `./index.css` only. It has been dead since the project's first commit and describes UI that never existed here.",
+ "risk":"None identified. Nothing imports it, so the build cannot change.",
+ "alt":"Keep as a curiosity. There is no case for it — it is not this project's history, it is Vite's.",
+ "paired":"Paired with C-004 (`src/assets/hero.png`) — this file's `.hero` rules were that image's only consumer."},
+
+{"id":"C-002","cat":"§1 Vite starter-template leftovers","path":"src/assets/react.svg","action":"DELETE",
+ "what":"The React logo, from the Vite starter template.",
+ "why":"Unreferenced. `git grep --fixed-strings \"react.svg\"` returns no hits in `src/` or `index.html`.",
+ "risk":"None identified.","alt":"Keep. No case.","paired":""},
+
+{"id":"C-003","cat":"§1 Vite starter-template leftovers","path":"src/assets/vite.svg","action":"DELETE",
+ "what":"The Vite logo, from the starter template.",
+ "why":"Unreferenced. Same grep result as C-002 — no hits anywhere.",
+ "risk":"None identified.","alt":"Keep. No case.","paired":""},
+
+{"id":"C-004","cat":"§1 Vite starter-template leftovers","path":"src/assets/hero.png","action":"DELETE",
+ "what":"13 KB image from the Vite starter template.",
+ "why":"Unreferenced by any source file. Its only consumer was ever `src/App.css`'s `.hero` block. Both are dead either way, but action them together: deleting `App.css` without this leaves an orphan image; deleting this without `App.css` leaves CSS referencing a missing file.",
+ "risk":"None identified.","alt":"Keep. No case.",
+ "paired":"Paired with C-001 (`src/App.css`)."},
+
+{"id":"C-005","cat":"§1 Vite starter-template leftovers","path":"public/icons.svg","action":"DELETE",
+ "what":"5 KB SVG sprite containing `bluesky-icon`, `discord-icon`, `documentation-icon`, `github-icon`, `social-icon`, `x-icon` — the Vite starter's social-link sprite.",
+ "why":"Unreferenced. No `icons.svg` hit and **no `<use>` element anywhere** in `src/` or `index.html` (verified), so it is not being pulled in as a dynamic sprite either. This app's icons come from `lucide-react` via `src/lib/walletIcons.js`, per DESIGN-SPEC §7 ('Icons | lucide-react only').",
+ "risk":"None identified. Note `public/favicon.svg` **is** referenced from `index.html:5` and is **not** part of this block.",
+ "alt":"Keep. No case — these are social icons for a site that does not exist.","paired":""},
+
+{"id":"C-006","cat":"§2 Local artifact directories (not in git)","path":"dist/","action":"DELETE",
+ "what":"Vite build output — 7 files, 2.5 MB. Regenerated in full by `npm run build` (2.4 s, verified in Session 1).",
+ "why":"Build artefact, gitignored (`.gitignore` line: `dist`). The brief names 'stray build output' as a sweep category. Nothing references it; Vercel builds from source on its own infrastructure.",
+ "risk":"None identified. `npm run preview` would need a fresh `npm run build` first — a 2.4 s cost. **Not recoverable from git** — gitignored, so there is no copy in history.",
+ "alt":"Keep. It costs 2.5 MB and is rebuilt on demand; there is no reason to preserve a specific old build.","paired":""},
+
+{"id":"C-007","cat":"§2 Local artifact directories (not in git)","path":".playwright-mcp/","action":"DELETE",
+ "what":"101 files, 1.9 MB — 60 `page-<timestamp>.yml` accessibility snapshots, 14 `console-<timestamp>.log` files, and ~20 review PNGs. Oldest timestamps are 2026-07-26. Produced automatically by the Playwright MCP during browser-verification runs.",
+ "why":"Machine-generated session debris, gitignored explicitly ('Local browser-testing artifacts (Playwright MCP snapshots/logs, review screenshots)'). Referenced by nothing. The verification *conclusions* these supported are already folded into PROJECT-CONTEXT.md §6.",
+ "risk":"None identified. New runs recreate the directory. **Not recoverable from git.**",
+ "alt":"Keep as a record of what was verified in browser — but the logs are timestamped blobs with no index, so reconstructing which run proved what is impractical.","paired":""},
+
+{"id":"C-008","cat":"§2 Local artifact directories (not in git)","path":"screens/budgeting-rework/ and screens/page-header/","action":"DELETE",
+ "what":"14 review screenshots across two subfolders — `budgeting-rework/` (12: multi-income editor, percent mode, empty states, save-confirm, light + dark) and `page-header/` (2). Produced while reviewing PR #16 and PR #15.",
+ "why":"Both PRs **merged** (2026-07-21). Unreferenced — `docs/dashboard-recon.md` is the only document that cites anything in `screens/`, and it names **only the nine root-level files**, none of these. They show a Budgeting page that has since had Phase C built against it on `b/budgeting-performance`.",
+ "risk":"Low. These document a merged PR's review; the PR itself is in git history. **Not recoverable from git** if deleted — gitignored.",
+ "alt":"Keep. They are the only visual record of the Budgeting rework review.",
+ "paired":"**Read C-009 first.** This block is deliberately scoped to these two subfolders and must not be widened to all of `screens/` — nine files in its root are load-bearing for an upcoming phase."},
+
+{"id":"C-009","cat":"§2 Local artifact directories (not in git)","path":"screens/ root — the nine dashboard/wallets/income PNGs","action":"FLAG",
+ "what":"`dashboard_light_1440.png`, `dashboard_dark_1440.png`, `dashboard_light_390.png`, `wallets_light_1440.png`, `wallets_dark_1440.png`, `walletdetail_unalloc_light_1440.png`, `walletdetail_unalloc_dark_1440.png`, `income_light_1440.png`, `income_dark_1440.png`.",
+ "why":"It may **not** go. Recorded so a future sweep does not mistake these for the same class of junk as C-007/C-008. `docs/dashboard-recon.md:6` states 'Screenshots live in **/screens** (not docs/)' and its §4 cites all nine by name as the evidence base for the **Phase 2 dashboard rebuild, which has not started**. They are gitignored, so if deleted they are gone permanently and the recon document loses its illustrations.",
+ "risk":"Deleting them would silently break a live plan document for an upcoming phase. That is precisely the failure mode this audit exists to prevent.",
+ "alt":"Move them into `docs/dashboard-recon-screens/` and commit them, so they stop being one `Remove-Item` away from loss. That is a MOVE, and arguably Session 4's call — flagged, not proposed.",
+ "paired":"Sibling of C-008."},
+
+{"id":"C-010","cat":"§3 Superseded screenshots in docs/","path":"docs/redesign-screenshots/ (14 PNGs)","action":"ARCHIVE",
+ "what":"Both-theme screenshots seeded during the R1 + R2 redesign rollout (PRs #7 and #8, 2026-07-10/11): dashboard, income, income-entry-detail, login ×3, settings, wallet-detail fixed and unallocated, wallets — light and dark.",
+ "why":"They show a UI superseded **twice** — by the density pass (2026-07-13, whose own screenshots are C-011) and again by the Budgeting/PageHeader work (2026-07-17 … 07-21). No individual file is referenced anywhere (verified: `git grep` on each of the 14 basenames returns no hits). The **folder path** is cited once, at `PROJECT-CONTEXT.md:623`, as evidence that R2 was verified in both themes.",
+ "risk":"Archiving preserves that evidence; the `PROJECT-CONTEXT.md:623` path would need updating to `docs/archive/…`, which is Session 5's job. Deleting instead would break the citation outright. These are tracked in git, so either action is reversible.",
+ "alt":"DELETE — the brief explicitly sanctions it ('Deletion is for genuine noise: build artefacts, superseded screenshots'). Recommended against here only because the folder is cited as proof a merged PR was verified.",
+ "paired":"Destination: `docs/archive/redesign-screenshots/`."},
+
+{"id":"C-011","cat":"§3 Superseded screenshots in docs/","path":"docs/density-screenshots/ (8 PNGs)","action":"ARCHIVE",
+ "what":"Both-theme screenshots from the density & completeness pass (PR #11, 2026-07-13): income, settings, walletdetail, wallets — light and dark.",
+ "why":"Same reasoning as C-010, one generation later. Superseded by the Budgeting and PageHeader work. No individual file referenced (verified per basename); the folder path is cited once at `PROJECT-CONTEXT.md:475`.",
+ "risk":"Same as C-010 — the one folder-level citation needs a Session 5 update. Tracked in git, so reversible.",
+ "alt":"DELETE, or keep — these are the newest of the three screenshot sets and the closest to current UI, so they are the most defensible to retain in place.",
+ "paired":"Destination: `docs/archive/density-screenshots/`."},
+
+{"id":"C-012","cat":"§3 Superseded screenshots in docs/","path":"docs/*_straightFromClaudeInterface.png (3 files)","action":"DELETE",
+ "what":"`docs/income_straightFromClaudeInterface.png`, `docs/settings_straightFromClaudeInterface.png`, `docs/wallet_straightFromClaudeInterface.png` — three mockup images whose filenames say they are raw exports from a chat interface.",
+ "why":"Unreferenced — `git grep` on all three basenames returns nothing. **INFERRED** (I did not open them, per the brief's rule on binary assets): they appear to be the raw versions of the three cleaned-up mockups `docs/wallets.png`, `docs/income.png`, `docs/settings.png`, which **are** cited — at `DESIGN-SPEC.md:183`, as the owner-approved mockups behind the density pass. If that inference is right they are redundant duplicates; if it is wrong they are three unreferenced images either way.",
+ "risk":"Low, and zero if archived — they are tracked, so git can restore them.",
+ "alt":"ARCHIVE instead of DELETE, if the design-iteration history is worth 900 KB.",
+ "paired":"**`docs/wallets.png`, `docs/income.png` and `docs/settings.png` are NOT in this block** and must not be swept with it — they are load-bearing for DESIGN-SPEC.md, a protected file."},
+
+{"id":"C-013","cat":"§4 Consumed plan & recon documents","path":"docs/settings-recon.md","action":"ARCHIVE",
+ "what":"152-line read-only reconnaissance for the settings-page planning session, written against branch `b/testing-finish` (2026-07-08). Explicitly report-only: 'Decisions happen in the planning session — this is an inventory with a recommendation per item.'",
+ "why":"Fully consumed. The planning session happened and shipped as PR #6 (settings phase 1 hygiene, 2026-07-09); its decisions are recorded in PROJECT-CONTEXT.md §6. Referenced by exactly one file — PROJECT-CONTEXT.md — and only as provenance ('Recon: …').",
+ "risk":"Low. One citation in PROJECT-CONTEXT.md needs its path updated (Session 5). The document still explains *why* settings ended up as it did, which is worth keeping somewhere.",
+ "alt":"KEEP-BUT-FLAG — it is only 152 lines and does no harm in `docs/`.",
+ "paired":"Destination: `docs/archive/settings-recon.md`."},
+
+{"id":"C-014","cat":"§4 Consumed plan & recon documents","path":"distribution-unallocated-plan.md","action":"ARCHIVE",
+ "what":"121-line plan for finishing income-distribution edit (Fix C) and building the Unallocated outbound interface (Stage 4).",
+ "why":"The phase is **done**. PROJECT-CONTEXT.md §5 records 'Unallocated wallet outbound (BUILT — DONE)' and §6 'Income-distribution & Unallocated-wallet redesign phase: DONE', and the code confirms it (`unallocatedPlans.js`, `UnallocatedConflictBanner.jsx`, the outbound DistributionPopup mode at `WalletDetail.jsx:705`). Meanwhile the file's own header still declares itself 'the ACTIVE phase' — recorded as discrepancy **D-11**. Leaving a shipped plan claiming to be active is exactly the drift this operation exists to remove.",
+ "risk":"**One of the three highest-risk blocks.** The filename is referenced by CLAUDE.md ('Key references … phase plans'), PROJECT-CONTEXT.md §9 (where it is listed as '(active phase)'), and ARCHITECTURE.md. Archiving it leaves three documents — one of them protected — pointing at a moved path until Session 5 repairs them.",
+ "alt":"KEEP-BUT-FLAG, and let Session 5 simply correct the 'ACTIVE phase' header in place. That is lower risk and arguably achieves the same thing.",
+ "paired":"Paired with C-015 — both create the same doc-repair debt, and Session 5 should fix them in one pass. Destination: `docs/archive/distribution-unallocated-plan.md`."},
+
+{"id":"C-015","cat":"§4 Consumed plan & recon documents","path":"testing-setup-plan.md","action":"ARCHIVE",
+ "what":"104-line handoff note for setting up Vitest, CI and merge protection. Self-describes as 'a handoff note to kickstart… Feed it back into a conversation to resume this topic.'",
+ "why":"Shipped as PR #4 (2026-07-07). The suite exists (352 tests, 24 files), CI runs on every PR, and the decisions and deliberate omissions are recorded in `docs/testing-notes.md`, which is the living document and **is** cited from `src/lib/dashboardCalcs.test.js`. This file is the consumed prompt; `testing-notes.md` is the durable record.",
+ "risk":"Same doc-repair debt as C-014 — referenced by CLAUDE.md, PROJECT-CONTEXT.md §9 and ARCHITECTURE.md.",
+ "alt":"KEEP-BUT-FLAG. It is 104 lines and harmless where it sits.",
+ "paired":"Paired with C-014. Destination: `docs/archive/testing-setup-plan.md`."},
+
+{"id":"C-016","cat":"§5 Documentation stubs","path":"README.md","action":"FLAG",
+ "what":"16 lines. The **unmodified** Vite starter README — 'This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.' Untouched since 2026-05-18.",
+ "why":"It may not go — a repository needs a README. But it is referenced by nothing (verified: zero grep hits) and describes a template rather than this app. It is the first thing a visitor to github.com/bramduthoo/financieel sees, and it says nothing about wallets, envelopes, euros, or how to run the project. Recorded as discrepancy **D-18**.",
+ "risk":"None — KEEP-BUT-FLAG changes nothing today.",
+ "alt":"Have Session 5 rewrite it (what the app is, the stack, `npm run dev`, and a pointer to PROJECT-CONTEXT.md / CLAUDE.md). That is the outcome I would expect; this block exists to put it on the record so it is not forgotten.",
+ "paired":""},
+
+{"id":"C-017","cat":"§5 Documentation stubs","path":"ARCHITECTURE.md","action":"FLAG",
+ "what":"21 lines. Not a document — a **tombstone**: 'This file is retired as a source of truth… they were wrong in ways that caused real incidents when trusted. Do not rely on anything that used to be here.'",
+ "why":"It may not go, and the reasoning is worth stating plainly so nobody deletes it in a later sweep. Its filename is still referenced by **nine** files, including CLAUDE.md and `.claude/skills/db-migration/SKILL.md`. Most of those references are *warnings not to trust it* — which only work if the file is there to be found. Deleting the tombstone would leave nine dangling references and remove the warning that the incidents produced.",
+ "risk":"None — KEEP-BUT-FLAG changes nothing.",
+ "alt":"ARCHIVE it and update the nine references. Higher effort, no benefit; the file is 21 lines.",
+ "paired":""},
+
+{"id":"C-018","cat":"§6 Unused dependencies & stale build config","path":"package.json — remove the `sql` dependency","action":"DELETE",
+ "what":"`\"sql\": \"^0.78.0\"` — declared as a runtime dependency.",
+ "why":"**Zero references in the entire repo** outside package.json (verified for both `'sql'` and `\"sql\"` quoting). It is also the single worst security item in the project: `npm audit` (run 2026-09-07) shows it carries a moderate 'SQL Injection in sql' advisory with **no fix available**, and `npm ls lodash` proves it is the *sole* reason `lodash@4.1.0` is installed:\n```\nfinancieel@0.0.0\n└─┬ sql@0.78.0\n  └── lodash@4.1.0\n```\nThat `lodash` is the project's **only critical vulnerability** and carries nine advisories (prototype pollution ×5, command injection, ReDoS, `_.template` code injection), also with no fix available. **Removing this one unused line eliminates the critical finding and one moderate, with no code change.**",
+ "risk":"Low but not nil — `package-lock.json` is regenerated, which is a large diff. Nothing imports the package, so the build cannot break on a missing module.",
+ "alt":"Keep and accept the advisories. There is no upgrade path: both packages are effectively abandoned upstream.",
+ "paired":"**Highest-value block in this file.** If marked ok, Session 3 must re-run `npm install`, `npm run build`, `npm test` and `npm run lint` and compare against INVENTORY.md §10–§11 (352 tests, build clean, 44 lint problems) before committing."},
+
+{"id":"C-019","cat":"§6 Unused dependencies & stale build config","path":"package.json — remove the `supabase` CLI from dependencies","action":"DELETE",
+ "what":"`\"supabase\": \"^2.105.0\"` — the Supabase **command-line tool**, declared as a *runtime* dependency of a browser app.",
+ "why":"Unused, and the workflow says so. There is **no `supabase/config.toml`** (the directory contains only `migrations/`), so the CLI is not initialised against this project, and `PROJECT-CONTEXT.md:142` states outright: 'there is no migration runner, no `supabase db push` in the workflow. The owner applies each file by hand.' No script, doc or source file invokes it.",
+ "risk":"If you ever intend to run `npx supabase …` locally, removing it makes that a download-on-demand rather than an error — but it would no longer be pinned. This is the block most likely to be a deliberate choice I cannot see from the repo, so it is worth a moment's thought rather than a reflex ok.",
+ "alt":"Move it to `devDependencies`, which is where a CLI belongs regardless of whether it is kept. That is the safer half-step — use `note: move to devDependencies` if you prefer it.",
+ "paired":""},
+
+{"id":"C-020","cat":"§6 Unused dependencies & stale build config","path":"package.json — remove `path-key` and `react-is`","action":"DELETE",
+ "what":"`\"path-key\": \"^4.0.0\"` and `\"react-is\": \"^19.2.7\"`.",
+ "why":"Neither appears anywhere in `src/`. `path-key` has **no reference in the repo at all**. `react-is` is referenced in exactly one place — the `optimizeDeps` line in `vite.config.js` that C-021 removes — where it sits alongside `recharts` as that library's peer. With `recharts` absent, `react-is` has nothing to support.",
+ "risk":"Low. If C-021 is refused, `react-is` should stay, or Vite will be told to pre-bundle a package that is no longer installed. `path-key` is independent and safe to remove either way.",
+ "alt":"Remove `path-key` only and leave `react-is` until C-021 is decided — use `note: path-key only`.",
+ "paired":"The `react-is` half is paired with C-021."},
+
+{"id":"C-021","cat":"§6 Unused dependencies & stale build config","path":"vite.config.js — remove the `optimizeDeps` block","action":"DELETE",
+ "what":"```\noptimizeDeps: {\n  include: ['recharts', 'react-is'],\n},\n```",
+ "why":"It instructs Vite to pre-bundle **`recharts`, which is not installed** — absent from package.json, absent from package-lock.json (`grep -c recharts package-lock.json` → 0) and absent from `node_modules/`. It is also the exact thing the project's own rules forbid: CLAUDE.md — 'Charts are **inline SVG only — no chart libraries**'; DESIGN-SPEC.md §7 — 'chart library import is a violation'. The app complies in `src/` (7 components hand-roll inline SVG, zero chart-library imports); only this config line still points at the abandoned approach. Recorded as discrepancy **D-04**.",
+ "risk":"**The highest-risk block in this file**, purely because it edits build configuration. In practice Vite silently ignores an unresolvable `optimizeDeps.include` entry — which is why the build is green today — so removing it should be a no-op. 'Should be' is why this one gets a full `npm run build` before commit rather than after.",
+ "alt":"Leave it. It is inert and costs nothing but confusion for the next reader who greps for `recharts` and wonders whether a chart library is sneaking in.",
+ "paired":"Paired with C-020's `react-is` half."}
+]
+</script>
+
+<div class="wrap">
+  <header class="page">
+    <div class="hrow">
+      <div>
+        <div class="eyebrow">Financieel audit · Session 2</div>
+        <h1>Cleanup Review</h1>
+        <p class="sub">21 proposals from <code>CLEANUP-PROPOSAL.md</code>. Decide each, then Export and drop the JSON into <code>docs/audit/</code>.</p>
+      </div>
+      <div class="actions">
+        <button class="btn" id="theme" title="Toggle light / dark">Theme</button>
+        <button class="btn" id="import">Import JSON</button>
+        <button class="btn" id="copy">Copy</button>
+        <button class="btn primary" id="export">Export</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="strip">
+    <div class="cell"><div class="lbl">Decided</div><div class="val" id="nDone">0</div></div>
+    <div class="cell"><div class="lbl">Undecided</div><div class="val" id="nOpen">21</div></div>
+    <div class="cell"><div class="lbl">Total</div><div class="val" id="nAll">21</div></div>
+    <div class="cell"><div class="lbl">Last saved</div><div class="val saved" id="savedAt" style="font-size:13px">—</div></div>
+  </div>
+  <div class="bar"><i id="progress" style="width:0%"></i></div>
+
+  <div class="toolbar" style="margin-top:14px">
+    <input class="search" id="q" type="search" placeholder="Search id, path, or text…   ( / )" autocomplete="off">
+    <label class="toggle"><input type="checkbox" id="onlyOpen"> Show only undecided</label>
+  </div>
+
+  <div class="panes">
+    <nav class="list" id="list"></nav>
+    <main class="detail" id="detail"></main>
+  </div>
+
+  <div class="keys">
+    <span><kbd>j</kbd> / <kbd>k</kbd> move</span>
+    <span><kbd>1</kbd> ok</span>
+    <span><kbd>2</kbd> no</span>
+    <span><kbd>3</kbd> defer</span>
+    <span><kbd>0</kbd> clear</span>
+    <span><kbd>Enter</kbd> notes</span>
+    <span><kbd>Esc</kbd> leave notes</span>
+    <span><kbd>/</kbd> search</span>
+    <span style="color:var(--ink-faint)">Autosaves to this browser continuously — Export writes the file the next session reads.</span>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+'use strict';
+var KEY='financieel-audit-cleanup-v1';
+var BLOCKS=JSON.parse(document.getElementById('blocks').textContent);
+var state={}, dirty=false, sel=0, view=BLOCKS.slice();
+
+/* ── storage (never throw) ───────────────────────────────────────────── */
+function load(){
+  try{
+    var raw=localStorage.getItem(KEY); if(!raw) return;
+    var o=JSON.parse(raw);
+    state=o.decisions||{};
+    if(o.savedAt) document.getElementById('savedAt').textContent=when(o.savedAt);
+  }catch(e){ state={}; }
+}
+function save(){
+  try{
+    var now=new Date().toISOString();
+    localStorage.setItem(KEY,JSON.stringify({document:'CLEANUP-PROPOSAL.md',key:KEY,savedAt:now,decisions:state}));
+    document.getElementById('savedAt').textContent=when(now);
+    dirty=false;
+  }catch(e){
+    document.getElementById('savedAt').textContent='not saved';
+    dirty=true;
+  }
+}
+function when(iso){
+  try{ var d=new Date(iso);
+    return d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  }catch(e){ return '—'; }
+}
+
+/* ── tiny markdown: **bold**, `code`, ```blocks```, blank-line paras ──── */
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmt(s){
+  if(!s) return '';
+  var parts=String(s).split(/```/), out='';
+  for(var i=0;i<parts.length;i++){
+    if(i%2===1){ out+='<pre><code>'+esc(parts[i].replace(/^\n/,''))+'</code></pre>'; continue; }
+    var t=esc(parts[i]);
+    t=t.replace(/`([^`]+)`/g,'<code>$1</code>');
+    t=t.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+    t=t.replace(/\*([^*]+)\*/g,'<em>$1</em>');
+    t.split(/\n{2,}/).forEach(function(p){ if(p.trim()) out+='<p>'+p.replace(/\n/g,'<br>')+'</p>'; });
+  }
+  return out;
+}
+
+/* ── rendering ───────────────────────────────────────────────────────── */
+function decided(id){ var d=state[id]; return !!(d&&(d.decision||(d.notes&&d.notes.trim()))); }
+function counts(){
+  var done=0; BLOCKS.forEach(function(b){ if(decided(b.id)) done++; });
+  document.getElementById('nDone').textContent=done;
+  document.getElementById('nOpen').textContent=BLOCKS.length-done;
+  document.getElementById('nAll').textContent=BLOCKS.length;
+  document.getElementById('progress').style.width=(BLOCKS.length? Math.round(done/BLOCKS.length*100):0)+'%';
+}
+function filtered(){
+  var q=document.getElementById('q').value.trim().toLowerCase();
+  var only=document.getElementById('onlyOpen').checked;
+  return BLOCKS.filter(function(b){
+    if(only&&decided(b.id)) return false;
+    if(!q) return true;
+    return (b.id+' '+b.path+' '+b.cat+' '+b.what+' '+b.why+' '+b.risk+' '+b.alt+' '+b.paired).toLowerCase().indexOf(q)>-1;
+  });
+}
+function renderList(){
+  view=filtered();
+  if(sel>=view.length) sel=Math.max(0,view.length-1);
+  var el=document.getElementById('list'), html='', lastCat='';
+  view.forEach(function(b,i){
+    if(b.cat!==lastCat){ html+='<div class="grp">'+esc(b.cat)+'</div>'; lastCat=b.cat; }
+    var d=(state[b.id]||{}).decision||'';
+    html+='<div class="li'+(i===sel?' sel':'')+'" data-i="'+i+'">'
+      +'<span class="dot '+esc(d)+'"></span>'
+      +'<span class="id">'+esc(b.id)+'</span>'
+      +'<span class="nm">'+esc(b.path)+'<em>'+esc(b.action==='FLAG'?'KEEP-BUT-FLAG':b.action)+(d?' · '+esc(d):'')+'</em></span>'
+      +'</div>';
+  });
+  el.innerHTML=html||'<div class="empty"><p>Nothing matches.</p><p>Clear the search, or untick “show only undecided”.</p></div>';
+}
+function renderDetail(){
+  var el=document.getElementById('detail'), b=view[sel];
+  if(!b){ el.innerHTML='<div class="empty"><p>No item selected.</p><p>Adjust the filter to bring one back.</p></div>'; return; }
+  var d=state[b.id]||{}, act=b.action==='FLAG'?'KEEP-BUT-FLAG':b.action;
+  el.innerHTML=
+    '<div class="meta">'+esc(b.cat)+'</div>'
+    +'<h2>'+esc(b.id)+' · '+esc(b.path)+'</h2>'
+    +'<div style="margin-top:10px"><span class="pill '+esc(b.action)+'">Proposed: '+esc(act)+'</span></div>'
+    +'<div class="fld"><div class="k">What it is</div><div class="v">'+fmt(b.what)+'</div></div>'
+    +'<div class="fld"><div class="k">Why it may go</div><div class="v">'+fmt(b.why)+'</div></div>'
+    +'<div class="fld"><div class="k">Risk if actioned</div><div class="v">'+fmt(b.risk)+'</div></div>'
+    +'<div class="fld"><div class="k">Alternative</div><div class="v">'+fmt(b.alt)+'</div></div>'
+    +(b.paired?'<div class="paired">'+fmt(b.paired)+'</div>':'')
+    +'<div class="decide">'
+      +'<div class="k" style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted)">Your decision</div>'
+      +'<div class="choices">'
+        +btn('ok','1',d.decision)+btn('no','2',d.decision)+btn('defer','3',d.decision)
+      +'</div>'
+      +'<textarea id="notes" placeholder="Notes — free text. Anything here is read back as the block’s Notes field; prefix with “note:” to give an instruction that overrides the decision.">'+esc(d.notes||'')+'</textarea>'
+      +'<div class="hint">ok = do it · no = leave it · defer = revisit later. Blank means undecided and is left out of the export.</div>'
+    +'</div>';
+  el.querySelectorAll('.ch').forEach(function(x){
+    x.addEventListener('click',function(){ setDecision(b.id, x.dataset.v===((state[b.id]||{}).decision)?'':x.dataset.v); });
+  });
+  var ta=el.querySelector('#notes');
+  ta.addEventListener('input',function(){ var s=state[b.id]||(state[b.id]={}); s.notes=ta.value; dirty=true; counts(); renderList(); save(); });
+  ta.addEventListener('keydown',function(e){ if(e.key==='Escape'){ ta.blur(); } e.stopPropagation(); });
+}
+function btn(v,k,cur){
+  return '<button class="ch" data-v="'+v+'" aria-pressed="'+(cur===v)+'"><kbd>'+k+'</kbd>'+v+'</button>';
+}
+function setDecision(id,v){
+  var s=state[id]||(state[id]={});
+  if(v) s.decision=v; else delete s.decision;
+  if(!s.decision&&!(s.notes&&s.notes.trim())) delete state[id];
+  dirty=true; save(); counts(); renderList(); renderDetail();
+}
+function render(){ counts(); renderList(); renderDetail(); }
+
+/* ── export / import ─────────────────────────────────────────────────── */
+function payload(){
+  var out={};
+  Object.keys(state).forEach(function(id){
+    var s=state[id]; if(!s) return;
+    var o={}; if(s.decision) o.decision=s.decision;
+    if(s.notes&&s.notes.trim()) o.notes=s.notes.trim();
+    if(Object.keys(o).length) out[id]=o;
+  });
+  return JSON.stringify({
+    document:'CLEANUP-PROPOSAL.md', key:KEY, exportedAt:new Date().toISOString(),
+    total:BLOCKS.length, answered:Object.keys(out).length, decisions:out
+  },null,2);
+}
+function toast(m){
+  var t=document.getElementById('toast'); t.textContent=m; t.hidden=false;
+  clearTimeout(toast._t); toast._t=setTimeout(function(){ t.hidden=true; },2600);
+}
+document.getElementById('export').addEventListener('click',function(){
+  var blob=new Blob([payload()],{type:'application/json'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='cleanup-decisions.json'; document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },0);
+  dirty=false; toast('Exported cleanup-decisions.json → move it into docs/audit/');
+});
+document.getElementById('copy').addEventListener('click',function(){
+  var txt=payload();
+  function fallback(){
+    var ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); toast('Copied to clipboard — paste into docs/audit/cleanup-decisions.json'); }
+    catch(e){ toast('Could not copy — use Export instead'); }
+    ta.remove();
+  }
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){ dirty=false; toast('Copied to clipboard — paste into docs/audit/cleanup-decisions.json'); },fallback);
+  } else fallback();
+});
+document.getElementById('import').addEventListener('click',function(){
+  var inp=document.createElement('input'); inp.type='file'; inp.accept='application/json,.json';
+  inp.addEventListener('change',function(){
+    var f=inp.files&&inp.files[0]; if(!f) return;
+    var r=new FileReader();
+    r.onload=function(){
+      try{
+        var o=JSON.parse(r.result);
+        if(!o||!o.decisions) throw new Error('no decisions');
+        state=o.decisions; save(); render(); toast('Imported '+Object.keys(state).length+' decisions');
+      }catch(e){ toast('That file is not a decisions export'); }
+    };
+    r.readAsText(f);
+  });
+  inp.click();
+});
+
+/* ── theme ───────────────────────────────────────────────────────────── */
+document.getElementById('theme').addEventListener('click',function(){
+  var cur=document.documentElement.getAttribute('data-theme');
+  var dark=cur? cur==='dark' : (window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches);
+  document.documentElement.setAttribute('data-theme',dark?'light':'dark');
+  try{ localStorage.setItem(KEY+':theme',dark?'light':'dark'); }catch(e){}
+});
+try{ var th=localStorage.getItem(KEY+':theme'); if(th) document.documentElement.setAttribute('data-theme',th); }catch(e){}
+
+/* ── keyboard ────────────────────────────────────────────────────────── */
+document.addEventListener('keydown',function(e){
+  var tag=(e.target.tagName||'').toLowerCase();
+  if(tag==='textarea') return;
+  if(tag==='input'){ if(e.key==='Escape'){ e.target.blur(); } return; }
+  if(e.metaKey||e.ctrlKey||e.altKey) return;
+  var b=view[sel];
+  if(e.key==='j'||e.key==='ArrowDown'){ e.preventDefault(); if(sel<view.length-1){sel++;render();scrollSel();} }
+  else if(e.key==='k'||e.key==='ArrowUp'){ e.preventDefault(); if(sel>0){sel--;render();scrollSel();} }
+  else if(e.key==='/'){ e.preventDefault(); document.getElementById('q').focus(); }
+  else if(e.key==='Enter'){ e.preventDefault(); var ta=document.getElementById('notes'); if(ta){ta.focus();} }
+  else if(b&&(e.key==='1'||e.key==='2'||e.key==='3'||e.key==='0')){
+    e.preventDefault();
+    setDecision(b.id,{ '1':'ok','2':'no','3':'defer','0':'' }[e.key]);
+    if(e.key!=='0'&&sel<view.length-1){ sel++; render(); scrollSel(); }
+  }
+});
+function scrollSel(){
+  var n=document.querySelector('.li.sel');
+  if(n&&n.scrollIntoView) n.scrollIntoView({block:'nearest'});
+}
+document.getElementById('list').addEventListener('click',function(e){
+  var row=e.target.closest?e.target.closest('.li'):null;
+  if(!row) return; sel=Number(row.dataset.i)||0; render();
+});
+document.getElementById('q').addEventListener('input',function(){ sel=0; render(); });
+document.getElementById('onlyOpen').addEventListener('change',function(){ sel=0; render(); });
+
+window.addEventListener('beforeunload',function(e){
+  if(!dirty) return;
+  e.preventDefault(); e.returnValue='';
+});
+
+load(); render();
+})();
+</script>
+</body>
+</html>
