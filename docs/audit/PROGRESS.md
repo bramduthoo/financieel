@@ -365,3 +365,56 @@ end state is intact.
    discrepancy **D-01** is a direct self-contradiction inside `PROJECT-CONTEXT.md` (§4 says the
    CSV-import tables are not applied, §6 says they are) and only a live query can settle which
    sentence Session 5 should keep.
+
+---
+
+## Live-DB verification — 2026-09-14 (closes the Session 1 gap)
+
+- **Model:** Claude Opus 5 · **Branch:** `b/audit-cleanup`
+- **Access:** read-only Supabase MCP against `duyttdjfvblhhjihybal`. **SELECT only** — no write, no
+  `apply_migration`, per ground rule 3 and `CLAUDE.md` rule 3.
+
+### The OAuth problem, and what actually fixed it
+
+Three link generations failed with `{"message":"Unrecognized client_id"}`. The cause was **not**
+the stale DCR registration cleaned up on 2026-09-07 — it was that **this Claude Code session had
+been alive since 2026-09-04 and was caching the dead `client_id` in process memory.** The value
+appeared nowhere in `.claude.json`, `.credentials.json` or `settings.json`, only in the session
+transcript, which is why editing files could not clear it.
+
+**Fix: restart Claude Code.** A fresh session did a genuine dynamic client registration —
+`client_id` changed `6d885f74…` → `89f46504…`, callback port `39455` → `45667` — and the consent
+screen appeared immediately. Worth adding to the tooling memory: *if Supabase OAuth fails
+repeatedly in a long-running session, restart before touching credentials.*
+
+### Results — all four open questions closed
+
+| Question | Answer |
+|---|---|
+| **D-01** — are the CSV-import tables applied? | **YES.** Both `recurring_import_links` and `monthly_balance_snapshots` exist. §6 is right; the §4 heading is the false half. |
+| **D-20** — does `budget_allocations` exist? | **YES**, with a full shape, **0 rows**, and no code touching it. Vestigial confirmed. |
+| Does `unallocated_pending_conflicts` match the code? | **YES** — exactly the shape `unallocatedPlans.js:103` writes. Still undocumented in §4. |
+| Does `wallets.cap_reduction_enabled` still exist? | **YES**, boolean, non-null on all 18 wallets. Documented-dead, and the docs are right. |
+
+Also confirmed: **all seven RPCs present** with the documented SECURITY settings (six INVOKER, plus
+`handle_new_user` as the one intentional DEFINER) — §4's list needs no correction.
+`imported_statements` is empty, exactly as documented. 19 tables in `public`.
+
+### Two new discrepancies, visible only from the live DB
+
+- **D-22** — `settings.currency` and `settings.currency_symbol` still exist, though the currency
+  picker was reverted in `c6e4f15` and the app is hard-coded to euros. Written by nothing, read by
+  nothing, and **not documented as dead** — unlike `cap_reduction_enabled`. Low severity; the risk
+  is someone assuming a currency feature half-exists.
+- **D-23** — `settings.hide_balances` **does not exist**, confirming that privacy mode shipped
+  session-only and that `PHASE-ROADMAP.md` Phase 1's kickoff prompt describes a migration that must
+  never be written. The live-DB half of D-02.
+
+`DISCREPANCIES.md` now carries **23 entries** and a `Live-DB verification` section that is
+authoritative wherever it overlaps an earlier entry.
+
+### Session 5 is now unblocked
+
+No outstanding prerequisites. The one decision still open is `S-001`, and it has been **executed**
+(commit `d666165`, owner approved 2026-09-14), so Session 5 inherits a root of five markdown files
+and six specs under `docs/plans/`.

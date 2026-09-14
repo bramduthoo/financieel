@@ -6,9 +6,14 @@
 > Reality = `origin/main` @ `aaeb44e`, whose tree is identical to the audited working tree.
 > Every "what is actually true" cell is backed by a file read or a command run this session.
 >
-> **Live-database verification did not run this session** (`INVENTORY.md` §12). Discrepancies that
-> can only be settled by querying the DB are marked **⚠ NEEDS LIVE DB** and stated as a
-> contradiction between documents, not as a verdict.
+> **Live-database verification did not run in Session 1** (`INVENTORY.md` §12), so discrepancies
+> needing a live query were marked **⚠ NEEDS LIVE DB** and stated as a contradiction between
+> documents rather than a verdict.
+>
+> **✅ UPDATE 2026-09-14 — that verification has now run.** Every ⚠ marker is resolved in the
+> **[Live-DB verification](#live-db-verification--2026-09-14)** section at the end of this file,
+> which also adds two discrepancies (D-22, D-23) that were invisible from the repo. Where the
+> live DB settles a question, **that section is authoritative over the entry above it.**
 
 ---
 
@@ -18,10 +23,13 @@
 |---|--:|---|
 | **High** — actively misleading; a session acting on it would do the wrong thing | 6 | D-01 … D-06 |
 | **Medium** — stale status; wastes time or causes rework | 8 | D-07 … D-14 |
-| **Low** — inaccurate detail, no operational consequence | 7 | D-15 … D-21 |
+| **Low** — inaccurate detail, no operational consequence | 9 | D-15 … D-21, D-22, D-23 |
 
-Highest-risk three: **D-01** (the same file says a migration both is and is not applied),
-**D-02** (a shipped feature documented as unbuilt), **D-03** (a documented command that fails).
+**23 discrepancies total.**
+
+Highest-risk three: **D-01** (the same file says a migration both is and is not applied —
+**now resolved: it WAS applied, §4 is the wrong half**), **D-02** (a shipped feature documented as
+unbuilt), **D-03** (a documented command that fails).
 
 ---
 
@@ -293,3 +301,115 @@ These documented claims were tested this session and **hold**:
   logs it manually." Confirmed: no scheduler, cron or edge function exists.
 - `PROJECT-CONTEXT.md` §6 — "352 tests green". Exactly 352, 24 files, exit 0.
 - `DESIGN-SPEC.md` §2 token values vs `src/index.css`. Every hex matches.
+
+---
+
+# Live-DB verification — 2026-09-14
+
+> Performed against project `duyttdjfvblhhjihybal` via the read-only Supabase MCP, after the OAuth
+> problem was resolved. **SELECT only — no write, no migration, no `apply_migration`.** This
+> settles every ⚠ NEEDS LIVE DB marker above and adds two findings that could not be seen from the
+> repo.
+
+## The public schema as it actually is — 19 tables
+
+```
+budget_allocations              income_templates                unallocated_pending_conflicts
+counterparty_wallet_mappings    monthly_balance_snapshots       unallocated_plan_items
+imported_statements             recurring_import_links          unallocated_plans
+income_distribution_rules       recurring_rules                 unallocated_template_items
+income_entries                  settings                        unallocated_templates
+income_recurring                transactions                    wallets
+income_template_distribution_items
+```
+
+## D-01 — RESOLVED. §6 is right; §4's heading is wrong.
+
+`recurring_import_links` **exists**. `monthly_balance_snapshots` **exists**.
+
+The CSV-import migration `20260730120000_csv_import_schema.sql` **was applied.** So
+`PROJECT-CONTEXT.md` §6 ("Schema: APPLIED & VERIFIED 2026-07-30") is correct, and the §4 heading
+("CSV-import tables (DRAFTED 2026-07-30 — **NOT applied yet**)") together with its follow-on
+sentence about the Import page degrading to a "reduced checks" banner is **false and must be
+replaced**. Session 5: keep §6's wording, rewrite the §4 heading.
+
+Both tables currently hold **0 rows**, consistent with §6's note that the owner's first real CSV
+import has not happened yet.
+
+## D-20 — RESOLVED. `budget_allocations` exists, and is genuinely vestigial.
+
+The table is present with a real shape — `id`, `user_id`, `wallet_id`, `amount` (numeric NOT NULL),
+`valid_from` (date NOT NULL), `valid_until` (date), `created_at` — and holds **0 rows**. Combined
+with the Session 1 finding that no file in `src/` reads or writes it, the INFERRED verdict is now
+confirmed: it is a designed-but-abandoned table from a pre-distribution budgeting model. It is
+still deleted by `reset_user_data`, which is the only code that touches it.
+
+## `unallocated_pending_conflicts` — exists, and matches the code exactly
+
+Columns: `id`, `user_id` (NOT NULL), `balance_snapshot` (numeric NOT NULL), `eligible_plan_ids`
+(ARRAY, NOT NULL), `status` (text NOT NULL), `chosen_plan_id` (uuid), `resolved_at`, `created_at`.
+
+That is precisely the shape `src/lib/unallocatedPlans.js:103` inserts and
+`src/components/UnallocatedConflictBanner.jsx:65,77` updates. **D-20's related note stands:**
+`PROJECT-CONTEXT.md` §4 never documents this table as an entry, despite it driving the whole
+conflict-stall mechanism. Session 5 should add it. Currently 0 rows.
+
+## `wallets.cap_reduction_enabled` — confirmed present and confirmed dead
+
+The column exists (`boolean`, nullable) and is **non-null on all 18 wallet rows**, so it holds real
+values that nothing reads. `CLAUDE.md` rule 7 and `PROJECT-CONTEXT.md` §4 both already call it a
+dead column; the live DB confirms the documentation rather than contradicting it. No change needed
+beyond leaving the warning in place.
+
+## RPC functions — all seven present, security settings as documented
+
+| Function | Arguments | Security |
+|---|---|---|
+| `increment_wallet_balance` | `p_wallet_id uuid, p_amount numeric` | INVOKER |
+| `decrement_wallet_balance` | `p_wallet_id uuid, p_amount numeric` | INVOKER |
+| `distribute_from_unallocated` | `p_unallocated_wallet_id uuid, p_distributions jsonb, p_note text, p_date date` | INVOKER |
+| `edit_income_distribution` | `p_income_entry_id uuid, p_new_credits jsonb, p_source_name text, p_date date` | INVOKER |
+| `import_transactions` | `p_items jsonb` | INVOKER |
+| `reset_user_data` | `p_full boolean` | INVOKER |
+| `handle_new_user` | *(none)* | **DEFINER** |
+
+Matches `PROJECT-CONTEXT.md` §4's list exactly, including the one intentional SECURITY DEFINER (the
+signup trigger). **Nothing to correct.**
+
+## `imported_statements` — confirmed empty, as documented
+
+0 rows. `PROJECT-CONTEXT.md` §4's note that it is "**Currently written by NOTHING**… Don't be
+surprised it's empty; don't 'fix' it by writing placeholder rows" is accurate.
+
+---
+
+## New — found only by querying the live DB
+
+### D-22 — `settings.currency` and `settings.currency_symbol` survive a reverted feature
+
+- **Claim:** no document mentions these columns as vestigial. `PROJECT-CONTEXT.md` §4 lists
+  `settings` as carrying "currency, currency_symbol, month_start_day, theme, strict_distribution,
+  bank_provider" as though all are live.
+- **Actually true:** both columns **exist in the live DB**, but the currency picker was **reverted**
+  — commit `c6e4f15` "revert(currency): drop the currency picker — app is EUR-only" — and Session 1
+  confirmed `git grep -i currency` across `src/` returns only import-pipeline hits. The app is
+  hard-coded to euros in `src/lib/format.js`, which builds `€ 1.234,56` by hand.
+- So these are two columns written by nothing and read by nothing — the same category as
+  `cap_reduction_enabled`, but **not documented as dead anywhere**.
+- **Evidence:** `information_schema.columns` on `public.settings`; `git log` for `c6e4f15`;
+  `INVENTORY.md` §2 and `src/lib/format.js:1-8`.
+- **Severity: Low.** No behavioural impact. Session 5 should mark them vestigial in §4 so the next
+  person does not try to wire a currency feature to them and assume it half-exists.
+
+### D-23 — `settings.hide_balances` does **not** exist, confirming D-02's second half
+
+- **Claim:** `PHASE-ROADMAP.md` Phase 1's kickoff prompt says "Add a `hide_balances` boolean to
+  settings (draft migration per db-migration skill — STOP for the owner to apply…)".
+- **Actually true:** there is **no `hide_balances` column** in the live `settings` table. Privacy
+  mode shipped **session-only**, with a module-level flag in `src/lib/format.js:16` and no
+  persistence — exactly as that file's own comment says ("Session-only… Resets to visible on reload
+  by design").
+- This is the live-DB half of **D-02**: the plan and the implementation diverged, the
+  implementation was the better call, and neither document records the change.
+- **Severity: Low** on its own; it matters because `PHASE-ROADMAP.md` still presents Phase 1 as
+  upcoming work with a migration attached that must never be written.
