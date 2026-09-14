@@ -293,3 +293,75 @@ rather than edited into the earlier files, per the append-only rule.
 
 Nothing blocking. Session 4 (structure review) is read-only and independent of all of the above.
 The Supabase MCP consent step is still outstanding and still blocks Sessions 5–6 via D-01.
+
+---
+
+## Session 4 — STRUCTURE REVIEW (read-only) — COMPLETE
+
+- **Date:** 2026-09-14
+- **Model:** Claude Opus 5 (`claude-opus-5`)
+- **Branch:** `b/audit-cleanup` — assessed *after* the Session 3 cleanup, at `a0e75fa`
+
+### Verdict
+
+```
+Root & docs hygiene:  CHANGE NEEDED
+src/ structure:       NO CHANGE NEEDED
+```
+
+### Produced
+
+| File | Contents |
+|---|---|
+| `docs/audit/STRUCTURE-REVIEW.md` | Verdict block first, then the `src/` assessment (no proposals, with the evidence for that), then one root/docs proposal as an `S-` decision block. |
+| `docs/audit/structure-review.html` | Review interface, required because one verdict is CHANGE NEEDED. Same contract as `cleanup-review.html`: self-contained, offline, `localStorage` key `financieel-audit-structure-v1`, exports `structure-decisions.json`. |
+
+### `src/` — no change, and the evidence for it
+
+The addendum's default verdict held, but it was tested rather than assumed:
+
+| Check | Result |
+|---|---|
+| `lib/` importing upward from `components/` or `pages/` | none — zero hits |
+| `components/` importing from `pages/` | none — zero hits |
+| Circular imports (all 31 non-test lib modules, resolved and cross-checked) | none |
+| Misfiled files | none |
+| Case for a `hooks/` directory | it would hold two one-line `useContext` wrappers |
+
+**One real finding, deliberately not proposed:** `Income.jsx` (1225 lines), `Import.jsx` (1194) and
+`WalletDetail.jsx` (989) are too large, and `WalletDetail.jsx` branches three distinct wallet
+behaviours in one component. Not proposed because (a) it is a refactor, not a relocation, which
+ground rule 8 puts outside this operation; (b) nothing under `src/pages/` has a test to catch a
+mistake; (c) it would collide with `b/budgeting-performance`, which the owner chose to keep and
+which touches 10 files under `src/`. **Recorded for the scope discussion.**
+
+Cost of a hypothetical `src/` move, measured for the record: 32 of 96 tracked `src/` files import
+from `lib/` and 9 from `components/`, so renaming either rewrites imports in **at least 41 files**.
+
+### Root & docs — one proposal, `S-001`
+
+Move six feature specifications (1,553 lines) from the repo root into `docs/plans/`, leaving a root
+whose eleven markdown files become five, all of them entry points. Four of the six are cited from
+*inside source-code comments* as authoritative specs — but by bare filename, never imported — so
+the build, tests and app cannot break. The cost is imprecise citations plus path updates in
+`CLAUDE.md`, `PROJECT-CONTEXT.md` §9 and `PHASE-ROADMAP.md`, which is already Session 5's work.
+
+Explicitly not proposed: moving the three `docs/*.png` mockups, which are cited by exact path at
+`DESIGN-SPEC.md:183`.
+
+### Verification
+
+`structure-review.html` was served locally and driven in a browser: renders correctly in the
+project's tokens, verdict tags display, keyboard decision and autosave both work. The verification
+recreated `.playwright-mcp/`, which C-007 had deleted — it has been removed again, so the Session 3
+end state is intact.
+
+### What the owner must do before Session 5
+
+1. **Decide `S-001`** — via `structure-review.html` → Export → drop `structure-decisions.json` into
+   `docs/audit/`, or by editing `DECISION:` in `STRUCTURE-REVIEW.md` directly. With a single block
+   the markdown is probably faster.
+2. **Complete the Supabase OAuth consent.** This is now the one genuine blocker for Session 5:
+   discrepancy **D-01** is a direct self-contradiction inside `PROJECT-CONTEXT.md` (§4 says the
+   CSV-import tables are not applied, §6 says they are) and only a live query can settle which
+   sentence Session 5 should keep.

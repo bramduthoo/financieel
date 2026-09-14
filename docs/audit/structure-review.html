@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Structure Review — Financieel audit</title>
+<style>
+:root{
+  --cream:#F4F0E7; --card:#FFFFFF; --card-border:#E4DFD3; --inner-border:#ECE7DB;
+  --field:#F7F4EC; --track:#F1EFE8;
+  --ink:#2C2C2A; --ink-soft:#5F5E5A; --ink-muted:#888780; --ink-faint:#B4B2A9;
+  --accent:#D85A30; --accent-solid:#D85A30;
+  --positive:#3B6D11; --positive-bar:#639922; --positive-tint:#EAF3DE;
+  --negative:#993C1D; --negative-tint:#FAECE7; --warning:#EF9F27;
+  --shadow:0 1px 2px rgba(44,44,42,.04);
+}
+:root[data-theme="dark"]{
+  --cream:#14140F; --card:#1E1E17; --card-border:#2C2C2A; --inner-border:#2C2C2A;
+  --field:#14140F; --track:#2C2C2A;
+  --ink:#F1EFE8; --ink-soft:#B4B2A9; --ink-muted:#888780; --ink-faint:#5F5E5A;
+  --accent:#F0997B; --positive:#97C459; --positive-tint:rgba(99,153,34,.18);
+  --negative:#F09595; --negative-tint:rgba(226,75,74,.15); --shadow:none;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --cream:#14140F; --card:#1E1E17; --card-border:#2C2C2A; --inner-border:#2C2C2A;
+  --field:#14140F; --track:#2C2C2A;
+  --ink:#F1EFE8; --ink-soft:#B4B2A9; --ink-muted:#888780; --ink-faint:#5F5E5A;
+  --accent:#F0997B; --positive:#97C459; --positive-tint:rgba(99,153,34,.18);
+  --negative:#F09595; --negative-tint:rgba(226,75,74,.15); --shadow:none;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--cream);color:var(--ink);
+  font:400 14px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased}
+code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+button{font:inherit;color:inherit;cursor:pointer}
+.wrap{max-width:860px;margin:0 auto;padding:0 16px;padding-block:22px}
+header.page{border-bottom:1px solid var(--card-border);padding-bottom:14px;margin-bottom:18px}
+.hrow{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;justify-content:space-between}
+h1{margin:0;font-size:26px;font-weight:500;letter-spacing:-.02em}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);margin-bottom:5px}
+.sub{margin:6px 0 0;font-size:13px;color:var(--ink-soft)}
+.actions{display:flex;flex-wrap:wrap;gap:7px}
+.btn{background:var(--card);border:1px solid var(--card-border);border-radius:9px;padding:7px 12px;font-size:13px;font-weight:500}
+.btn:hover{border-color:var(--ink-faint)}
+.btn.primary{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+.card{background:var(--card);border:1px solid var(--card-border);border-radius:14px;padding:20px;box-shadow:var(--shadow);margin-bottom:16px}
+.lbl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted)}
+h2{margin:0;font-size:20px;font-weight:500;letter-spacing:-.02em}
+h3{margin:0 0 4px;font-size:15px;font-weight:500}
+.verdict{display:grid;grid-template-columns:1fr;gap:1px;background:var(--inner-border);
+  border:1px solid var(--card-border);border-radius:14px;overflow:hidden;margin-bottom:16px}
+.vrow{background:var(--card);padding:13px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.vrow .nm{font-size:14px}
+.tag{font-size:11px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;padding:4px 10px;border-radius:999px}
+.tag.change{background:var(--negative-tint);color:var(--negative)}
+.tag.nochange{background:var(--positive-tint);color:var(--positive)}
+.fld{margin-top:15px;padding-top:14px;border-top:1px solid var(--inner-border)}
+.fld .k{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);margin-bottom:5px}
+.v{font-size:13.5px;line-height:1.6}
+.v p{margin:0 0 8px}.v p:last-child{margin-bottom:0}
+code{background:var(--field);border:1px solid var(--inner-border);border-radius:5px;padding:.5px 4px;font-size:12px}
+table{border-collapse:collapse;width:100%;margin:8px 0;font-size:12.5px}
+th,td{text-align:left;padding:6px 9px;border-bottom:1px solid var(--inner-border);vertical-align:top}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-muted);font-weight:500}
+.tblwrap{overflow-x:auto}
+.pill{display:inline-block;font-size:11px;font-weight:500;letter-spacing:.04em;padding:3px 9px;border-radius:999px;
+  background:var(--positive-tint);color:var(--positive);text-transform:uppercase}
+.choices{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.ch{background:var(--card);border:1px solid var(--card-border);border-radius:9px;padding:9px 15px;font-size:13px;font-weight:500;display:flex;gap:8px;align-items:center}
+.ch kbd{font-size:10px;background:var(--field);border:1px solid var(--inner-border);border-radius:4px;padding:1px 5px;color:var(--ink-muted)}
+.ch:hover{border-color:var(--ink-faint)}
+.ch[aria-pressed="true"]{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+.ch[aria-pressed="true"] kbd{background:transparent;border-color:currentColor;color:inherit}
+textarea{width:100%;margin-top:11px;background:var(--field);border:1px solid var(--card-border);border-radius:9px;
+  padding:10px 12px;font:inherit;font-size:13px;color:var(--ink);resize:vertical;min-height:64px}
+textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.hint{font-size:11px;color:var(--ink-faint);margin-top:6px}
+.keys{margin-top:14px;font-size:11.5px;color:var(--ink-muted);display:flex;flex-wrap:wrap;gap:5px 14px}
+.keys kbd{font-size:10.5px;background:var(--card);border:1px solid var(--card-border);border-radius:4px;padding:1.5px 5px;color:var(--ink-soft)}
+.note{background:var(--field);border:1px solid var(--card-border);border-left:3px solid var(--warning);
+  border-radius:9px;padding:11px 13px;font-size:12.5px;color:var(--ink-soft);margin-top:12px}
+.saved{font-size:11.5px;color:var(--ink-muted);margin-top:10px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:var(--cream);
+  padding:10px 18px;border-radius:9px;font-size:13px;box-shadow:0 4px 14px rgba(0,0,0,.16);z-index:50}
+.toast[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="page">
+    <div class="hrow">
+      <div>
+        <div class="eyebrow">Financieel audit · Session 4</div>
+        <h1>Structure Review</h1>
+        <p class="sub">One decision. <code>STRUCTURE-REVIEW.md</code> stays canonical — this is just an input device.</p>
+      </div>
+      <div class="actions">
+        <button class="btn" id="theme">Theme</button>
+        <button class="btn" id="import">Import JSON</button>
+        <button class="btn" id="copy">Copy</button>
+        <button class="btn primary" id="export">Export</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="verdict">
+    <div class="vrow"><span class="nm">Root &amp; docs hygiene</span><span class="tag change">Change needed</span></div>
+    <div class="vrow"><span class="nm"><code>src/</code> structure</span><span class="tag nochange">No change needed</span></div>
+  </div>
+
+  <div class="card">
+    <div class="lbl">Context · no decision required</div>
+    <h3 style="margin-top:6px">Why <code>src/</code> gets no proposals</h3>
+    <div class="v">
+      <p>The <code>lib/</code> / <code>components/</code> / <code>pages/</code> split is holding up at 96 files. I looked for specific failures rather than assuming, and found none:</p>
+      <div class="tblwrap"><table>
+        <tr><th>Check</th><th>Result</th></tr>
+        <tr><td>Does <code>lib/</code> import upward from <code>components/</code> or <code>pages/</code>?</td><td>No — zero hits</td></tr>
+        <tr><td>Does <code>components/</code> import from <code>pages/</code>?</td><td>No — zero hits</td></tr>
+        <tr><td>Circular imports across all 31 lib modules?</td><td>None</td></tr>
+        <tr><td>Anything misfiled?</td><td>No</td></tr>
+        <tr><td>Would a <code>hooks/</code> folder help?</td><td>It would hold two one-line <code>useContext</code> wrappers</td></tr>
+      </table></div>
+      <p>The one real problem is three oversized page components — <code>Income.jsx</code> (1225 lines), <code>Import.jsx</code> (1194), <code>WalletDetail.jsx</code> (989). That is a refactor, not a relocation; nothing under <code>src/pages/</code> has a test to catch a mistake; and it would collide with <code>b/budgeting-performance</code>, which you chose to keep. <strong>Recorded for the scope discussion, not proposed.</strong></p>
+      <p>For reference, had I proposed a move: 32 of 96 <code>src/</code> files import from <code>lib/</code> and 9 from <code>components/</code>, so renaming either rewrites imports in at least 41 files.</p>
+    </div>
+  </div>
+
+  <div class="card" id="block">
+    <div class="lbl">Root &amp; docs hygiene · 1 of 1</div>
+    <h2 style="margin-top:6px">S-001 · Move six feature specs into <code>docs/plans/</code></h2>
+    <div style="margin-top:10px"><span class="pill">Proposed: MOVE</span></div>
+
+    <div class="fld"><div class="k">What it is</div><div class="v">
+      <p><code>budgeting-page-plan.md</code>, <code>pdf-import-plan.md</code>, <code>kbc-adapter-spec.md</code>, <code>kbc-csv-import-background.md</code>, <code>encryption-with-key-plan.md</code>, <code>backup-restore-feature-plan.md</code> — 1,553 lines of feature-specific specification currently in the repository root.</p>
+    </div></div>
+
+    <div class="fld"><div class="k">Why it may go</div><div class="v">
+      <p>After the Session 3 cleanup the root holds <strong>11 markdown files</strong>. Five are entry points; six only matter once you are already deep in a feature. Moving the six leaves a root where every markdown file is somewhere you would actually start.</p>
+      <p><code>docs/archive/</code> and <code>docs/audit/</code> already establish that <code>docs/</code> is where non-entry documentation lives — these six simply never moved there.</p>
+    </div></div>
+
+    <div class="fld"><div class="k">Risk if actioned</div><div class="v">
+      <p>Low, but not zero. Four of the six are cited from <strong>inside working source code</strong> as authoritative specs:</p>
+      <div class="tblwrap"><table>
+        <tr><th>Spec</th><th>Cited from</th></tr>
+        <tr><td><code>budgeting-page-plan.md</code></td><td><code>resolveCappedInflow.js:1</code>, <code>budgetPlan.js:1</code>, <code>budgetFlowLayout.js:1</code>, 4 components, 2 migrations — and CLAUDE.md rule 7 calls it "authoritative"</td></tr>
+        <tr><td><code>pdf-import-plan.md</code></td><td><code>dedupe.js</code>, <code>detectBank.js</code>, <code>buildRows.js</code>, <code>normalize.js</code>, <code>suggestWallet.js</code>, <code>types.js</code>, <code>Import.jsx</code>, 2 migrations</td></tr>
+        <tr><td><code>kbc-adapter-spec.md</code></td><td><code>banks/kbc.js</code>, <code>normalize.js</code>, <code>kbc.test.js</code>, 1 migration</td></tr>
+        <tr><td><code>kbc-csv-import-background.md</code></td><td><code>banks/kbcCsv.js</code>, <code>matchRecurring.js</code>, <code>reconcile.js</code>, <code>monthlySnapshots.js</code>, <code>Import.jsx</code>, 1 migration</td></tr>
+      </table></div>
+      <p><strong>No code imports them</strong> — every citation is a comment naming the file and a section. So the build, the tests and the app cannot break, and a bare filename stays greppable after a move. What does change: the citations become imprecise, and CLAUDE.md, PROJECT-CONTEXT.md §9 and PHASE-ROADMAP.md name several by path and need updating. That is already Session 5's task and should be folded into it rather than done twice.</p>
+    </div></div>
+
+    <div class="fld"><div class="k">Alternative</div><div class="v">
+      <p>Leave them. Eleven markdown files in a root is untidy, not broken, and every one is findable by name anyway. If the answer is <code>no</code>, nothing downstream changes — Session 5 proceeds identically.</p>
+    </div></div>
+
+    <div class="note">Not proposed: moving <code>docs/wallets.png</code>, <code>docs/income.png</code> and <code>docs/settings.png</code> into <code>docs/mockups/</code>. They are cited by exact path at <code>DESIGN-SPEC.md:183</code>, and breaking a citation in a protected file to tidy three files is a bad trade.</div>
+
+    <div class="fld" style="border-top-color:var(--card-border)">
+      <div class="k">Your decision</div>
+      <div class="choices">
+        <button class="ch" data-v="ok"><kbd>1</kbd>ok</button>
+        <button class="ch" data-v="no"><kbd>2</kbd>no</button>
+        <button class="ch" data-v="defer"><kbd>3</kbd>defer</button>
+      </div>
+      <textarea id="notes" placeholder="Notes — free text. Prefix with “note:” to give an instruction that overrides the decision."></textarea>
+      <div class="hint">ok = do the move · no = leave them in root · defer = revisit later. Blank means undecided and is left out of the export.</div>
+      <div class="saved" id="savedAt">Not saved yet</div>
+    </div>
+
+    <div class="keys">
+      <span><kbd>1</kbd> ok</span><span><kbd>2</kbd> no</span><span><kbd>3</kbd> defer</span>
+      <span><kbd>0</kbd> clear</span><span><kbd>Enter</kbd> notes</span><span><kbd>Esc</kbd> leave notes</span>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+'use strict';
+var KEY='financieel-audit-structure-v1';
+var state={}, dirty=false;
+
+function when(iso){ try{ return new Date(iso).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }catch(e){ return '—'; } }
+function load(){
+  try{ var raw=localStorage.getItem(KEY); if(!raw) return;
+    var o=JSON.parse(raw); state=o.decisions||{};
+    if(o.savedAt) document.getElementById('savedAt').textContent='Saved '+when(o.savedAt);
+  }catch(e){ state={}; }
+}
+function save(){
+  try{
+    var now=new Date().toISOString();
+    localStorage.setItem(KEY,JSON.stringify({document:'STRUCTURE-REVIEW.md',key:KEY,savedAt:now,decisions:state}));
+    document.getElementById('savedAt').textContent='Saved '+when(now); dirty=false;
+  }catch(e){ document.getElementById('savedAt').textContent='Could not save to this browser — use Export'; dirty=true; }
+}
+function paint(){
+  var d=(state['S-001']||{}).decision||'';
+  document.querySelectorAll('.ch').forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.v===d)); });
+  var ta=document.getElementById('notes');
+  if(document.activeElement!==ta) ta.value=(state['S-001']||{}).notes||'';
+}
+function set(v){
+  var s=state['S-001']||(state['S-001']={});
+  if(v) s.decision=v; else delete s.decision;
+  if(!s.decision && !(s.notes&&s.notes.trim())) delete state['S-001'];
+  save(); paint();
+}
+document.querySelectorAll('.ch').forEach(function(b){
+  b.addEventListener('click',function(){ set(b.dataset.v===((state['S-001']||{}).decision)?'':b.dataset.v); });
+});
+var ta=document.getElementById('notes');
+ta.addEventListener('input',function(){
+  var s=state['S-001']||(state['S-001']={}); s.notes=ta.value;
+  if(!s.decision && !ta.value.trim()) delete state['S-001'];
+  dirty=true; save();
+});
+ta.addEventListener('keydown',function(e){ if(e.key==='Escape') ta.blur(); e.stopPropagation(); });
+
+function payload(){
+  var out={}, s=state['S-001'];
+  if(s){ var o={}; if(s.decision) o.decision=s.decision; if(s.notes&&s.notes.trim()) o.notes=s.notes.trim();
+    if(Object.keys(o).length) out['S-001']=o; }
+  return JSON.stringify({
+    document:'STRUCTURE-REVIEW.md', key:KEY, exportedAt:new Date().toISOString(),
+    verdict:{ rootAndDocs:'CHANGE NEEDED', src:'NO CHANGE NEEDED' },
+    total:1, answered:Object.keys(out).length, decisions:out
+  },null,2);
+}
+function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.hidden=false;
+  clearTimeout(toast._t); toast._t=setTimeout(function(){ t.hidden=true; },2600); }
+
+document.getElementById('export').addEventListener('click',function(){
+  var b=new Blob([payload()],{type:'application/json'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='structure-decisions.json';
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },0);
+  dirty=false; toast('Exported structure-decisions.json → move it into docs/audit/');
+});
+document.getElementById('copy').addEventListener('click',function(){
+  var txt=payload();
+  function fb(){ var t=document.createElement('textarea'); t.value=txt; t.style.position='fixed'; t.style.opacity='0';
+    document.body.appendChild(t); t.select();
+    try{ document.execCommand('copy'); toast('Copied — paste into docs/audit/structure-decisions.json'); }
+    catch(e){ toast('Could not copy — use Export instead'); } t.remove(); }
+  if(navigator.clipboard&&navigator.clipboard.writeText)
+    navigator.clipboard.writeText(txt).then(function(){ dirty=false; toast('Copied — paste into docs/audit/structure-decisions.json'); },fb);
+  else fb();
+});
+document.getElementById('import').addEventListener('click',function(){
+  var i=document.createElement('input'); i.type='file'; i.accept='application/json,.json';
+  i.addEventListener('change',function(){
+    var f=i.files&&i.files[0]; if(!f) return;
+    var r=new FileReader();
+    r.onload=function(){ try{ var o=JSON.parse(r.result); if(!o||!o.decisions) throw 0;
+      state=o.decisions; save(); paint(); toast('Imported'); }catch(e){ toast('That file is not a decisions export'); } };
+    r.readAsText(f);
+  });
+  i.click();
+});
+document.getElementById('theme').addEventListener('click',function(){
+  var cur=document.documentElement.getAttribute('data-theme');
+  var dark=cur? cur==='dark' : (window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches);
+  document.documentElement.setAttribute('data-theme',dark?'light':'dark');
+  try{ localStorage.setItem(KEY+':theme',dark?'light':'dark'); }catch(e){}
+});
+try{ var th=localStorage.getItem(KEY+':theme'); if(th) document.documentElement.setAttribute('data-theme',th); }catch(e){}
+
+document.addEventListener('keydown',function(e){
+  var t=(e.target.tagName||'').toLowerCase();
+  if(t==='textarea'||t==='input') return;
+  if(e.metaKey||e.ctrlKey||e.altKey) return;
+  if(e.key==='1') { e.preventDefault(); set('ok'); }
+  else if(e.key==='2'){ e.preventDefault(); set('no'); }
+  else if(e.key==='3'){ e.preventDefault(); set('defer'); }
+  else if(e.key==='0'){ e.preventDefault(); set(''); }
+  else if(e.key==='Enter'){ e.preventDefault(); ta.focus(); }
+});
+window.addEventListener('beforeunload',function(e){ if(dirty){ e.preventDefault(); e.returnValue=''; } });
+
+load(); paint();
+})();
+</script>
+</body>
+</html>
