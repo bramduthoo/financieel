@@ -418,3 +418,82 @@ authoritative wherever it overlaps an earlier entry.
 No outstanding prerequisites. The one decision still open is `S-001`, and it has been **executed**
 (commit `d666165`, owner approved 2026-09-14), so Session 5 inherits a root of five markdown files
 and six specs under `docs/plans/`.
+
+---
+
+## Session 5 — DOCS PROPOSAL (nothing applied yet)
+
+- **Date:** 2026-09-14
+- **Model:** Claude Opus 5 (`claude-opus-5`)
+- **Branch:** `b/audit-cleanup`
+- **Status:** proposal written and awaiting decisions. **No document has been edited.** Per
+  `AUDIT-BRIEF.md` §4, Session 5 proposes before applying; the edits are a second pass that runs
+  only after the owner marks blocks.
+
+### Produced
+
+| File | Contents |
+|---|---|
+| `docs/audit/DOCS-PROPOSAL.md` | 22 `D-` decision blocks in five sections, ordered safest-first. |
+| `docs/audit/docs-review.html` | Review interface per the addendum. `localStorage` key `financieel-audit-docs-v1`, exports `docs-decisions.json`. Shows each block as *currently says → actually true → what I propose*, colour-coded. |
+
+### ⚠ Naming collision — later sessions must not trip on this
+
+`AUDIT-BRIEF.md` §3 reserves the `D-` prefix for **docs proposals**. Session 1 had already used
+`D-01 … D-23` for **discrepancies** in `DISCREPANCIES.md`. Both now exist.
+
+Convention adopted, and used consistently in `DOCS-PROPOSAL.md` and `docs-review.html`:
+- **`D-01 … D-22`** = docs-proposal blocks (this session, per the brief).
+- **`DISC-nn`** = a discrepancy, which `DISCREPANCIES.md` itself labels `D-nn`.
+
+Nothing was renamed in `DISCREPANCIES.md` — renaming a committed artefact mid-operation would be
+worse than the footnote. **Session 6 should use `Q-` and will not collide.**
+
+### Shape of the proposal
+
+| Section | Blocks | What |
+|---|--:|---|
+| §1 Path repairs from Sessions 3–4 | D-01 … D-05 | Mechanical debt I created by archiving/deleting/moving files |
+| §2 Live-DB factual corrections | D-06 … D-09 | Things the 2026-09-14 queries proved wrong |
+| §3 Stale status claims | D-10 … D-13 | Shipped work documented as pending |
+| §4 Rule and tooling corrections | D-14 … D-18 | `CLAUDE.md` / `PROJECT-CONTEXT.md` claims the code contradicts |
+| §5 Structural | D-19 … D-22 | The three the brief requires, plus the `README.md` from C-016 |
+
+The three brief-mandated structural requirements are **D-19** (status gets one home: `PROJECT-CONTEXT.md`
+§6, with `PHASE-ROADMAP.md` and the plan files demoted to pointers), **D-20** (a new
+`OPEN-QUESTIONS.md` seeded with 10 collected questions), and **D-22** (§7 preserved under ground
+rule 5 — grouped by theme, two entries marked superseded, **zero deletions**).
+
+### Judgement calls worth knowing about
+
+1. **D-16 cannot be executed without an answer.** Whether this is still a two-person project is a
+   fact about the owner's life, not the repo, so the block offers (a) keep the two-person framing
+   and fix only the branch convention, or (b) make it single-maintainer. The owner must pick one in
+   the Notes field.
+2. **D-22 argues against itself on purpose.** Ground rule 5 calls the decision log the most
+   valuable artefact in the repo; regrouping it produces a large diff where an accidental change
+   would be easy to miss. The block says plainly that `no` costs nothing.
+3. **Nothing in `Cursus/` is proposed**, although four of its chapters cite the deleted
+   `ARCHITECTURE.md`. It is a frozen June teaching artefact already marked outdated-on-schema by two
+   documents; rewriting it is its own project.
+4. **Source-code comments are not touched** by D-05. The ~15 citations of moved spec files use bare
+   filenames, which stay greppable. Editing working code to fix a comment path would put diff noise
+   into money code for no gain.
+5. **Two known-cheap code fixes are routed to the register rather than done** — the four raw palette
+   classes in `src/App.jsx` (D-15) and the 44 lint problems (D-14). Ground rule 8: record, do not act.
+
+### Verification
+
+`docs-review.html` was served locally and driven in a browser: renders in the project's tokens,
+**zero page console errors**, keyboard navigation and autosave work. Embedded JSON parsed with
+`node`: 22 blocks, no duplicate ids, no block missing a required field, section counts match the
+markdown summary table (5/4/4/5/4), zero network references. `.playwright-mcp/` was recreated by
+that run and removed again.
+
+### What the owner must do before the Session 5 edits can run
+
+1. **Decide the 22 blocks** — `docs/audit/docs-review.html` → Export → drop `docs-decisions.json`
+   into `docs/audit/`, or edit `DECISION:` in `DOCS-PROPOSAL.md` directly.
+2. **D-16 needs (a) or (b) in its Notes**, or it will be reported as skipped.
+3. **D-20 optionally needs a location** — `OPEN-QUESTIONS.md` in the root (my lean) or under `docs/`.
+4. Partial decisions are fine; blocks left `?` are never executed.
