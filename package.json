@@ -15,14 +15,10 @@
     "@supabase/supabase-js": "^2.106.0",
     "date-fns": "^4.2.1",
     "lucide-react": "^1.16.0",
-    "path-key": "^4.0.0",
     "pdfjs-dist": "6.1.200",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "react-is": "^19.2.7",
-    "react-router-dom": "^7.15.1",
-    "sql": "^0.78.0",
-    "supabase": "^2.105.0"
+    "react-router-dom": "^7.15.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
