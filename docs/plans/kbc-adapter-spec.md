@@ -1,5 +1,7 @@
 # KBC adapter spec — "Export KBC Mobile" per-transaction PDF
 
+> **Status: see `PROJECT-CONTEXT.md` §6.** Shipped as part of PR #17. Kept as the living spec that src/lib/import/banks/kbc.js cites.
+
 > Derived from a real anonymized statement (2026-07-26). Card-payment layout CONFIRMED.
 > Transfer / domiciliëring / incoming-credit layouts NOT YET SEEN — flagged below.
 > Fixtures: test-fixtures/kbc-mobile-export/. Do not invent unseen layouts; request a

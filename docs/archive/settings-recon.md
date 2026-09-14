@@ -1,5 +1,7 @@
 # Settings-page reconnaissance
 
+> **Status: see `PROJECT-CONTEXT.md` §6.** ARCHIVED - consumed by PR #6, 2026-07-09. Kept for its reasoning, not for instruction.
+
 Report-only recon for the upcoming settings-page **planning** session. No code changes were made.
 Findings are cited to files/lines as of branch `b/testing-finish` (2026-07-08). Decisions happen in
 the planning session — this is an inventory with a recommendation per item.

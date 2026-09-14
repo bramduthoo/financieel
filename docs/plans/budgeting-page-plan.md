@@ -1,5 +1,7 @@
 # budgeting-page-plan.md — Budgeting feature (phase context + kickoff prompts)
 
+> **Status: see `PROJECT-CONTEXT.md` §6.** Budgeting Phases A/B/B2 shipped (PRs #14-#16). Phase C is unmerged - see OPEN-QUESTIONS.md Q1. This file remains the authoritative spec for the capped-wallet mechanic (CLAUDE.md rule 7).
+
 > Authoritative record for the **Budgeting** feature: the salary-driven distribution control/overview
 > page, plus the capped-wallet mechanic fix it depends on, plus the planned-vs-used analytics. Holds
 > every decision made for this feature so a fresh chat or Claude Code session can continue with full

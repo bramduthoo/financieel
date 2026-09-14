@@ -1,5 +1,7 @@
 # Client-side encryption plan for Financieel
 
+> **Status: see `PROJECT-CONTEXT.md` §6.** NOT BUILT. See PHASE-ROADMAP.md Phase C. Two open discussions remain unresolved inside.
+
 Handoff note to kickstart adding client-side encryption so that not even the
 database admin can read users' sensitive financial data. Feed this back into a
 conversation to resume the topic.

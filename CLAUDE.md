@@ -2,18 +2,26 @@
 
 Personal-finance web app built around a **wallet** model: income arrives, gets distributed
 across wallets (fixed / variable / capped / investment / Unallocated), balances and projections
-are tracked. Two-person project: Bram (`b/` branches) and Wouter (`f/` branches).
+are tracked. Single-maintainer project: Bram, working on `b/` branches.
 
 > **Ground truth hierarchy:** live Supabase DB > `PROJECT-CONTEXT.md` > this file > everything
-> else. `ARCHITECTURE.md` and `Cursus/` docs are OUTDATED on schema. Never assume schema or
-> file contents — read the real thing first.
+> else. The `Cursus/` docs are OUTDATED on schema — never trust them. (A former `ARCHITECTURE.md`
+> was retired to a pointer and then deleted in 2026-09; if you find a copy in git history, it is
+> wrong.) Never assume schema or file contents — read the real thing first.
+>
+> **Status lives in `PROJECT-CONTEXT.md` §6 and nowhere else.** If any other document appears to
+> assert what is or is not built, it is stale — trust §6. Open decisions live in
+> `OPEN-QUESTIONS.md`.
 
 ## Commands
 
 - Dev server: `npm run dev` (Vite, http://localhost:5173)
 - Build: `npm run build`
 - Preview built app: `npm run preview`
-- Lint: `npm run lint` (ESLint flat config, `eslint.config.js`)
+- Lint: `npm run lint` (ESLint flat config, `eslint.config.js`) — **currently fails**: 44
+  pre-existing problems (33 errors, 11 warnings) as of 2026-09-14, incl. 11
+  `react-hooks/static-components`. Treat that count as the baseline; your change must not raise it.
+  **CI does not run lint** — only `npm test` — so nothing else will catch a regression.
 - Tests: `npm test` (Vitest, one-shot) / `npm run test:watch`. Behaviour tests for `src/lib/`
   pure logic live in `src/lib/*.test.js`; scope/decisions in `docs/testing-notes.md`. A Stop hook
   also runs `npm test` on session end; CI runs it on every PR.
@@ -54,12 +62,14 @@ remove it).
    automated/recurring income (fill to `cap_max` at full rate → reduce the part above the ceiling to
    `cap_reduction_rate` → overflow to `overflow_wallet_id` else Unallocated). Math lives in pure
    `src/lib/resolveCappedInflow.js`; `cap_reduction_enabled` is a dead column. Don't "simplify" this —
-   it's intentional. See `budgeting-page-plan.md` §4 (authoritative) + PROJECT-CONTEXT.md §7.
+   it's intentional. See `docs/plans/budgeting-page-plan.md` §4 (authoritative) + PROJECT-CONTEXT.md §7.
 
 ## Design system (locked — do not deviate without explicit approval)
 
 Live system is **"the blend"** — authority is `DESIGN-SPEC.md`; tokens are defined in `src/index.css`
-(`@theme` + `.dark` overrides). **Reskin rollout is complete** (R1 + R2): the whole app uses the tokens.
+(`@theme` + `.dark` overrides). **Reskin rollout is complete** (R1 + R2) **with one known exception**:
+`src/App.jsx` still uses raw Tailwind palette classes in the pre-session loading screen and the signup
+welcome banner. Everything else in `src/` uses the tokens.
 Prefer the token utilities over raw hex; wallets are identified by their icon (`src/lib/walletIcons.js`
 `<WalletIcon>`), not colour.
 
@@ -75,13 +85,18 @@ Prefer the token utilities over raw hex; wallets are identified by their icon (`
 
 ## Workflow conventions
 
-- **First-time machine setup (per clone, not carried by the repo).** Cloning gives you `CLAUDE.md`,
+- **New-machine setup (per clone, not carried by the repo).** Cloning gives you `CLAUDE.md`,
   the project skills (`.claude/skills/`), hooks, and the plugin *enablement* + marketplace in
   `.claude/settings.json` — but **not** the plugin *installs* or per-machine git config. On a new
-  machine: (1) install the official plugins once (`context7`, `supabase`, `playwright`, `github`
-  from `claude-plugins-official` — the marketplace is pre-declared via `extraKnownMarketplaces`,
-  so Claude Code can offer to install the enabled ones); (2) `git config --global fetch.prune true`.
-  GitHub's auto-delete-on-merge is server-side, so it already applies to everyone.
+  machine: (1) install the seven official plugins once — `context7`, `supabase`, `playwright`,
+  `github`, `frontend-design`, `code-review`, `typescript-lsp` from `claude-plugins-official` (the
+  marketplace is pre-declared via `extraKnownMarketplaces`, so Claude Code can offer to install the
+  enabled ones); (2) `git config --global fetch.prune true`.
+  GitHub's auto-delete-on-merge is server-side, so it already applies.
+- **Supabase MCP auth gotcha.** The plugin starts each session needing authorization. If the consent
+  link returns `{"message":"Unrecognized client_id"}` **repeatedly**, the cause is usually a
+  long-running session caching a dead client registration in memory — **restart Claude Code** before
+  touching `~/.claude/.credentials.json`. (Verified 2026-09-14.)
 - **Sync before branching (every session).** Start with `git fetch origin --prune`, fast-forward
   local `main` (`git switch main && git pull --ff-only`), then cut new work from fresh upstream:
   `git switch -c b/foo origin/main` — never off a stale local `main`. GitHub auto-deletes merged
@@ -104,9 +119,18 @@ Prefer the token utilities over raw hex; wallets are identified by their icon (`
 
 ## Key references (read on demand, don't preload)
 
-- `PROJECT-CONTEXT.md` — master context: schema (§4), features (§5), current standing (§6),
-  decision log (§7), gotchas (§8). Read §6–§7 at the start of any feature session.
-- `distribution-unallocated-plan.md`, `testing-setup-plan.md`, `backup-restore-feature-plan.md`,
-  `encryption-with-key-plan.md` — phase plans.
+- `PROJECT-CONTEXT.md` — master context: schema (§4), features (§5), **current status (§6 — the
+  only place status is asserted)**, decision log (§7), gotchas (§8). Read §6–§7 at the start of any
+  feature session.
+- `OPEN-QUESTIONS.md` — decisions currently waiting on the owner.
+- `PHASE-ROADMAP.md` — how to start work that has **not** started. Carries no status.
+- `docs/plans/backup-restore-feature-plan.md`, `docs/plans/encryption-with-key-plan.md` — plans for
+  phases **not yet built**.
+- `docs/plans/` also holds the specs for shipped features that source code still cites:
+  `budgeting-page-plan.md`, `pdf-import-plan.md`, `kbc-adapter-spec.md`,
+  `kbc-csv-import-background.md`.
+- `docs/archive/` — consumed plans, kept for their reasoning, **not** for instruction.
+- `docs/audit/` — the 2026-09 audit that produced this structure (inventory, discrepancies,
+  decisions, journal).
 - `src/lib/distributeIncome.js`, `src/components/DistributionPopup.jsx` — the heart of the
   distribution system.

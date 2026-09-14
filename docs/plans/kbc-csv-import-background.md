@@ -1,5 +1,7 @@
 # kbc-csv-import-background.md — format facts & design decisions (BACKGROUND ONLY)
 
+> **Status: see `PROJECT-CONTEXT.md` §6.** Shipped as PR #18, 2026-07-30. Background only - kept as the living format reference that src/lib/import/ cites.
+
 > Reference/context for the KBC monthly CSV import feature. This file is background only —
 > it contains NO build instructions. The build steps live in the separate
 > `kbc-csv-import-instructions.md`. Keep the two apart on purpose.

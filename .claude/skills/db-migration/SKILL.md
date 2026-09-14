@@ -14,7 +14,7 @@ forward.
 
 Query the **live** schema for every table/function you'll touch, via the read-only Supabase
 MCP (`list_tables`, `execute_sql` against `information_schema` / `pg_policies` /
-`pg_proc`). Never trust ARCHITECTURE.md, Cursus/, or memory. Confirm current state matches
+`pg_proc`). Never trust `Cursus/`, a stale doc, or memory. Confirm current state matches
 your assumption; if it doesn't, stop and report.
 
 ## 1. Draft the migration as a file in the repo

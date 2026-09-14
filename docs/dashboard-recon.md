@@ -3,7 +3,10 @@
 > Read-only inventory for the chat-side dashboard redesign session. No code or DB was
 > changed. Ground truth: live Supabase (`duyttdjfvblhhjihybal`) + `src/pages/Dashboard.jsx`
 > as of branch `b/workflow-sync-protocol`, 2026-07-16.
-> Screenshots live in **`/screens`** (not `docs/`), test account `bram.duthoo+claudetest`.
+> Screenshots **no longer exist** — see §4. Test account `bram.duthoo+claudetest`.
+>
+> **Status:** this is recon for a phase that has not started. Status lives in
+> `PROJECT-CONTEXT.md` §6.
 
 ---
 
@@ -150,19 +153,19 @@ via `<title>`.
 
 ---
 
-## 4. Screenshots (in `/screens`, test acct, desktop 1440px unless noted)
+## 4. Screenshots — **GONE, must be re-captured**
 
-| File | Page | Theme | Width |
-|---|---|---|---|
-| `dashboard_light_1440.png` | Dashboard | light | 1440 |
-| `dashboard_dark_1440.png` | Dashboard | dark | 1440 |
-| `dashboard_light_390.png` | Dashboard (mobile) | light | 390 |
-| `wallets_light_1440.png` | Wallets | light | 1440 |
-| `wallets_dark_1440.png` | Wallets | dark | 1440 |
-| `walletdetail_unalloc_light_1440.png` | WalletDetail (Unallocated) | light | 1440 |
-| `walletdetail_unalloc_dark_1440.png` | WalletDetail (Unallocated) | dark | 1440 |
-| `income_light_1440.png` | Income | light | 1440 |
-| `income_dark_1440.png` | Income | dark | 1440 |
+This section used to list nine screenshots under `/screens` (Dashboard light/dark/mobile, Wallets
+light/dark, WalletDetail-Unallocated light/dark, Income light/dark), captured on the test account at
+1440px.
+
+**They were deleted in the 2026-09 cleanup** (audit block C-009). `/screens` was gitignored, so
+there is **no copy in git history** — they are not recoverable.
+
+**Before starting Phase 2, re-capture the baseline:** log in with the test account from
+`.env.test.local`, and screenshot Dashboard (light, dark, and 390px), Wallets, WalletDetail on the
+Unallocated wallet, and Income — both themes. Everything else in this document still stands; only
+the images are missing.
 
 **Data-density caveat.** The test account (`bram.duthoo+claudetest`) is **usable but thin**:
 4 active wallets (fixed "Rent" €500/€1200, variable-capped "Clothing" €120/€400,

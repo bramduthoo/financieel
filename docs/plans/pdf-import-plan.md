@@ -1,5 +1,7 @@
 # pdf-import-plan.md — PDF bank-statement import (Phase 3)
 
+> **Status: see `PROJECT-CONTEXT.md` §6.** Shipped as PR #17, 2026-07-26. Kept as the living spec that src/lib/import/ cites by section.
+
 > Companion plan file for the PDF import phase. Read together with PROJECT-CONTEXT.md and
 > DESIGN-SPEC.md. Strategy decided in the phase-3 design chat (2026-07-11). Maintain like
 > PROJECT-CONTEXT: fold decisions back in as they land.

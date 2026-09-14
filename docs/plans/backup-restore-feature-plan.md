@@ -1,5 +1,7 @@
 # Backup and restore (export/import) feature plan for Financieel
 
+> **Status: see `PROJECT-CONTEXT.md` §6.** NOT BUILT. See PHASE-ROADMAP.md Phase B. This plan predates the two-tier reset, the unallocated_* tables and both import sources - reconcile it before building.
+
 Handoff note to kickstart building a local data backup and restore feature.
 Feed this back into a conversation to resume the topic.
 

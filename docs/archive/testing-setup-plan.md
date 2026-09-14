@@ -1,5 +1,7 @@
 # Testing and CI setup plan for Financieel
 
+> **Status: see `PROJECT-CONTEXT.md` §6.** ARCHIVED - shipped as PR #4, 2026-07-07. Kept for its reasoning. The living record is docs/testing-notes.md.
+
 This document is a handoff note to kickstart setting up automated testing,
 continuous integration, and merge protection for the Financieel project.
 Feed it back into a conversation to resume this topic from a shared starting point.

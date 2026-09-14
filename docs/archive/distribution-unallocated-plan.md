@@ -1,5 +1,7 @@
 # Finishing the Distribution Logic & Unallocated Wallet
 
+> **Status: see `PROJECT-CONTEXT.md` §6.** ARCHIVED - this phase is DONE. Kept for its reasoning, not for instruction. The text below still calls itself the ACTIVE phase; it is not, and has not been since 2026-07.
+
 > Companion to PROJECT-CONTEXT.md. Read that first for full project state. This file covers the
 > ACTIVE phase: finishing income-distribution edit (Fix C), then building the Unallocated wallet
 > outbound interface (Stage 4). Schema for all of this ALREADY EXISTS in the live DB.

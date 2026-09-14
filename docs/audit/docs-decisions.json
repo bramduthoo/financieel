@@ -1,0 +1,76 @@
+{
+  "document": "DOCS-PROPOSAL.md",
+  "key": "financieel-audit-docs-v1",
+  "exportedAt": "2026-09-14T12:44:52.467Z",
+  "total": 22,
+  "answered": 22,
+  "decisions": {
+    "D-01": {
+      "decision": "ok"
+    },
+    "D-02": {
+      "decision": "ok"
+    },
+    "D-03": {
+      "decision": "ok"
+    },
+    "D-04": {
+      "decision": "ok"
+    },
+    "D-05": {
+      "decision": "ok"
+    },
+    "D-06": {
+      "decision": "ok"
+    },
+    "D-07": {
+      "decision": "ok"
+    },
+    "D-08": {
+      "decision": "ok"
+    },
+    "D-09": {
+      "decision": "ok"
+    },
+    "D-10": {
+      "decision": "ok"
+    },
+    "D-11": {
+      "decision": "ok"
+    },
+    "D-12": {
+      "decision": "ok"
+    },
+    "D-13": {
+      "decision": "ok"
+    },
+    "D-14": {
+      "decision": "ok"
+    },
+    "D-15": {
+      "decision": "ok"
+    },
+    "D-16": {
+      "decision": "ok",
+      "notes": "b"
+    },
+    "D-17": {
+      "decision": "ok"
+    },
+    "D-18": {
+      "decision": "ok"
+    },
+    "D-19": {
+      "decision": "ok"
+    },
+    "D-20": {
+      "decision": "ok"
+    },
+    "D-21": {
+      "decision": "ok"
+    },
+    "D-22": {
+      "decision": "ok"
+    }
+  }
+}
