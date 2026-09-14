@@ -1,0 +1,76 @@
+{
+  "document": "CLEANUP-PROPOSAL.md",
+  "key": "financieel-audit-cleanup-v1",
+  "exportedAt": "2026-09-14T10:06:31.390Z",
+  "total": 21,
+  "answered": 21,
+  "decisions": {
+    "C-001": {
+      "decision": "ok"
+    },
+    "C-002": {
+      "decision": "ok"
+    },
+    "C-003": {
+      "decision": "ok"
+    },
+    "C-004": {
+      "decision": "ok"
+    },
+    "C-005": {
+      "decision": "ok"
+    },
+    "C-006": {
+      "decision": "ok"
+    },
+    "C-007": {
+      "decision": "ok"
+    },
+    "C-009": {
+      "decision": "no",
+      "notes": "they can be deleted"
+    },
+    "C-008": {
+      "decision": "ok"
+    },
+    "C-010": {
+      "decision": "no",
+      "notes": "delete"
+    },
+    "C-011": {
+      "decision": "no",
+      "notes": "delete"
+    },
+    "C-012": {
+      "decision": "ok"
+    },
+    "C-013": {
+      "decision": "ok"
+    },
+    "C-014": {
+      "decision": "ok"
+    },
+    "C-015": {
+      "decision": "ok"
+    },
+    "C-016": {
+      "decision": "ok"
+    },
+    "C-017": {
+      "decision": "no",
+      "notes": "delete"
+    },
+    "C-018": {
+      "decision": "ok"
+    },
+    "C-019": {
+      "decision": "ok"
+    },
+    "C-020": {
+      "decision": "ok"
+    },
+    "C-021": {
+      "decision": "ok"
+    }
+  }
+}

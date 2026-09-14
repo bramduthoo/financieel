@@ -216,3 +216,80 @@ unresolved. Reading `INVENTORY.md` §1 and deciding the following is the gate:
 > `supabase|5de00e37…` entry (a different project, `bljaqfeqkjaqvdxwbpkx`) were preserved. Only the
 > browser consent step remains outstanding. Left as an append rather than an edit, per the
 > append-only rule.
+
+---
+
+## Session 3 — CLEANUP EXECUTE — COMPLETE
+
+- **Date:** 2026-09-14
+- **Model:** Claude Opus 5 (`claude-opus-5`)
+- **Branch:** `b/audit-cleanup`
+- **Input:** `docs/audit/cleanup-decisions.json` (exported from the review interface,
+  2026-09-14T10:06Z — 21 of 21 answered)
+
+### Outcome: 21 executed, 0 skipped, 0 deferred
+
+| Batch | Commit | Blocks | Action |
+|---|---|---|---|
+| Vite starter leftovers | `9cd6330` | C-001 … C-005 | DELETE (tracked) |
+| Superseded screenshots | `d707f23` | C-010, C-011, C-012 | DELETE (tracked) — 27 files |
+| Consumed plan/recon docs | `ac869eb` | C-013, C-014, C-015 | ARCHIVE → `docs/archive/` |
+| Retired tombstone | `dab45fe` | C-017 | DELETE (tracked) |
+| Deps + build config | `65d3674` | C-018 … C-021 | DELETE (package.json, vite.config.js) |
+| Local artifact dirs | *(no commit — gitignored)* | C-006, C-007, C-008, C-009 | DELETE (disk only) |
+| README | *(no file action)* | C-016 | KEEP-BUT-FLAG — recorded, rewrite is Session 5's |
+
+### Four owner overrides honoured
+
+`cleanup-decisions.json` carried `decision: "no"` with a contradicting note on four blocks. Per
+`AUDIT-BRIEF.md` §3 ("or free text after `note:` which you must read and honour"), the note won:
+
+| Block | Proposed | Note | Executed as |
+|---|---|---|---|
+| C-010 | ARCHIVE | "delete" | DELETE |
+| C-011 | ARCHIVE | "delete" | DELETE |
+| C-017 | KEEP-BUT-FLAG | "delete" | DELETE |
+| C-009 | KEEP-BUT-FLAG | "they can be deleted" | DELETE — **confirmed with the owner before acting** |
+
+**C-009 was escalated rather than assumed.** It was the only irreversible item (gitignored, no git
+copy) and the only one whose note was permissive ("can be") rather than imperative. The owner was
+shown the consequence — `docs/dashboard-recon.md` §4 cites all nine screenshots by name for the
+unstarted Phase 2 rebuild — and chose permanent deletion. All of `screens/` is therefore gone.
+
+### Verification — no regression (gates run after the dependency change)
+
+| Gate | INVENTORY.md baseline | After cleanup | Verdict |
+|---|---|---|---|
+| `npm run build` | pass | pass, built in 2.79 s | ✅ |
+| `npm test` | 352 passed / 24 files | 352 passed / 24 files | ✅ |
+| `npm run lint` | 44 problems (33 err, 11 warn), exit 1 | 44 problems (33 err, 11 warn), exit 1 | ✅ identical |
+
+`npm install` removed 7 packages (253 → 194). **`lodash` is gone** (`npm ls lodash` → empty),
+taking the project's only critical advisory with it, and `sql`'s own moderate advisory too.
+
+**Honest note on the audit total:** it moved 10 → 11, not down. Three dev-side advisories
+(`vitest`, `@vitest/mocker`, `baseline-browser-mapping`) were published in the week between the
+2026-09-07 baseline and today. Unrelated to this change. Critical is now **0**, which was the point.
+
+### Correction to a Session 1 figure
+
+`INVENTORY.md` §3 and `CLEANUP-PROPOSAL.md` C-010 both say `docs/redesign-screenshots/` held **14**
+PNGs. It held **16** (the 30-PNG total for `docs/` was right; the split was 16/8/6, not 14/8/6).
+C-010 targeted the whole folder, so the executed action was correct either way. Recorded here
+rather than edited into the earlier files, per the append-only rule.
+
+### Doc-repair debt created — all of it Session 5's, none fixed here (ground rule 8)
+
+1. `PROJECT-CONTEXT.md:475` and `:623` cite the two deleted screenshot folders.
+2. `CLAUDE.md`'s "Key references" list and `PROJECT-CONTEXT.md` §9 name
+   `distribution-unallocated-plan.md` and `testing-setup-plan.md`, now under `docs/archive/`.
+3. **Eight files still name the deleted `ARCHITECTURE.md`:** `CLAUDE.md`, `PROJECT-CONTEXT.md`,
+   `pdf-import-plan.md`, `.claude/skills/db-migration/SKILL.md`, and four `Cursus/` chapters. Most
+   are *warnings not to trust it*, so they need rewording, not a path fix.
+4. `docs/dashboard-recon.md` §4 now cites nine screenshots that no longer exist anywhere.
+5. `CLAUDE.md`'s first-time-setup and `PROJECT-CONTEXT.md` §2 may mention removed dependencies.
+
+### What the owner must do before Session 5
+
+Nothing blocking. Session 4 (structure review) is read-only and independent of all of the above.
+The Supabase MCP consent step is still outstanding and still blocks Sessions 5–6 via D-01.
