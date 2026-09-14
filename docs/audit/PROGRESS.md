@@ -497,3 +497,87 @@ that run and removed again.
 2. **D-16 needs (a) or (b) in its Notes**, or it will be reported as skipped.
 3. **D-20 optionally needs a location** — `OPEN-QUESTIONS.md` in the root (my lean) or under `docs/`.
 4. Partial decisions are fine; blocks left `?` are never executed.
+
+---
+
+## Session 5 — DOCS REWRITE EXECUTED — COMPLETE
+
+- **Date:** 2026-09-14 · **Model:** Claude Opus 5 · **Branch:** `b/audit-cleanup`
+- **Input:** `docs/audit/docs-decisions.json` — **22 of 22 marked `ok`**, zero `no`, zero `defer`.
+  (The export arrived with a GUID filename from the browser download; renamed to
+  `docs-decisions.json` and committed as the input of record.)
+
+### Outcome: 22 executed, 0 skipped, 0 deferred
+
+| Commit | Blocks | Files |
+|---|---|---|
+| `e607d6b` | D-01, D-03, D-04, D-05, D-10, D-12, D-13, D-14…D-17, D-19 (parts), D-20, D-21 | `CLAUDE.md`, `README.md`, `PHASE-ROADMAP.md`, `OPEN-QUESTIONS.md` (new), `docs/dashboard-recon.md`, 9 plan/archive stamps, `db-migration/SKILL.md` |
+| `f2d1fec` | D-02, D-06…D-09, D-10, D-11, D-17, D-18, D-19, D-22 | `PROJECT-CONTEXT.md` §§2,3,4,6,7,8,9 + `docs/plans/pdf-import-plan.md` |
+
+### Owner input that shaped execution
+
+- **D-16 → option (b).** `CLAUDE.md` is now single-maintainer: the `f/` branch convention is gone
+  and "first-time setup for collaborators" became "new-machine setup".
+- **D-20 → no location given**, so the register was created at the repo root as proposed
+  (`OPEN-QUESTIONS.md`), next to `PHASE-ROADMAP.md`. It holds **11** questions; Q3
+  (`transactions_import_fingerprint_idx` should probably be UNIQUE) is flagged as the most
+  consequential, and is cheapest to fix now while 0 rows are imported.
+
+### §7 — the append-only guarantee, and how it was verified
+
+Ground rule 5 makes this the highest-risk edit in the operation. Execution was chosen to minimise
+that risk: the 45 entries turned out to be **already contiguous by theme**, so six headings were
+inserted and **nothing was reordered, reworded or merged**.
+
+Verified programmatically against `git show HEAD:PROJECT-CONTEXT.md` after the edit:
+
+```
+entries before: 45 | after: 45
+real content differences: 0
+order preserved: true
+supersede notes added: 2
+```
+
+The two supersede notes are **appended** to their entries, never replacing existing text:
+`claude_ai_Supabase` (does not persist across restart; the durable server is the plugin) and the
+privacy-mode deferral (shipped 2026-07-13 as PR #10, session-only).
+
+**Deliberately NOT marked superseded:** the `ARCHITECTURE.md retired to a pointer` entry. Deleting
+the file in Session 3 was the *conclusion* of that decision — "a second schema doc drifts and has
+caused incidents" — not a reversal of it. Marking it superseded would misrepresent the record.
+
+*(A first verification pass reported 43 entries "missing or altered". That was a bug in the
+checking script — CRLF, then a splitter that absorbed the new headings into the preceding entry —
+not in the file. Recorded because a future session running a similar check should expect both
+traps.)*
+
+### Verification
+
+| Gate | Baseline (`INVENTORY.md`) | After | |
+|---|---|---|---|
+| `npm run build` | pass | pass | ✅ |
+| `npm test` | 352 / 24 files | 352 / 24 files | ✅ |
+| `npm run lint` | 44 (33 err, 11 warn) | 44 (33 err, 11 warn) | ✅ |
+
+Also swept afterwards: no live document still points at a deleted screenshot folder, an archived
+plan at its old path, or a moved spec. The four surviving `ARCHITECTURE.md` mentions are all
+intentional — two reworded warnings, the §7 decision entry, and the §9 note that `Cursus/` cites it.
+
+### State of the documentation after this session
+
+- **Status is asserted in `PROJECT-CONTEXT.md` §6 and nowhere else.** `PHASE-ROADMAP.md` carries
+  none by design; all nine plan/archive files carry a one-line stamp pointing at §6; `CLAUDE.md`,
+  `README.md` and §2 all say so explicitly.
+- **`OPEN-QUESTIONS.md`** is the single home for unresolved decisions. The convention is: answer →
+  record in §7 → delete the row.
+- **`PHASE-ROADMAP.md`** is forward-only. Shipped phases are deleted, not annotated — which is what
+  stops it drifting out of agreement with §6 again.
+
+### What the owner must do before Session 6
+
+Nothing blocking. Session 6 (the questionnaire, per `docs/audit/QUESTIONNAIRE-SPEC.md`) reads the
+rewritten documents and produces `QUESTIONNAIRE.md` + `questionnaire.html`. It uses the `Q-` prefix
+and will not collide with either the `D-` proposals or the `DISC-` discrepancies.
+
+**Worth knowing:** `OPEN-QUESTIONS.md` Q1 (land or abandon `b/budgeting-performance`) is still
+open, and the questionnaire is likely to press on it.
