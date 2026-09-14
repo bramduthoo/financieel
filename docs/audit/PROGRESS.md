@@ -581,3 +581,37 @@ and will not collide with either the `D-` proposals or the `DISC-` discrepancies
 
 **Worth knowing:** `OPEN-QUESTIONS.md` Q1 (land or abandon `b/budgeting-performance`) is still
 open, and the questionnaire is likely to press on it.
+
+---
+
+## Session 5 addendum — audit decisions appended to §7 (2026-09-14)
+
+At the owner's request, and following `CLAUDE.md`'s convention that every session ends with
+`wrapup` keeping `PROJECT-CONTEXT.md` current.
+
+**Why this was not part of D-22:** that block authorised *regrouping* §7 and adding two supersede
+notes — it did not authorise new entries. But the audit produced genuine decisions, and §7 is
+append-only by design, so adding to it is exactly what the section is for. Without this, the *why*
+behind the restructure lived only in `docs/audit/`, which is not where a future session looks first.
+
+**Appended:** one new themed group, *Documentation & repository structure (2026-09 audit)*, with
+**9 entries** — status single-home and why §6 was chosen; roadmap forward-only; the open-questions
+cycle; the four unused dependencies and the critical vulnerability one of them carried;
+the `recharts` `optimizeDeps` removal; `ARCHITECTURE.md` deleted rather than retired; the
+`docs/plans/` vs `docs/archive/` split (by whether source code cites the file, not by whether the
+feature shipped); the page-split refactor **deliberately not done**, with its gating conditions
+stated so it is not relitigated casually; and `src/` structure reviewed and left alone with the
+evidence for that.
+
+**Append-only verified programmatically** against `git show HEAD:PROJECT-CONTEXT.md`:
+
+```
+entries before: 45 | after: 54 | new: 9
+pre-existing entries altered: 0
+original order preserved: true
+```
+
+Gates re-run after the append: build pass, 352/24 tests, lint 44 (33 errors, 11 warnings) —
+unchanged from the `INVENTORY.md` baseline.
+
+**Sessions 1–5 are now complete.** Session 6 has no prerequisites.

@@ -964,6 +964,54 @@ Deferred / smaller:
 ---
 
 
+### Documentation & repository structure (2026-09 audit)
+
+- **Status is asserted in §6 and nowhere else; every other document points at it.** Before the audit
+  it lived in four places — §6, §4, `PHASE-ROADMAP.md` and the plan files — and they contradicted
+  each other: §4 said the CSV-import tables were not applied while §6 said they were; §6 said privacy
+  mode was unbuilt while the roadmap scheduled it and the code had shipped it in July. One home was
+  chosen over "keep them in sync" because syncing had already failed for six weeks. §6 was picked
+  because the `wrapup` skill already updates it at the end of every session — put status where the
+  habit is, not where a new convention has to be learned.
+- **`PHASE-ROADMAP.md` is forward-only: a shipped phase is DELETED from it, never annotated.**
+  Annotating is precisely what let it drift — Phase 1 (privacy mode) and Phase 3 (PDF import) sat
+  there for two months describing decisions that had already been made and built, so a fresh chat
+  handed the roadmap would have been told to build them again.
+- **Unresolved questions live in `OPEN-QUESTIONS.md`, not scattered mid-paragraph.** The cycle is:
+  answer it → record the decision here in §7 → delete the row. A question buried inside a schema
+  paragraph reads as commentary and never gets decided; a register makes the backlog countable.
+- **Four dependencies were removed because they were unused, and one of them was the entire critical
+  vulnerability.** `sql@0.78.0` had zero references in `src/` and existed only to drag in
+  `lodash@4.1.0` (nine advisories, no upstream fix). Also removed: `supabase` (the CLI, wrongly
+  declared as a runtime dependency), `path-key`, `react-is`. The lesson worth keeping: "a couple of
+  vulnerabilities" in a doc is not a measurement — `npm audit` needs a longer timeout than the
+  default and had never actually been run to completion.
+- **`vite.config.js` no longer pre-bundles `recharts`.** The `optimizeDeps` entry named a package
+  that was not installed, not in the lockfile, and explicitly forbidden by our own rule that charts
+  are inline SVG only. Vite silently ignores an unresolvable entry, which is why it survived so long:
+  nothing fails, it just misleads the next reader into thinking a chart library is creeping in.
+- **`ARCHITECTURE.md` was deleted, not just retired.** This completes the earlier decision above
+  rather than reversing it: a retired pointer still shows up in greps and still gets opened. The
+  warnings that referenced it were reworded to carry the substance ("never trust a doc for schema —
+  query the live DB") instead of naming a file that no longer exists.
+- **`docs/plans/` holds living specs; `docs/archive/` holds consumed ones — and the split is by
+  whether source code cites them, not by whether the feature shipped.** `budgeting-page-plan.md`,
+  `pdf-import-plan.md`, `kbc-adapter-spec.md` and `kbc-csv-import-background.md` all describe
+  shipped work, yet stay in `plans/` because ~15 comments in `src/lib/` cite them by section.
+  Archiving them would orphan a reference inside money code.
+- **The three oversized page components were assessed and deliberately NOT split** (`Income.jsx`
+  1225 lines, `Import.jsx` 1194, `WalletDetail.jsx` 989, the last branching four wallet types in one
+  component). Reasons, so this is not relitigated casually: it is a refactor rather than a
+  relocation, and these files hold 21–28 `useState` hooks each with sequenced DB writes; **nothing
+  under `src/pages/` has a test to catch a mistake**; and the project has a documented history of a
+  merge that passed the build and still crashed at runtime. Gated behind `OPEN-QUESTIONS.md` Q6
+  (component test infrastructure) and Q1 (the unmerged Budgeting branch).
+- **`src/` structure was reviewed and left alone.** Verified rather than assumed: `lib/` never
+  imports upward from `components/` or `pages/`, `components/` never imports from `pages/`, there
+  are no circular imports across the 31 non-test lib modules, and a `hooks/` directory would hold two
+  one-line `useContext` wrappers. Renaming `lib/` or `components/` would rewrite imports in at least
+  41 of 96 files; "cleaner" does not pay for that.
+
 ## 8. Known risks / gotchas (hard-won in this project)
 
 - **A Supabase `upsert` payload must not repeat its conflict key.** Postgres refuses ("cannot affect
