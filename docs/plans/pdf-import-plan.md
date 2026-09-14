@@ -299,8 +299,8 @@ plan and WAIT for approval before writing code.
 Read first: pdf-import-plan.md, kbc-adapter-spec.md, DESIGN-SPEC.md, the pdf.js research
 notes, and the real source files you'll touch (Income.jsx + DistributionPopup.jsx for the
 'log as income' hand-off, src/lib/format.js, the router/nav, Settings). Verify the live
-schema via the read-only MCP before assuming any column. Do NOT trust ARCHITECTURE.md or
-Cursus/ for schema.
+schema via the read-only MCP before assuming any column. Do NOT trust Cursus/ or any
+doc for schema.
 
 Scope (KBC 'Export KBC Mobile' per-transaction PDFs only): one PDF = one transaction;
 multi-file batch upload is REQUIRED. Confirmed transaction types: card payment (physical +

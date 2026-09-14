@@ -5,7 +5,7 @@
 > understanding. Keep it current: at the end of each working chat, fold the changes/decisions back in.
 >
 > **New chat reading this: this file + the live Supabase database are ground truth. Where this
-> conflicts with older docs (the `Cursus/` course files, parts of `ARCHITECTURE.md`), this file and
+> conflicts with older docs (the `Cursus/` course files), this file and
 > the live DB win. Verify against the live DB before building; do not assume.**
 
 ---
@@ -53,9 +53,12 @@ shows up under the name "WOUTER" in branches/commits. Two-person project, GitHub
   pointing it at the site later is optional and free.
 - **Local path (owner's machine, Windows):** C:\Users\bduthoo\Documents\financieel
 - **In-repo reference:** `CLAUDE.md` in the repo root is the always-loaded entry doc for Claude Code
-  (project rules, commands, stack, design system, hooks). `ARCHITECTURE.md` has been **retired to a
-  pointer** — it and the `Cursus/` DB docs are **outdated** vs the live schema; do not trust them.
+  (project rules, commands, stack, design system, hooks). The `Cursus/` DB docs are **outdated** vs
+  the live schema; do not trust them. (A former `ARCHITECTURE.md` was retired to a pointer in
+  2026-07 and **deleted** in the 2026-09 cleanup — if you find a copy in git history, it is wrong.)
   Ground-truth order: live Supabase DB > this file > `CLAUDE.md`.
+  **Status is asserted in §6 of this file and nowhere else**; open decisions live in
+  `OPEN-QUESTIONS.md`; `PHASE-ROADMAP.md` covers only work that has not started.
 
 ### Email / auth configuration (important, easy to forget)
 - **Resend** sends Supabase's auth emails (signup verification, password reset) via SMTP
@@ -90,16 +93,25 @@ shows up under the name "WOUTER" in branches/commits. Two-person project, GitHub
   The assistant verifies resulting data via the connector. Neither the assistant nor Claude Code can
   click the UI; full UI automation would need Playwright (deferred to the testing phase).
 
-### Connectors status
+### Connectors status — chat assistant (claude.ai)
 - **Supabase connector:** connected, read-WRITE (it auto-connected with default/standard scope rather
   than the read-only we'd discussed; treat write power with care).
 - **GitHub connector:** **NOT connected**, the owner couldn't find it in the connector list. So the
-  assistant cannot read the repo/PRs/Actions directly; rely on the owner pasting relevant bits. If it
-  becomes available later, it would help the testing/CI phase and merge diagnosis.
+  chat assistant cannot read the repo/PRs/Actions directly; rely on the owner pasting relevant bits.
+
+### MCP status — Claude Code (separate from the above, and often confused with it)
+- **Supabase:** the `plugin_supabase_supabase` plugin. Works, but needs OAuth authorization each
+  session. If the consent link returns `{"message":"Unrecognized client_id"}` **repeatedly**, the
+  cause is a long-running session caching a dead client registration in memory — **restart Claude
+  Code** rather than editing `~/.claude/.credentials.json` (diagnosed 2026-09-14).
+- **GitHub:** the plugin **is** enabled in `.claude/settings.json`, but has been failing to connect
+  with `400: Authorization header is badly formatted`. That is an auth fault, not absence. The
+  **`gh` CLI works** and is the reliable fallback for PR/branch queries.
+- **Playwright:** works; used for browser verification with the test account.
 
 ### Claude Code instruction conventions
 - `CLAUDE.md` loads automatically; have Claude Code read the actual relevant source/DB before changing
-  anything (never trust ARCHITECTURE.md or `Cursus/` for schema).
+  anything (never trust `Cursus/` or any doc for schema — query the live DB).
 - For anything risky, tell it to explain its plan and **wait for approval** before writing code.
 - "Do not change logic/signatures/queries beyond scope." It should report exactly what it changed.
 - Keep the risky/atomic balance logic in **DB functions written & verified by the assistant**; Claude
@@ -134,9 +146,10 @@ shows up under the name "WOUTER" in branches/commits. Two-person project, GitHub
 
 > **CHANGED 2026-07-26 — the repo now HAS a `supabase/migrations/` folder.** Since 2026-07-09 every
 > new schema change is committed there as a timestamped `.sql` file (`YYYYMMDDHHMMSS_short_name.sql`)
-> carrying a purpose/date/impact/rollback header, per the `db-migration` skill. Five files exist today:
-> `reset_user_data`, `wallets_cap_max_gte_budget`, `income_recurring_include_in_budget`, and the two
-> PDF-import ones (`import_schema`, `import_transactions_rpc`).
+> carrying a purpose/date/impact/rollback header, per the `db-migration` skill. **Six files exist
+> today:** `reset_user_data`, `wallets_cap_max_gte_budget`, `income_recurring_include_in_budget`, the
+> two PDF-import ones (`import_schema`, `import_transactions_rpc`), and `csv_import_schema`
+> (2026-07-30).
 >
 > **This does NOT make the folder the source of truth.** Nothing auto-applies it — there is no
 > migration runner, no `supabase db push` in the workflow. The owner applies each file by hand and the
@@ -147,7 +160,7 @@ shows up under the name "WOUTER" in branches/commits. Two-person project, GitHub
 > - the **live database remains the only complete source of truth for schema**, and a file existing in
 >   the folder is NOT evidence it ran. Always verify against the live DB.
 >
-> The `Cursus/` DDL and `ARCHITECTURE.md` still do not reflect the live schema — don't trust them.
+> The `Cursus/` DDL does not reflect the live schema — don't trust it.
 
 ### RLS pattern (every user-data table)
 - Nullable `user_id uuid`, FK to `auth.users(id) ON DELETE CASCADE`.
@@ -183,11 +196,23 @@ shows up under the name "WOUTER" in branches/commits. Two-person project, GitHub
 - **income_templates**: name, amount, note, **send_remainder bool** (added in Fix B), user_id.
   Carries a distribution via `income_template_distribution_items`.
 - **recurring_rules**: recurring EXPENSE rules (separate concept from income_recurring). user_id.
-- **budget_allocations**: user_id.
-- **settings**: currency, currency_symbol, month_start_day, theme, strict_distribution (governs
-  manual/template distribution strictness only), **bank_provider** (text, nullable, CHECK restricting
-  to supported importers — `'kbc'` today; a default/tiebreaker for the PDF importer, never an override:
-  the PDF identifies its own bank), user_id. One row per user.
+- **budget_allocations**: wallet_id, amount (numeric NN), valid_from (date NN), valid_until (date),
+  created_at, user_id. **VESTIGIAL —** the table exists and is well-formed, but holds **0 rows** and
+  **no code in `src/` reads or writes it** (verified 2026-09-14). A designed-but-abandoned
+  pre-distribution budgeting model. The only thing that touches it is `reset_user_data`, which
+  deletes from it. Do not build against it without deciding what it is for.
+- **settings**: month_start_day, theme, strict_distribution (governs manual/template distribution
+  strictness only), **bank_provider** (text, nullable, CHECK restricting to supported importers —
+  `'kbc'` today; a default/tiebreaker for the PDF importer, never an override: the PDF identifies its
+  own bank), user_id. One row per user.
+  - **VESTIGIAL — `currency`, `currency_symbol`:** both columns still exist, but the currency picker
+    was **reverted** (`c6e4f15`, "app is EUR-only") and nothing reads them. The app is hard-coded to
+    euros in `src/lib/format.js`, which builds `€ 1.234,56` by hand. Seeing these columns does **not**
+    mean a currency feature half-exists.
+  - **`hide_balances` DOES NOT EXIST, and must never be created.** Privacy mode shipped
+    **session-only** (PR #10): a module-level flag in `src/lib/format.js`, reset to visible on reload
+    by design. An old `PHASE-ROADMAP.md` kickoff prompt instructed adding this column; that
+    instruction has been deleted. Verified absent 2026-09-14.
 
 ### PDF-import tables (added 2026-07-26, applied & verified)
 - **transactions.import_fingerprint** (text, nullable, partial index on `(user_id, import_fingerprint)`
@@ -202,10 +227,17 @@ shows up under the name "WOUTER" in branches/commits. Two-person project, GitHub
   MOVES the mapping (newest confirmation wins).
 - **imported_statements**: bank, account_iban_hash, statement_number, imported_at, user_id.
 
-### CSV-import tables (DRAFTED 2026-07-30 — **NOT applied yet**, `supabase/migrations/20260730120000_csv_import_schema.sql`)
-> Claude Code consumes these; the owner applies the migration via the chat assistant, then it is
-> re-verified read-only. Until then the Import page degrades visibly ("reduced checks" banner) and the
-> recurring/snapshot writes are skipped.
+### CSV-import tables (APPLIED 2026-07-30 — re-verified against the live DB 2026-09-14)
+> `supabase/migrations/20260730120000_csv_import_schema.sql`. **Both tables exist.** Confirmed by
+> direct query on 2026-09-14: columns, `user_id NOT NULL` on both, every CHECK (including the
+> one-rule XOR and the boundary-day rule), all three FKs `ON DELETE CASCADE`, both unique indexes,
+> RLS on, 8/8 policies. The Import page's "reduced checks" banner is gone.
+>
+> Both are currently **empty (0 rows)** — not because the schema is missing, but because the first
+> real CSV import has not been run yet (`OPEN-QUESTIONS.md` notes this as outstanding).
+>
+> *Historical note: §4 claimed for six weeks that these tables were "NOT applied yet" while §6 said
+> the opposite. §6 was right. Corrected 2026-09-14 by the audit (discrepancy D-01).*
 - **recurring_import_links**: rule_kind (`income`/`expense`) + the matching nullable FK
   (income_recurring_id / recurring_rule_id, CHECK exactly one, both ON DELETE CASCADE), counterparty_key,
   direction, linked_amount, account_iban, created_at, last_seen_at, user_id.
@@ -241,6 +273,16 @@ shows up under the name "WOUTER" in branches/commits. Two-person project, GitHub
   Unallocated wallet. Plan: name, threshold, distribute_mode (`fixed_amount`/`amount_over_threshold`/
   `full_balance`, default amount_over_threshold), distribute_amount (nullable; required when
   fixed_amount, via CHECK), is_active, user_id. Items: plan_id, wallet_id, mode, value, user_id.
+- **unallocated_pending_conflicts**: id, user_id (NN), balance_snapshot (numeric NN),
+  eligible_plan_ids (uuid ARRAY, NN), status (text NN — `pending`/`resolved`/`dismissed`),
+  chosen_plan_id (uuid), resolved_at, created_at. *(Verified live 2026-09-14; previously undocumented
+  here despite being load-bearing.)*
+  **This table is a persisted refusal to guess.** When more than one `unallocated_plan` is
+  simultaneously eligible, `evaluateUnallocatedPlans` fires **nothing** — it writes a row here with a
+  balance snapshot and the eligible plan ids, and stalls until the user resolves it via
+  `UnallocatedConflictBanner` (mounted on the Dashboard and the Unallocated page). While a conflict
+  is pending, **no plan ever auto-fires**. Written by `src/lib/unallocatedPlans.js:103`, read at
+  `:61`/`:91`. Cleared by both tiers of `reset_user_data` — it is transient state, not history.
 
 ### RPC functions (created/used in this project)
 - `increment_wallet_balance(p_wallet_id, p_amount)` / `decrement_wallet_balance(...)`: atomic
@@ -368,9 +410,62 @@ comparisons. The DB chapter is now outdated vs the live schema.
 
 ---
 
-## 6. Current standing (update this when a phase ends)
+## 6. Current standing — THE SINGLE SOURCE OF STATUS
 
-**KBC monthly CSV import — DONE, PR #18 open (branch `b/csv-import`, 2026-07-30).**
+> **This section is the only place in the project where status is asserted.** `PHASE-ROADMAP.md`
+> covers work that has not started and deliberately carries no status; plan files under
+> `docs/plans/` and `docs/archive/` each point back here; `OPEN-QUESTIONS.md` holds decisions
+> waiting on the owner. If any other document appears to say what is or is not built, it is stale —
+> trust this section. *(Structure imposed 2026-09-14 by the audit; before that, status was
+> duplicated across four places that contradicted each other.)*
+>
+> **Every claim here carries evidence** — a PR number and merge date, or the word UNVERIFIED.
+> Update this section when a phase ends; the `wrapup` skill exists to make that habitual.
+
+### 6.1 Shipped — reverse chronological
+
+| Merged | PR | What |
+|---|---|---|
+| 2026-07-30 | **#18** | KBC monthly CSV import — second import source, recurring-link matching, month-boundary snapshots, soft reconciliation |
+| 2026-07-26 | **#17** | KBC PDF bank-statement import (Phase 3) + editable cost name in Payment history |
+| 2026-07-21 | **#16** | Budgeting Phase B2-2 — Budgeting page rework |
+| 2026-07-21 | **#15** | Budgeting Phase B2-1 — the shared `PageHeader` primitive |
+| 2026-07-19 | **#14** | Budgeting Phases A + B — capped-wallet mechanic redesign + the Budgeting page |
+| 2026-07-15 | **#13** | Workflow: require `origin/main` sync + branch hygiene each session |
+| 2026-07-15 | **#12** | Scope official plugins to this project |
+| 2026-07-13 | **#11** | Density & completeness pass (Wallets / Income / Settings / WalletDetail) |
+| 2026-07-13 | **#10** | Privacy mode — session-only "hide amounts" toggle |
+| 2026-07-13 | **#9** | Display currency setting *(later reverted — app is EUR-only, `c6e4f15`)* |
+| 2026-07-11 | **#8** | Redesign R2 — full rollout, every page reskinned, wallet icon identity |
+| 2026-07-10 | **#7** | Redesign R1 — foundation: tokens, `formatMoney`, Layout/Dashboard/Settings |
+| 2026-07-09 | **#6** | Settings phase 1 (hygiene) — two-tier reset, password change, profile, logout-all |
+| 2026-07-08 | **#5** | Resolver lift — pure `src/lib/resolveDistribution.js` + settings recon |
+| 2026-07-07 | **#4** | Testing setup — Vitest behaviour tests for `src/lib/` + CI |
+| 2026-07-07 | **#3**, **#2** | Claude Code workflow config bootstrap |
+| 2026-06-26 | **#1** | Multi-user support |
+
+**All 18 PRs are merged. There are no open PRs** (verified `gh pr list --state all`, 2026-09-14).
+
+Not a PR, but shipped to the repo: the **2026-09 audit and cleanup** — see `docs/audit/`.
+
+### 6.2 In flight / undecided
+
+| Item | State | Decision needed |
+|---|---|---|
+| **Budgeting Phase C** | ~1,300 lines, complete and tested, on local branch `b/budgeting-performance`. **Never pushed**, 6 commits behind `origin/main`. | `OPEN-QUESTIONS.md` **Q1** — land or abandon |
+| **`b/privacy-mode`** | 3 commits ahead / 24 behind; content already on `main` under different SHAs | `OPEN-QUESTIONS.md` **Q10** — delete the branch? |
+| **First real CSV import** | Schema applied and verified; **0 rows imported**. The end-to-end path has never run on real data. | Owner action, not a decision |
+| **Dashboard rebuild** | Not started. Recon exists (`docs/dashboard-recon.md`); its baseline screenshots were deleted and need re-capturing. | `PHASE-ROADMAP.md` Phase A |
+| **Backup / restore** | Not started. Plan predates several subsystems. | `PHASE-ROADMAP.md` Phase B |
+| **Client-side encryption** | Not started; two open discussions unresolved in its plan. | `PHASE-ROADMAP.md` Phase C |
+| **`npm run lint`** | **Red** — 44 problems (33 errors, 11 warnings). CI does not run it. | `OPEN-QUESTIONS.md` **Q9** |
+
+### 6.3 Detail by phase
+
+*Narrative record of each phase as it shipped, newest first. The tables above are authoritative for
+status; these entries carry the reasoning and the verification detail.*
+
+**KBC monthly CSV import — DONE, merged as PR #18, 2026-07-30 (branch `b/csv-import`).**
 Implemented + **352 tests green** + build clean + eslint unchanged from `origin/main` (44 pre-existing
 problems, 0 new) + design-check (0 indigo/purple; summary strip kept to four cells) + **code-reviewer
 (2 criticals + 10 important findings, all fixed and re-tested — see §8)** + both-theme
@@ -469,10 +564,10 @@ batch** (test account) — all balances reconcile to the cent. See `budgeting-pa
   the reduction case (bal 520 ≥ cap 400, rate 0.5 → 100 kept / 100 overflow to Unallocated, separate
   stamped credit rows). **IMMEDIATE NEXT:** open the PR; then Budgeting **Phase B** (kickoff 10.B).
 
-**Density & completeness pass: DONE (branch `b/density-pass`, 2026-07-14; PR open).**
+**Density & completeness pass: DONE, merged as PR #11, 2026-07-13 (branch `b/density-pass`).**
 Implemented + `vite build` clean + **95 tests green** + code-reviewer (no Criticals; touch-reachability,
 delta-zero-tone, ghost-card type-preset fixes applied) + both-theme Playwright screenshots seeded via the
-**test account** in `docs/density-screenshots/`. **db-verifier invariants 1/2/5 NOT yet run** — the Supabase
+**test account** (screenshots deleted in the 2026-09 cleanup; see `docs/audit/PROGRESS.md`). **db-verifier invariants 1/2/5 NOT yet run** — the Supabase
 MCP needed re-auth at session end; owner to authorize, then run against the test account's `user_id`.
 - **DESIGN-SPEC.md gained §8 "Density & completeness patterns"** (six locked rules) and the `design-check`
   skill's checklist + grep procedure were extended to enforce them — spec-first so the pattern can't drift.
@@ -604,7 +699,9 @@ screenshots Dashboard/Wallets/Settings light+dark + an in-browser scroll proof.
 - **Privacy mode (hide balances)** — **prerequisite now DONE:** the shared `formatMoney()`
   (`src/lib/format.js`, R1) replaced the inline `€{n.toFixed(2)}` call sites, so privacy mode is now a
   trivial toggle inside that one function (and the same formatter is what a future real-currency feature
-  needs). Still unbuilt — pick it up any time.
+  needs). **SHIPPED 2026-07-13 as PR #10** — and deliberately differently from the plan above: it is
+  **session-only**, a module-level flag in `src/lib/format.js` masking to `€ ••••`, reset to visible on
+  reload by design. There is **no `hide_balances` column** and none should be added.
 - **Email change, account deletion, backup/export** — out of scope for hygiene (account deletion needs
   an edge function; backup is its own phase); **`month_start_day` wiring** — removed by decision, not
   wanted.
@@ -620,7 +717,8 @@ screenshots Dashboard/Wallets/Settings light+dark + an in-browser scroll proof.
    icon picker in WalletModal persists `wallets.icon` (column already existed — no migration); colour
    picker removed, all colour dots replaced by icons. Verified: `npm test` 67 green, build clean,
    design-check clean (0 indigo), code-reviewer, both-theme screenshot sweep in
-   `docs/redesign-screenshots/`. Tokenization used deterministic find/replace scripts + per-file fixes.
+   both themes via Playwright on the test account (screenshots deleted in the 2026-09 cleanup).
+   Tokenization used deterministic find/replace scripts + per-file fixes.
    **Small follow-up now unblocked:** privacy mode = a toggle inside `formatMoney` (all euro display
    already routes through it). **Loose end:** delete a stray `Test salary` €1000 income entry on the
    test account (created while screenshotting DistributionPopup; income row exists with no distribution).
@@ -641,7 +739,18 @@ Deferred / smaller:
 
 ---
 
-## 7. Decision log (the "why", so new chats don't relitigate)
+## 7. Decision log (the "why", so new chats don’t relitigate)
+
+> **Append-only (audit ground rule 5).** No decision here may be deleted or have its meaning
+> changed. An obsolete entry is **marked superseded** and says what replaced it — it is never
+> removed. This log is the most valuable artefact in the repo: it is why a new session does not
+> re-argue a settled question.
+>
+> *Grouped by theme on 2026-09-14 by the audit (block D-22). Every entry is preserved verbatim and
+> in its original relative order — the entries were already clustered by theme, so only headings
+> were inserted, nothing was reordered or reworded. Two entries gained a SUPERSEDED note.*
+
+### Imports (PDF + CSV)
 
 - **The KBC export CSV's ledger order is the FILE's order, never a `Datum` sort.** The real export's
   `Datum` column inverts (21/12 listed after 22/12) and `Valuta` is not monotonic either, but the running
@@ -676,6 +785,9 @@ Deferred / smaller:
 - **No papaparse.** The real export has zero quoted fields, so the dependency bought a `split(';')`; the
   in-repo tokenizer still implements the full RFC 4180 quoting rules, because a future quoted field
   containing `;` must not shift every column after it.
+
+### Money, distribution & the Unallocated wallet
+
 - **Budgeting page edits the salary's `income_distribution_rules` in place** (same rows the recurring
   log reads) — "edit one, the other follows" is structural, not a sync job. Must-fund wallets are pinned
   to their `budget` (change the budget to change the plan; not a free distribution input); leftover
@@ -713,6 +825,9 @@ Deferred / smaller:
   (money-disappears failure). Risky balance logic lives in one reviewed, atomic, DB-side place; Claude
   Code only calls it.
 - **Recurring income amount only changes via edit**, which then forces re-doing the distribution.
+
+### Testing
+
 - **Testing before encryption; backup before encryption**, tests are the safety net for the
   encryption migration; backup protects users from forgotten-password data loss (password-derived key
   = unrecoverable data if forgotten).
@@ -741,6 +856,9 @@ Deferred / smaller:
 - **Dashboard projection testability is deferred to the dashboard rebuild**, not bolted on now: the
   `new Date()`-dependent projection fns will be reworked in that phase, so adding a `now`-injection
   seam earlier is churn. Deterministic month-scoped calcs stay covered meanwhile.
+
+### Tooling & workflow
+
 - **One chat per phase + this central file**, to stop paying to re-read irrelevant history every turn.
 - **Encryption stance:** desirable to the owner (cares about data privacy) but accepted as a large,
   later project. Key derived from password in the browser via Web Crypto (PBKDF2) + per-user salt;
@@ -761,8 +879,15 @@ Deferred / smaller:
 - **Claude Code now has a read-only Supabase MCP** (`claude_ai_Supabase`) for verifying schema/data;
   **write migrations still go through the owner's channel** (db-migration skill). Read-only power does
   not change the "Claude Code never applies DB writes" rule.
+  > **SUPERSEDED 2026-09-14.** The `claude_ai_Supabase` connector does **not** persist across a
+  > Claude Code restart. The durable server is the installed `supabase` **plugin**
+  > (`plugin_supabase_supabase`), which needs OAuth authorization each session. The reasoning below —
+  > that Claude Code should verify schema against the live DB rather than trust a doc — still stands.
 - **ARCHITECTURE.md retired to a pointer**, not maintained. A second schema doc drifts and has caused
   incidents; single source of truth is live DB > PROJECT-CONTEXT.md > CLAUDE.md.
+
+### Settings & product scope
+
 - **Data reset is two-tier, not one "delete all" button** (settings phase 1): "Clear activity" (wipe
   transactions/income/allocations/pending-conflicts + zero balances, keep templates/rules/plans) vs.
   "Full reset" (also remove the structure). One button conflated two very different intents and its copy
@@ -777,6 +902,13 @@ Deferred / smaller:
   inline across ~22 files. Brute-forcing 22 files now would be redone in the redesign (which touches
   every component anyway). **Plan of record:** the redesign introduces the shared formatter → privacy
   mode becomes a trivial toggle → and the same formatter is what a future real-currency feature needs.
+  > **SUPERSEDED 2026-07-13 by PR #10.** Privacy mode shipped, and the deferral reasoning below was
+  > vindicated: because R1 had already routed every amount through `formatMoney()`, it became a
+  > toggle inside that one function. It shipped **session-only** (no `hide_balances` column), which
+  > the original plan did not anticipate.
+
+### Design system
+
 - **Redesign tokens live as Tailwind v4 `@theme` CSS vars overridden under `.dark`** (R1), not a
   `tailwind.config` (there is none) and not per-element `dark:` classes. Overriding the same
   `--color-*` var in a `.dark {}` block makes every token utility auto-theme, so a component ships both
@@ -831,6 +963,7 @@ Deferred / smaller:
 
 ---
 
+
 ## 8. Known risks / gotchas (hard-won in this project)
 
 - **A Supabase `upsert` payload must not repeat its conflict key.** Postgres refuses ("cannot affect
@@ -881,8 +1014,14 @@ Deferred / smaller:
   functions by setting `request.jwt.claims` in a DO block, and always clean up test data.
 - **GitHub connector is not connected**, no direct repo/PR/Actions visibility for the assistant.
 - **Supabase free tier ceiling ~200 to 250 active users** (egress-bound). Usage model ~250 rows/user/month.
-- **npm audit:** a couple of vulnerabilities exist; do NOT `npm audit fix --force` casually (can break
-  the build). Address deliberately, not mid-feature.
+- **Dependency security (measured 2026-09-07, acted on 2026-09-14).** The old note here said "a
+  couple of vulnerabilities exist". When actually measured it was **10, one of them critical** — and
+  the critical one traced entirely to `sql@0.78.0`, an unused dependency whose only effect was
+  dragging in `lodash@4.1.0` (nine advisories, no upstream fix). The 2026-09 cleanup removed four
+  unused dependencies — `sql`, `supabase` (the CLI, declared as a runtime dep), `path-key` and
+  `react-is` — so **critical is now 0** and `npm ls lodash` is empty. `pdfjs-dist` remains the one
+  genuinely-used direct dependency with an open advisory (high; the fix is a non-major bump).
+  Still **never** run `npm audit fix --force` — the PreToolUse Bash guard blocks it anyway.
 - **Legacy capped wallets with NULL `cap_max` reduce from €0.** The capped executor now uses `cap_max`
   as the ceiling; `Number(null)` → 0, so a capped wallet whose `cap_max` was never set treats its whole
   inflow as "above ceiling" and multiplies by `cap_reduction_rate`. Benign at the DB default rate `1.0`
@@ -892,17 +1031,55 @@ Deferred / smaller:
 
 ---
 
-## 9. Companion plan files (kept alongside this one)
+## 9. The other documents, and what each is for
 
-- `distribution-unallocated-plan.md`, finishing distribution + the Unallocated wallet (active phase).
-- `pdf-import-plan.md` + `kbc-adapter-spec.md`, the PDF import phase (shipped, PR #17).
-- `kbc-csv-import-background.md`, the KBC export-CSV format facts + the recurring-link and
-  balance-snapshot decisions (background only — corrections from the real file are folded into §6/§7).
-- `testing-setup-plan.md`, Vitest + CI testing phase.
-- `backup-restore-feature-plan.md`, export/import backup feature (prerequisite for encryption).
-- `encryption-with-key-plan.md`, client-side encryption (after testing + backup), incl. the two open
-  discussions (atomicity, lost DB-side filtering/sorting) to resolve first.
+Status is **not** asserted in any of these — it lives in §6. Each file carries a one-line stamp
+saying so.
+
+### Entry points (repo root)
+
+| File | What it is |
+|---|---|
+| `CLAUDE.md` | Always-loaded rules for Claude Code: commands, stack, the seven non-negotiables, design system, hooks. |
+| `README.md` | The GitHub front page: what the app is, how to run it, reading order. |
+| `PHASE-ROADMAP.md` | **Only** work that has not started. Forward-looking; carries no status. |
+| `OPEN-QUESTIONS.md` | Decisions waiting on the owner. Answer one → record it in §7 → delete the row. |
+| `DESIGN-SPEC.md` | The locked design language. Enforced by the `design-check` skill. |
+
+### `docs/plans/` — living specs, cited from source code
+
+| File | Status | Note |
+|---|---|---|
+| `budgeting-page-plan.md` | Shipped PRs #14–#16; Phase C unmerged | **Authoritative** for the capped-wallet mechanic (`CLAUDE.md` rule 7). Cited by `resolveCappedInflow.js`, `budgetPlan.js`, `budgetFlowLayout.js`. |
+| `pdf-import-plan.md` | Shipped PR #17 | Cited by 8 files in `src/lib/import/` + 2 migrations. |
+| `kbc-adapter-spec.md` | Shipped PR #17 | The mobile-export PDF layout. Cited by `banks/kbc.js`, `normalize.js`. |
+| `kbc-csv-import-background.md` | Shipped PR #18 | Format facts only, no build steps. Cited by `banks/kbcCsv.js`, `matchRecurring.js`, `reconcile.js`, `monthlySnapshots.js`. |
+| `backup-restore-feature-plan.md` | **Not built** | Roadmap Phase B. Predates the two-tier reset, the `unallocated_*` tables and both import sources — reconcile before building. |
+| `encryption-with-key-plan.md` | **Not built** | Roadmap Phase C. Two open discussions unresolved inside. |
+
+**These four shipped specs are kept, not archived, because working source code cites them by
+section.** Moving or deleting one orphans a comment in money code.
+
+### `docs/archive/` — consumed, kept for reasoning only
+
+`distribution-unallocated-plan.md` (phase DONE; the text still calls itself "the ACTIVE phase" — it
+is not), `testing-setup-plan.md` (shipped PR #4; the living record is `docs/testing-notes.md`),
+`settings-recon.md` (consumed by PR #6).
+
+### `docs/` — living reference
+
+`testing-notes.md` (testing scope and deliberate omissions — cited from
+`src/lib/dashboardCalcs.test.js`), `pdfjs-research-notes.md` (the pdf.js survey the import
+implementation followed), `dashboard-recon.md` (input for the unstarted dashboard rebuild),
+`audit/` (the 2026-09 audit: inventory, understanding, discrepancies, decisions, journal).
+
+### `Cursus/` — a frozen teaching artefact
+
+A 12-chapter course about this codebase, last touched 2026-06-12. **Its schema content is
+outdated** and several chapters cite a deleted `ARCHITECTURE.md`. Not maintained; do not trust it
+for schema or structure.
 
 ---
 
-*End of central context. Keep section 6 (Current standing) and section 7 (Decision log) current as work progresses.*
+*End of central context. Keep §6 (status) and §7 (decision log) current as work progresses —
+that is what the `wrapup` skill is for.*
