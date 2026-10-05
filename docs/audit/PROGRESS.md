@@ -615,3 +615,112 @@ Gates re-run after the append: build pass, 352/24 tests, lint 44 (33 errors, 11 
 unchanged from the `INVENTORY.md` baseline.
 
 **Sessions 1–5 are now complete.** Session 6 has no prerequisites.
+
+---
+
+## Session 6 — QUESTIONNAIRE (read-only) — COMPLETE
+
+- **Date:** 2026-09-14 · **Model:** Claude Opus 5 (`claude-opus-5`) · **Branch:** `b/audit-cleanup`
+- **Scope:** read-only per ground rule 1. Nothing outside `docs/audit/` was created, modified,
+  deleted or staged. No database access of any kind this session — the four schema questions the
+  live-DB pass closed on 2026-09-14 were read from `DISCREPANCIES.md`, not re-queried.
+
+### Produced
+
+| File | Contents |
+|---|---|
+| `docs/audit/QUESTIONNAIRE.md` | **127 questions** — 64 in Part A, 63 in Part B; 32 MUST, 66 SHOULD, 29 NICE. All 17 spec sections (A1–A8, B1–B9) covered. Opens with counts by part and section, the ten-item "start here" list, a time estimate and the partial-answers note; closes with the five things I could not turn into questions, the eleven assumptions I would otherwise proceed on, and the five-question honesty check. |
+| `docs/audit/questionnaire.html` | The review interface required by `AUDIT-BRIEF-ADDENDUM.md` §2. 187 KB, single file, **zero network references** (verified by grep). `localStorage` key `financieel-audit-questionnaire-v1`, Export → `questionnaire-answers.json`, clipboard fallback, JSON import, autosizing free-text answers with no length limit, priority badges plus MUST-only / start-here / unanswered / needs-thought filters, section nav with per-section progress, keyboard-first, light and dark from the real `DESIGN-SPEC.md` §2 tokens. |
+
+### How the two files are kept from disagreeing
+
+Both are generated from **one** dataset (six JSON files plus a meta file) by two scripts, per the
+addendum's "generated from the same source data". The markdown is still canonical — it is what
+gets committed and diffed; the HTML embeds the same strings verbatim.
+
+Verified programmatically after generation:
+
+```
+127 questions · 0 duplicate ids · ids strictly sequential Q-001…Q-127 · 0 missing fields
+markdown blocks: 127 · identical order to the HTML dataset: true · empty ANSWER fields: 127
+every context / question / why / recommendation / option / header string: byte-identical
+counts agree: Part A 64, Part B 63; MUST 32, SHOULD 66, NICE 29
+```
+
+### Browser verification actually performed
+
+Served locally and driven in a real browser (Chrome MCP), not merely inspected:
+
+- Renders correctly in the project's tokens, light **and** dark. **Zero console messages** of any
+  kind, including after a reload with console tracking already attached.
+- Answering **Q-101 (a)** auto-skipped **Q-102, Q-103, Q-035 and Q-097**, each showing the reason
+  that caused it — the addendum's conditional-question requirement, driven by a machine-readable
+  condition table (14 conditionals) rather than prose.
+- Free-text input, needs-thought flag, per-section progress (`A3 … 1/8`), overall progress
+  (`2 / 127 answered · 125 left · 1 flagged`) and autosave all fire. Reload restored the saved
+  state silently.
+- Filters return the right sets: MUST-only **32**, start-here **10**, unanswered **125**.
+  Search on `resolveCappedInflow` returns exactly Q-006. `j` moves focus.
+- Export payload has the right shape (`document` / `version` / `exportedAt` / `answers` / `counts`),
+  contains only touched questions, and stamps `autoSkipped` per answer.
+- Test state lived under `http://localhost:8399`, a different origin from the `file://` the owner
+  will open, and was cleared afterwards anyway. The server was stopped.
+
+### Judgement calls worth knowing about
+
+1. **Q-011 contradicts `OPEN-QUESTIONS.md` on purpose, and says so.** The register calls promoting
+   `transactions_import_fingerprint_idx` to UNIQUE "the most consequential item in this file".
+   `fingerprintOf` (`src/lib/import/dedupe.js:16`) is `iban|date|amount|direction|counterparty`,
+   which is byte-identical for two €10,40 train tickets on one day — and §7 explicitly decided
+   those are real and must not default to skipped. A UNIQUE index would make them impossible to
+   record. The block states the disagreement rather than quietly recommending the register's answer.
+2. **One finding is called out above the start-here list.** `src/pages/Wallets.jsx:53-58`
+   hard-deletes a wallet with **no balance check** — a wallet holding money can be deleted in two
+   clicks and that money leaves the sum of balances with nothing recording it. It is not on the
+   start-here list because it unblocks nothing; it is flagged separately because it is the only
+   place in this app where money can be destroyed silently. Q-083 carries it. **Verified this
+   session** by reading `handleDelete` and the confirmation copy — not inherited from an earlier
+   artefact.
+3. **Q-023 is a second, unflagged instance of a known bug class.**
+   `IncomeRecurringDetail.jsx:404` renders an editable amount, `:160` inserts what was typed, and
+   `:169` distributes from `dr.amount`. Same family as the `KNOWN` comment at `Income.jsx:245`,
+   reached from the other direction, and on the only path that can trigger the capped mechanic.
+4. **The questionnaire names a tension the docs do not.** Sections A3 and A6 recommend moving more
+   money logic *into* atomic RPCs; the encryption plan requires moving all of it *out*. Q-072 and
+   Q-107 state that the two cancel, so one answer settles Q-018, Q-038, Q-045 and Q-046 as well.
+5. **Nothing was fixed.** Ground rule 8 — several items here are five-line changes I could have
+   made (Q-037's four Tailwind classes, Q-016's catch-all route). They are recorded, not acted on.
+6. **Line references were re-verified against the working tree**, not copied from `INVENTORY.md`.
+   That is how the `Income.jsx:245` / `:221` divergence between `INVENTORY.md` and
+   `PROJECT-CONTEXT.md` §6.3 was resolved: **245 is correct**, §6.3's `:221` is stale by 24 lines.
+   Recorded here rather than edited into §6.3, since that file is outside this session's scope.
+
+### Skipped / not done
+
+- **Nothing was committed.** Both artefacts are untracked (`git status --short` shows exactly
+  `?? docs/audit/QUESTIONNAIRE.md` and `?? docs/audit/questionnaire.html`). This follows Session 1's
+  precedent for a read-only session: its artefacts stayed untracked until the owner approved
+  committing them in Session 2. **The owner should commit them.**
+- **`b/budgeting-performance` was not read.** It is unmerged work outside the audit's read set, so
+  every Phase C question concerns the branch's existence rather than its design. Recorded in the
+  questionnaire's "questions I could not formulate".
+- **`.playwright-mcp/` exists again**, containing only `docs-decisions.json` dated 2026-09-14 14:44
+  — the browser's download of the Session-5 export before it was moved into `docs/audit/`. It was
+  **not** created by this session and was **not** deleted (ground rule 4). It is gitignored.
+
+### What the owner must do next
+
+1. **Answer the questionnaire.** Either open `docs/audit/questionnaire.html` (double-click), work
+   through it, click **Export**, and drop `questionnaire-answers.json` into `docs/audit/` — or fill
+   the `**ANSWER:**` fields in `QUESTIONNAIRE.md` directly. Both are valid; the JSON is what a later
+   session parses if present. Partial is fine.
+2. **If you answer nothing else, answer the ten in the start-here list** — or the five at the very
+   bottom of the file.
+3. **Read Q-083 first regardless.** It is the one finding I would act on before answering anything.
+4. **Commit the two artefacts** (see above — this session deliberately did not).
+
+**The six-session audit operation is complete.** Sessions 1–5 produced the map, the cleanup, the
+structure verdict and the documentation rewrite; this session produced the questionnaire they
+existed to make accurate. After the answers come back, the work is: record decisions in
+`PROJECT-CONTEXT.md` §7, move anything still open into `OPEN-QUESTIONS.md`, and rewrite
+`PHASE-ROADMAP.md` to whatever survives Q-077.
